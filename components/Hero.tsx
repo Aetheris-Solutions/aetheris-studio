@@ -3,8 +3,11 @@ import Reveal from "./Reveal";
 
 export default function Hero() {
   return (
-    <section id="top" className="relative min-h-[100svh] w-full overflow-hidden">
-      {/* Sky / clouds background */}
+    <section
+      id="top"
+      className="relative min-h-[100svh] w-full overflow-hidden pt-32 md:pt-40"
+    >
+      {/* Sky background */}
       <div className="absolute inset-0">
         <Image
           src="/images/sky.png"
@@ -14,12 +17,12 @@ export default function Hero() {
           sizes="100vw"
           className="object-cover engrave-soft animate-drift-slow"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(0,0,0,0.55)_80%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/55 to-black" />
+        <div className="absolute inset-0 bg-grid bg-grid-fade opacity-40" />
       </div>
 
-      {/* Pegasus — faint, to the right */}
-      <div className="absolute right-[-8%] top-[12%] w-[55vw] max-w-[820px] opacity-[0.22] pointer-events-none select-none hidden md:block">
+      {/* Pegasus faint */}
+      <div className="absolute right-[-10%] top-[8%] w-[55vw] max-w-[820px] opacity-[0.18] pointer-events-none select-none hidden md:block">
         <Image
           src="/images/pegasus.png"
           alt=""
@@ -30,69 +33,67 @@ export default function Hero() {
         />
       </div>
 
-      <div className="relative z-10 container-narrow pt-40 md:pt-52 pb-24">
+      <div className="relative z-10 container-narrow pb-24 md:pb-36">
         <Reveal>
-          <div className="flex items-center gap-4 mb-8">
-            <span className="ornament" />
-            <span className="eyebrow">Aetheris · Solutions · MMXXVI</span>
+          <div className="flex flex-wrap items-center gap-3 mb-9">
+            <span className="chip">
+              <span className="dot" /> AI Agency · Italia
+            </span>
+            <span className="chip">Framework AETHER™</span>
+            <span className="chip">Live in 14 giorni</span>
           </div>
         </Reveal>
 
         <Reveal delay={120}>
-          <h1 className="display text-[clamp(3rem,9vw,8rem)] text-ink-paper max-w-[14ch]">
-            Agenti AI
-            <span className="block not-italic font-light text-[0.85em] text-ink-paper/85">
-              che <em className="text-ink-gold">lavorano</em> per il
-              <br className="hidden md:block" /> tuo business.
-            </span>
+          <h1 className="display text-[clamp(2.6rem,7.2vw,6.5rem)] text-ink-paper max-w-[18ch] leading-[1.02]">
+            Agenti AI <span className="display-italic text-ink-gold">su misura</span>{" "}
+            che lavorano davvero per il tuo business.
           </h1>
         </Reveal>
 
-        <Reveal delay={280}>
-          <p className="mt-10 max-w-xl text-lg md:text-xl text-ink-paper/70 leading-relaxed">
-            Progettiamo{" "}
-            <span className="italic text-ink-paper">agenti artificiali</span>{" "}
-            su misura che automatizzano processi, rispondono ai clienti,
-            analizzano dati e orchestrano le tue operations —{" "}
-            <span className="italic text-ink-paper">
-              ventiquattro ore su ventiquattro.
-            </span>
+        <Reveal delay={260}>
+          <p className="lead mt-8 max-w-2xl">
+            Non template, non chatbot. Progettiamo agenti AI che parlano con
+            i tuoi clienti, automatizzano operations e si integrano nel tuo
+            stack — operativi in <span className="text-ink-paper">14 giorni</span>,
+            con ROI misurato fin dal primo mese.
           </p>
         </Reveal>
 
-        <Reveal delay={420}>
-          <div className="mt-12 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-            <a href="#contact" className="btn-ghost">
-              Prenota una call
+        <Reveal delay={400}>
+          <div className="mt-10 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+            <a href="#contact" className="btn btn-primary">
+              Prenota una call gratuita
               <span className="arrow" aria-hidden>
                 →
               </span>
             </a>
-            <a
-              href="#philosophy"
-              className="smallcaps text-[10px] text-ink-fog hover:text-ink-paper transition pl-1"
-            >
-              Scopri la filosofia
+            <a href="#agents" className="btn btn-ghost">
+              Esplora gli agenti
             </a>
+            <span className="fine pl-1">
+              30 minuti · zero impegno · audit incluso
+            </span>
           </div>
         </Reveal>
 
-        {/* KPI strip */}
+        {/* Tech / proof strip */}
         <Reveal delay={560}>
-          <div className="mt-24 md:mt-32 grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 border-t border-white/10 pt-10">
+          <div className="mt-20 md:mt-28 grid grid-cols-2 md:grid-cols-4 gap-x-10 gap-y-8 border-t border-white/10 pt-10">
             {[
-              { k: "24/7", v: "Operatività continua" },
-              { k: "−68%", v: "Tempo medio operativo" },
-              { k: "3×", v: "Lead qualificati" },
-              { k: "∞", v: "Scalabilità" },
+              { k: "60+", v: "Agenti in produzione", s: "PMI italiane" },
+              { k: "14gg", v: "Tempo medio di deploy", s: "MVP operativo" },
+              { k: "8.4×", v: "ROI medio primo anno", s: "dati clienti" },
+              { k: "GDPR", v: "Compliant by design", s: "EU data residency" },
             ].map((it) => (
               <div key={it.k}>
                 <div className="display text-4xl md:text-5xl text-ink-paper">
                   {it.k}
                 </div>
-                <div className="smallcaps text-[10px] text-ink-fog mt-2">
+                <div className="font-sans text-[13px] text-ink-paper/85 mt-2">
                   {it.v}
                 </div>
+                <div className="fine mt-1">{it.s}</div>
               </div>
             ))}
           </div>
@@ -100,9 +101,9 @@ export default function Hero() {
       </div>
 
       {/* Scroll cue */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-ink-fog">
-        <span className="smallcaps text-[9px]">scroll</span>
-        <span className="block w-px h-10 bg-gradient-to-b from-ink-fog/60 to-transparent" />
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-ink-fog">
+        <span className="fine">scroll</span>
+        <span className="block w-px h-8 bg-gradient-to-b from-ink-fog/50 to-transparent" />
       </div>
     </section>
   );

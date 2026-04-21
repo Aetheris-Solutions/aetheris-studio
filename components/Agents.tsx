@@ -3,155 +3,209 @@ import Reveal from "./Reveal";
 
 const agents = [
   {
-    n: "01",
-    title: "Agente Commerciale",
-    italic: "Orator",
-    desc: "Qualifica lead, risponde a richieste, prenota appuntamenti. Integrato con CRM, email e calendari — 24 ore su 24.",
-    points: [
-      "Qualifica e scoring automatico",
-      "Conversazione multicanale (chat, email, WhatsApp)",
-      "Hand-off fluido al team umano",
+    code: "/01",
+    name: "Hermes",
+    role: "Lead Qualifier",
+    portrait: "/images/man-portrait.png",
+    pitch:
+      "Risponde 24/7 a richieste, qualifica i lead con scoring automatico, prenota call sul tuo calendario.",
+    use: "Ideale per agenzie, SaaS B2B, real estate, studi professionali.",
+    integrations: ["WhatsApp", "Email", "HubSpot", "Cal.com", "Salesforce"],
+    metrics: [
+      { k: "+187%", v: "lead qualificati" },
+      { k: "8 min", v: "tempo medio risposta" },
     ],
+    setup: "Setup in 14 giorni",
+    from: "Da €1.990 setup + €299/mese",
   },
   {
-    n: "02",
-    title: "Agente Operations",
-    italic: "Artifex",
-    desc: "Orchestra flussi di lavoro tra i tuoi strumenti: ordini, fatture, logistica, reporting. Elimina data-entry e errori manuali.",
-    points: [
-      "Orchestrazione multi-tool (ERP, CRM, cloud)",
-      "Automazione end-to-end dei processi",
-      "Riduzione costi operativi misurabile",
+    code: "/02",
+    name: "Vulcano",
+    role: "Operations Engine",
+    portrait: "/images/man-beard.png",
+    pitch:
+      "Orchestra processi back-office: ordini, fatture, ticket, reportistica. Sostituisce ore di data entry.",
+    use: "Ideale per e-commerce, manifatturiero, logistica, servizi.",
+    integrations: ["ERP", "Shopify", "Stripe", "Google Drive", "Slack"],
+    metrics: [
+      { k: "−68%", v: "tempo operativo" },
+      { k: "12.5×", v: "ROI medio" },
     ],
+    setup: "Setup in 21 giorni",
+    from: "Da €2.490 setup + €499/mese",
   },
   {
-    n: "03",
-    title: "Agente Analista",
-    italic: "Augur",
-    desc: "Interroga i tuoi dati in linguaggio naturale, genera report e individua pattern nascosti. Il tuo BI analyst on-demand.",
-    points: [
-      "Query in linguaggio naturale",
-      "Report e dashboard automatiche",
-      "Insight predittivi sui KPI",
+    code: "/03",
+    name: "Minerva",
+    role: "Data Analyst",
+    portrait: "/images/woman-portrait.png",
+    pitch:
+      "Interroga i tuoi dati in linguaggio naturale, genera report e insight predittivi senza un BI team.",
+    use: "Ideale per founder, CFO, marketing manager, COO.",
+    integrations: ["BigQuery", "PostgreSQL", "Notion", "Sheets", "Metabase"],
+    metrics: [
+      { k: "12×", v: "velocità reporting" },
+      { k: "0", v: "data analyst richiesti" },
     ],
+    setup: "Setup in 10 giorni",
+    from: "Da €1.490 setup + €249/mese",
   },
   {
-    n: "04",
-    title: "Agente Customer Care",
-    italic: "Custos",
-    desc: "Gestisce richieste, resi, FAQ e supporto tecnico con il tono della tua brand. Risolve in autonomia l'80% dei ticket.",
-    points: [
-      "Risposte con tono brand-aware",
-      "Multi-lingua nativo",
-      "Escalation intelligente al team",
+    code: "/04",
+    name: "Custos",
+    role: "Customer Care",
+    portrait: "/images/woman-full.png",
+    pitch:
+      "Gestisce supporto, resi, FAQ e ordini con il tono della tua brand. Risolve l'80% dei ticket in autonomia.",
+    use: "Ideale per e-commerce, SaaS, retail multi-store, servizi.",
+    integrations: ["WhatsApp", "Intercom", "Zendesk", "Shopify", "Telegram"],
+    metrics: [
+      { k: "94%", v: "ticket risolti" },
+      { k: "24/7", v: "operatività" },
     ],
+    setup: "Setup in 14 giorni",
+    from: "Da €1.790 setup + €349/mese",
   },
 ];
 
 export default function Agents() {
-  const portraits = [
-    "/images/man-portrait.png",
-    "/images/woman-portrait.png",
-    "/images/man-beard.png",
-    "/images/woman-portrait.png",
-  ];
-
   return (
-    <section id="agents" className="relative py-32 md:py-48">
+    <section id="agents" className="section relative">
       <div className="container-narrow">
-        <Reveal>
-          <div className="flex items-center gap-4 mb-6">
-            <span className="h-px w-10 bg-ink-gold/60" />
-            <span className="eyebrow">II · Gli Agenti</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-end mb-16">
+          <div className="lg:col-span-7">
+            <Reveal>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="cross" />
+                <span className="eyebrow">Gli agenti</span>
+              </div>
+            </Reveal>
+            <Reveal delay={120}>
+              <h2 className="display text-4xl md:text-5xl lg:text-6xl text-ink-paper leading-[1.05] max-w-[20ch]">
+                Quattro agenti pronti.{" "}
+                <span className="display-italic text-ink-gold">
+                  O uno costruito su misura.
+                </span>
+              </h2>
+            </Reveal>
+          </div>
+          <div className="lg:col-span-5">
+            <Reveal delay={200}>
+              <p className="lead">
+                Ogni agente è un sistema autonomo: ruolo definito, integrazioni
+                native, metriche tracciate. Li attivi singolarmente o li fai
+                lavorare in orchestrazione.
+              </p>
+            </Reveal>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+          {agents.map((a, i) => (
+            <Reveal key={a.code} delay={i * 90}>
+              <article className="surface surface-hover h-full p-7 md:p-9 flex flex-col">
+                <div className="flex items-start justify-between gap-6 mb-7">
+                  <div>
+                    <div className="font-mono text-[11px] text-ink-mute tracking-widest mb-2">
+                      AGENT {a.code}
+                    </div>
+                    <h3 className="display text-4xl md:text-5xl text-ink-paper leading-none">
+                      {a.name}
+                    </h3>
+                    <div className="display-italic text-ink-gold/85 text-lg mt-1.5">
+                      {a.role}
+                    </div>
+                  </div>
+                  <div className="relative w-24 h-28 md:w-32 md:h-36 shrink-0">
+                    <Image
+                      src={a.portrait}
+                      alt={`${a.name} — ${a.role}`}
+                      fill
+                      sizes="160px"
+                      className="object-contain engrave fade-mask-soft"
+                    />
+                  </div>
+                </div>
+
+                <p className="text-ink-paper/80 text-[15.5px] leading-relaxed">
+                  {a.pitch}
+                </p>
+                <p className="mt-3 text-ink-fog text-[13.5px] italic">
+                  {a.use}
+                </p>
+
+                <div className="mt-6 grid grid-cols-2 gap-4">
+                  {a.metrics.map((m) => (
+                    <div
+                      key={m.v}
+                      className="border border-white/8 rounded-lg p-4 bg-white/[0.015]"
+                    >
+                      <div className="display text-3xl text-ink-paper">
+                        {m.k}
+                      </div>
+                      <div className="fine mt-1">{m.v}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-1.5">
+                  {a.integrations.map((it) => (
+                    <span
+                      key={it}
+                      className="font-mono text-[10.5px] text-ink-fog px-2 py-1 border border-white/8 rounded-md"
+                    >
+                      {it}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-auto pt-7">
+                  <div className="flex items-end justify-between gap-4 pt-6 border-t border-white/8">
+                    <div>
+                      <div className="fine">{a.setup}</div>
+                      <div className="font-sans text-[14px] text-ink-paper mt-1">
+                        {a.from}
+                      </div>
+                    </div>
+                    <a
+                      href="#contact"
+                      className="font-sans text-[13.5px] text-ink-paper hover:text-ink-gold transition flex items-center gap-1.5"
+                    >
+                      Attiva {a.name}
+                      <span aria-hidden>→</span>
+                    </a>
+                  </div>
+                </div>
+              </article>
+            </Reveal>
+          ))}
+        </div>
+
+        <Reveal delay={400}>
+          <div className="mt-8 surface p-7 md:p-9 flex flex-col md:flex-row items-start md:items-center gap-6 justify-between">
+            <div>
+              <div className="font-mono text-[11px] text-ink-mute tracking-widest mb-2">
+                AGENT /00 — CUSTOM
+              </div>
+              <h3 className="display text-2xl md:text-3xl text-ink-paper">
+                Hai un caso d&apos;uso unico?{" "}
+                <span className="display-italic text-ink-gold">
+                  Lo costruiamo da zero.
+                </span>
+              </h3>
+              <p className="mt-2 text-ink-fog text-[14.5px] max-w-2xl">
+                Discovery call, audit del processo, proposta tecnica e
+                preventivo entro 5 giorni lavorativi.
+              </p>
+            </div>
+            <a href="#contact" className="btn btn-primary">
+              Discovery call
+              <span className="arrow" aria-hidden>
+                →
+              </span>
+            </a>
           </div>
         </Reveal>
-
-        <Reveal delay={120}>
-          <h2 className="display text-4xl md:text-6xl text-ink-paper max-w-[18ch] leading-[1.05]">
-            Quattro figure.
-            <br />
-            Una{" "}
-            <em className="text-ink-gold">intelligenza</em> al servizio del tuo
-            business.
-          </h2>
-        </Reveal>
-
-        <Reveal delay={240}>
-          <p className="mt-6 max-w-2xl text-lg text-ink-paper/70">
-            Ogni agente è un sistema autonomo, addestrato sul tuo contesto,
-            integrato con i tuoi strumenti. Li combini come preferisci — o
-            li facciamo lavorare insieme.
-          </p>
-        </Reveal>
-
-        <div className="mt-20 md:mt-28 flex flex-col gap-28 md:gap-40">
-          {agents.map((a, i) => {
-            const reverse = i % 2 === 1;
-            return (
-              <div
-                key={a.n}
-                className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-16 items-center"
-              >
-                {/* Image */}
-                <div
-                  className={`md:col-span-5 ${
-                    reverse ? "md:order-2" : ""
-                  } relative`}
-                >
-                  <Reveal>
-                    <div className="relative aspect-[4/5] w-full max-w-sm mx-auto">
-                      <Image
-                        src={portraits[i]}
-                        alt={`${a.title} — ${a.italic}`}
-                        fill
-                        sizes="(max-width: 768px) 80vw, 35vw"
-                        className="object-contain engrave fade-mask"
-                      />
-                    </div>
-                    <div className="absolute -top-6 left-0 md:left-4 display italic text-7xl md:text-8xl text-ink-paper/10 select-none pointer-events-none">
-                      {a.n}
-                    </div>
-                  </Reveal>
-                </div>
-
-                {/* Text */}
-                <div className={`md:col-span-7 ${reverse ? "md:order-1" : ""}`}>
-                  <Reveal delay={120}>
-                    <div className="smallcaps text-[10px] text-ink-fog mb-3">
-                      Agente · {a.n}
-                    </div>
-                    <h3 className="display text-3xl md:text-5xl text-ink-paper leading-tight">
-                      {a.title}
-                      <span className="block text-ink-gold/80 not-italic font-display text-base md:text-lg tracking-[0.32em] uppercase mt-3">
-                        {a.italic}
-                      </span>
-                    </h3>
-                  </Reveal>
-
-                  <Reveal delay={240}>
-                    <p className="mt-6 text-lg text-ink-paper/75 max-w-xl leading-relaxed">
-                      {a.desc}
-                    </p>
-                  </Reveal>
-
-                  <Reveal delay={360}>
-                    <ul className="mt-8 space-y-3 max-w-xl">
-                      {a.points.map((p) => (
-                        <li
-                          key={p}
-                          className="flex items-start gap-4 text-ink-paper/85"
-                        >
-                          <span className="mt-[0.6em] inline-block h-px w-6 bg-ink-gold/70 shrink-0" />
-                          <span>{p}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </Reveal>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </section>
   );

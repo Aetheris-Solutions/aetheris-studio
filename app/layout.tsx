@@ -1,39 +1,41 @@
 import type { Metadata } from "next";
-import { Cinzel, Cormorant_Garamond, Inter } from "next/font/google";
+import { Instrument_Serif, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const cinzel = Cinzel({
+const instrumentSerif = Instrument_Serif({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-cinzel",
-  display: "swap",
-});
-
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  weight: ["400"],
   style: ["normal", "italic"],
-  variable: "--font-cormorant",
+  variable: "--font-serif",
   display: "swap",
 });
 
 const inter = Inter({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-inter",
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Aetheris Solutions — Agenti AI su misura per il tuo business",
+  title:
+    "Aetheris Solutions — Agenti AI custom che lavorano per il tuo business",
   description:
-    "Progettiamo agenti AI personalizzati che automatizzano processi, ottimizzano operations e portano risultati misurabili al tuo business.",
+    "Progettiamo, addestriamo e integriamo agenti AI su misura per PMI italiane. Framework AETHER, prodotti operativi in 14 giorni, ROI misurabile.",
   metadataBase: new URL("https://aetheris.solutions"),
   openGraph: {
-    title: "Aetheris Solutions — Agenti AI su misura",
+    title: "Aetheris Solutions — Agenti AI custom",
     description:
-      "Agenti AI personalizzati che ottimizzano il tuo business e portano risultati.",
+      "Agenti AI su misura per PMI italiane. Framework AETHER, deploy in 14 giorni, ROI misurabile.",
     type: "website",
+    locale: "it_IT",
   },
 };
 
@@ -45,9 +47,9 @@ export default function RootLayout({
   return (
     <html
       lang="it"
-      className={`${cinzel.variable} ${cormorant.variable} ${inter.variable}`}
+      className={`${instrumentSerif.variable} ${inter.variable} ${jetbrains.variable}`}
     >
-      <body className="grain vignette">{children}</body>
+      <body className="grain vignette antialiased">{children}</body>
     </html>
   );
 }
