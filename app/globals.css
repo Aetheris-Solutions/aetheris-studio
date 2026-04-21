@@ -1,0 +1,236 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #050505;
+  --color-bg-2: #0a0a0a;
+  --color-fg: #f5efe6;
+  --color-fog: #9a9286;
+  --color-gold: #c9a96e;
+  --noise-opacity: 0.06;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "ss01", "liga", "kern";
+}
+
+body {
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-weight: 400;
+  font-size: 17px;
+  line-height: 1.65;
+  background:
+    radial-gradient(1100px 700px at 50% -10%, rgba(40, 40, 40, 0.6), transparent 60%),
+    radial-gradient(900px 600px at 90% 110%, rgba(60, 50, 40, 0.35), transparent 60%),
+    var(--color-bg);
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(201, 169, 110, 0.35);
+  color: #fff;
+}
+
+/* Subtle film grain overlay */
+.grain::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  opacity: var(--noise-opacity);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.6 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
+/* Vintage edge vignette */
+.vignette::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: radial-gradient(
+    120% 90% at 50% 50%,
+    transparent 55%,
+    rgba(0, 0, 0, 0.55) 100%
+  );
+}
+
+.eyebrow {
+  font-family: var(--font-cinzel), serif;
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: rgba(201, 169, 110, 0.85);
+}
+
+.display {
+  font-family: var(--font-cormorant), serif;
+  font-weight: 300;
+  font-style: italic;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+.smallcaps {
+  font-family: var(--font-cinzel), serif;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* Hairline divider */
+.hairline {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(201, 169, 110, 0.55) 50%,
+    transparent
+  );
+}
+
+/* Image filter to keep engraving look uniform */
+.engrave {
+  filter: grayscale(100%) contrast(1.1) brightness(0.95);
+}
+
+.engrave-soft {
+  filter: grayscale(100%) contrast(1.05) brightness(1.02);
+}
+
+/* Mask: fade image edges into the dark background */
+.fade-mask {
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    #000 50%,
+    transparent 78%
+  );
+  mask-image: radial-gradient(ellipse at center, #000 50%, transparent 78%);
+}
+
+.fade-mask-soft {
+  -webkit-mask-image: radial-gradient(
+    ellipse at center,
+    #000 60%,
+    transparent 92%
+  );
+  mask-image: radial-gradient(ellipse at center, #000 60%, transparent 92%);
+}
+
+.fade-bottom {
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 0%,
+    #000 60%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(to bottom, #000 0%, #000 60%, transparent 100%);
+}
+
+/* Reveal on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition:
+    opacity 1s ease-out,
+    transform 1s ease-out;
+  will-change: opacity, transform;
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Buttons */
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1.6rem;
+  border: 1px solid rgba(201, 169, 110, 0.45);
+  color: var(--color-fg);
+  font-family: var(--font-cinzel), serif;
+  font-size: 11px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.4s ease,
+    color 0.4s ease,
+    border-color 0.4s ease,
+    transform 0.4s ease;
+}
+
+.btn-ghost:hover {
+  background-color: rgba(201, 169, 110, 0.08);
+  border-color: rgba(201, 169, 110, 0.85);
+  transform: translateY(-1px);
+}
+
+.btn-ghost .arrow {
+  transition: transform 0.4s ease;
+}
+
+.btn-ghost:hover .arrow {
+  transform: translateX(4px);
+}
+
+/* Simple cross/plus ornament */
+.ornament {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  position: relative;
+}
+.ornament::before,
+.ornament::after {
+  content: "";
+  position: absolute;
+  background: rgba(201, 169, 110, 0.65);
+}
+.ornament::before {
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  transform: translateX(-50%);
+}
+.ornament::after {
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+/* Responsive helpers */
+.container-narrow {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-left: clamp(1.25rem, 4vw, 3rem);
+  padding-right: clamp(1.25rem, 4vw, 3rem);
+}
+
+/* Marquee */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 60s linear infinite;
+}
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
