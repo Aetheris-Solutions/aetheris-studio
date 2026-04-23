@@ -111,28 +111,40 @@ async function sendViaResend(
     process.env.RESEND_FROM_EMAIL ||
     "Aetheris Solutions <onboarding@resend.dev>";
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      from,
-      to: [TARGET_EMAIL],
-      reply_to: s.email,
-      subject: buildSubject(s),
-      text: buildPlainText(s),
-      html: buildHtml(s),
-    }),
-  });
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key}`,
+      },
+      body: JSON.stringify({
+        from,
+        to: [TARGET_EMAIL],
+        reply_to: s.email,
+        subject: buildSubject(s),
+        text: buildPlainText(s),
+        html: buildHtml(s),
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    return { ok: false, provider: "resend", error: `HTTP ${res.status}: ${body}` };
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      return {
+        ok: false,
+        provider: "resend",
+        error: `HTTP ${res.status}: ${body}`,
+      };
+    }
+
+    return { ok: true, provider: "resend" };
+  } catch (err) {
+    return {
+      ok: false,
+      provider: "resend",
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-
-  return { ok: true, provider: "resend" };
 }
 
 /* ------------------------------------------------------------------ */
@@ -145,30 +157,45 @@ async function sendViaWeb3Forms(
   const accessKey = process.env.WEB3FORMS_KEY;
   if (!accessKey) return null;
 
-  const res = await fetch("https://api.web3forms.com/submit", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: JSON.stringify({
-      access_key: accessKey,
-      from_name: "Aetheris Solutions Site",
-      subject: buildSubject(s),
-      to: TARGET_EMAIL,
-      replyto: s.email,
-      name: s.name,
-      email: s.email,
-      company: s.company || "—",
-      agent: s.agent || "—",
-      message: s.message || "(nessun messaggio)",
-      source: s.source || "homepage",
-    }),
-  });
+  try {
+    const res = await fetch("https://api.web3forms.com/submit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        access_key: accessKey,
+        from_name: "Aetheris Solutions Site",
+        subject: buildSubject(s),
+        to: TARGET_EMAIL,
+        replyto: s.email,
+        name: s.name,
+        email: s.email,
+        company: s.company || "—",
+        agent: s.agent || "—",
+        message: s.message || "(nessun messaggio)",
+        source: s.source || "homepage",
+      }),
+    });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    return { ok: false, provider: "web3forms", error: `HTTP ${res.status}: ${body}` };
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      return {
+        ok: false,
+        provider: "web3forms",
+        error: `HTTP ${res.status}: ${body}`,
+      };
+    }
+
+    return { ok: true, provider: "web3forms" };
+  } catch (err) {
+    return {
+      ok: false,
+      provider: "web3forms",
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
-
-  return { ok: true, provider: "web3forms" };
 }
 
 /* ------------------------------------------------------------------ */
@@ -185,61 +212,74 @@ async function sendViaFormSubmit(
   const endpoint = `https://formsubmit.co/ajax/${encodeURIComponent(TARGET_EMAIL)}`;
   const origin = process.env.SITE_ORIGIN || "https://aetheris.solutions";
 
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Origin: origin,
-      Referer: `${origin}/`,
-    },
-    body: JSON.stringify({
-      _subject: buildSubject(s),
-      _template: "table",
-      _replyto: s.email,
-      _captcha: "false",
-      _autoresponse:
-        "Grazie per averci scritto. Abbiamo ricevuto la tua richiesta — ti risponderemo entro 24h lavorative.\n\n— Aetheris Solutions",
-      Nome: s.name,
-      Email: s.email,
-      Azienda: s.company || "—",
-      Agente: s.agent ? AGENT_LABELS[s.agent] || s.agent : "—",
-      Sorgente: s.source || "homepage",
-      Messaggio: s.message || "(nessun messaggio)",
-      _full_text: buildPlainText(s),
-    }),
-  });
+  try {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        Origin: origin,
+        Referer: `${origin}/`,
+        "User-Agent":
+          "Mozilla/5.0 (compatible; AetherisHomepage/1.0; +https://aetheris.solutions)",
+      },
+      body: JSON.stringify({
+        _subject: buildSubject(s),
+        _template: "table",
+        _replyto: s.email,
+        _captcha: "false",
+        _autoresponse:
+          "Grazie per averci scritto. Abbiamo ricevuto la tua richiesta — ti risponderemo entro 24h lavorative.\n\n— Aetheris Solutions",
+        Nome: s.name,
+        Email: s.email,
+        Azienda: s.company || "—",
+        Agente: s.agent ? AGENT_LABELS[s.agent] || s.agent : "—",
+        Sorgente: s.source || "homepage",
+        Messaggio: s.message || "(nessun messaggio)",
+        _full_text: buildPlainText(s),
+      }),
+    });
 
-  const body = (await res.json().catch(() => ({}))) as {
-    success?: string;
-    message?: string;
-  };
+    const raw = await res.text().catch(() => "");
+    let body: { success?: string; message?: string } = {};
+    try {
+      body = raw ? JSON.parse(raw) : {};
+    } catch {
+      // Non-JSON response (rare, but possible if FormSubmit returns HTML)
+    }
 
-  // FormSubmit returns success:"false" with an activation message on the
-  // very first submission to a new recipient. Treat it as success — the
-  // recipient will activate the form by clicking the link in their inbox,
-  // and we don't want to show an error to the visitor.
-  const needsActivation =
-    typeof body?.message === "string" &&
-    /activat/i.test(body.message);
+    // FormSubmit returns success:"false" with an activation/confirmation
+    // message on the very first submission to a new recipient. Treat it as
+    // success — the recipient will activate the form by clicking the link
+    // in their inbox, and we don't want to show an error to the visitor.
+    const msg = body?.message || "";
+    const needsActivation =
+      /activat|confirm|verify|verifica|conferma/i.test(msg);
 
-  if (!res.ok || (body?.success === "false" && !needsActivation)) {
+    if (!res.ok || (body?.success === "false" && !needsActivation)) {
+      return {
+        ok: false,
+        provider: "formsubmit",
+        error: msg || `HTTP ${res.status}: ${raw.slice(0, 200)}`,
+      };
+    }
+
+    if (needsActivation) {
+      console.warn(
+        `[email] FormSubmit needs activation for ${TARGET_EMAIL} — ` +
+          "recipient must click the activation link sent to their inbox. " +
+          "After activation, all future submissions will be delivered."
+      );
+    }
+
+    return { ok: true, provider: "formsubmit" };
+  } catch (err) {
     return {
       ok: false,
       provider: "formsubmit",
-      error: body?.message || `HTTP ${res.status}`,
+      error: err instanceof Error ? err.message : String(err),
     };
   }
-
-  if (needsActivation) {
-    console.warn(
-      "[email] FormSubmit needs activation — recipient must click " +
-        "the activation link sent to their inbox. After activation, " +
-        "all future submissions will be delivered automatically."
-    );
-  }
-
-  return { ok: true, provider: "formsubmit" };
 }
 
 /* ------------------------------------------------------------------ */

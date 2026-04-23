@@ -74,27 +74,49 @@ export async function submitContact(
     // headers() may not be available in some test contexts
   }
 
-  // Persist to Supabase if configured (non-blocking on failure)
-  const dbResult = await saveSubmissionToSupabase({
-    ...submission,
-    ip,
-    userAgent,
-  });
-  if (dbResult.enabled && !dbResult.ok) {
-    console.warn("[supabase] save failed:", dbResult.error);
+  // Persist to Supabase if configured (non-blocking on failure).
+  // Wrapped in try/catch so a misconfigured DB never breaks email delivery.
+  try {
+    const dbResult = await saveSubmissionToSupabase({
+      ...submission,
+      ip,
+      userAgent,
+    });
+    if (dbResult.enabled && !dbResult.ok) {
+      console.warn("[supabase] save failed:", dbResult.error);
+    }
+  } catch (err) {
+    console.warn("[supabase] save threw:", err);
   }
 
-  // Send email (with provider fallback chain)
-  const emailResult = await sendContactEmail(submission);
+  // Send email (with provider fallback chain).
+  // Wrapped in try/catch so a network hiccup never returns a 500.
+  let emailResult;
+  try {
+    emailResult = await sendContactEmail(submission);
+  } catch (err) {
+    console.error("[contact] sendContactEmail threw:", err);
+    emailResult = {
+      ok: false as const,
+      provider: "exception",
+      error: err instanceof Error ? err.message : String(err),
+    };
+  }
 
   if (!emailResult.ok) {
-    console.error("[contact] email send failed:", emailResult.error);
+    console.error(
+      "[contact] email send failed:",
+      emailResult.provider,
+      emailResult.error
+    );
     return {
       status: "error",
       message:
         "Non siamo riusciti a inviare la richiesta. Riprova o scrivici direttamente a info@aetheris.solutions.",
     };
   }
+
+  console.info("[contact] email sent via", emailResult.provider);
 
   return {
     status: "success",
