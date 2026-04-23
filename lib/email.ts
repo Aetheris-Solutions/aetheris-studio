@@ -9,7 +9,7 @@
  */
 
 export const TARGET_EMAIL =
-  process.env.CONTACT_TO_EMAIL || "marouane.moustaid@aetheris.consulting";
+  process.env.CONTACT_TO_EMAIL || "maru@hey.com";
 
 export type ContactSubmission = {
   name: string;

@@ -17,7 +17,7 @@
  */
 
 const TARGET =
-  process.env.CONTACT_TO_EMAIL || "marouane.moustaid@aetheris.consulting";
+  process.env.CONTACT_TO_EMAIL || "maru@hey.com";
 
 const submission = {
   name: "Test Aetheris",
