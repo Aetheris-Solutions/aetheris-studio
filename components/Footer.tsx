@@ -85,8 +85,8 @@ export default function Footer() {
 
         <div className="mt-14 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between gap-3 text-[12.5px] text-ink-mute font-mono">
           <span>
-            © {new Date().getFullYear()} Aetheris Solutions S.r.l. · P.IVA
-            01234567890
+            © {new Date().getFullYear()} Aetheris Solutions · P.IVA
+            14468170965
           </span>
           <span className="flex gap-5">
             <a href="#" className="hover:text-ink-paper">
