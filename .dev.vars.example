@@ -1,0 +1,8 @@
+RECAPTCHA_SITE_KEY=
+RECAPTCHA_SECRET_KEY=
+RECAPTCHA_ALLOWED_HOSTNAMES=localhost,aetherisstudio.com,www.aetherisstudio.com
+RECAPTCHA_MIN_SCORE=0.5
+
+RESEND_API_KEY=
+RESEND_FROM_EMAIL=Aetheris Studio <website@aetherisstudio.com>
+CONTACT_TO_EMAIL=info@aetherisstudio.com
