@@ -48,16 +48,27 @@ async function evaluate(expression) {
 }
 
 await command("Runtime.enable");
-await new Promise((resolve) => setTimeout(resolve, 800));
+await command("Page.enable");
+await command("Emulation.setDeviceMetricsOverride", {
+  width: 390,
+  height: 844,
+  deviceScaleFactor: 1,
+  mobile: true,
+});
+await command("Page.reload", { ignoreCache: true });
+await new Promise((resolve) => setTimeout(resolve, 1200));
 
 const before = await evaluate(`(() => {
   const menu = document.querySelector(".w-nav-menu");
   const button = document.querySelector(".w-nav-button");
+  const dots = [...document.querySelectorAll(".w-slider-dot")];
   return {
     menuDisplay: getComputedStyle(menu).display,
     buttonDisplay: getComputedStyle(button).display,
     buttonClass: button.className,
-    slideCount: document.querySelectorAll(".w-slider .w-slide").length
+    slideCount: document.querySelectorAll(".w-slider .w-slide").length,
+    dotCount: dots.length,
+    activeDot: dots.findIndex((dot) => dot.classList.contains("w-active")),
   };
 })()`);
 
@@ -75,13 +86,48 @@ const after = await evaluate(`(() => {
   };
 })()`);
 
-console.log(JSON.stringify({ before, after }, null, 2));
+async function waitForActiveDotChange(previousIndex, timeoutMs = 12000) {
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < timeoutMs) {
+    const activeIndex = await evaluate(`(() => {
+      const dots = [...document.querySelectorAll(".w-slider-dot")];
+      return dots.findIndex((dot) => dot.classList.contains("w-active"));
+    })()`);
+    if (activeIndex >= 0 && activeIndex !== previousIndex) return activeIndex;
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  return null;
+}
+
+const firstSliderAdvance = await waitForActiveDotChange(before.activeDot);
+const secondSliderAdvance =
+  firstSliderAdvance === null
+    ? null
+    : await waitForActiveDotChange(firstSliderAdvance);
+
+console.log(
+  JSON.stringify(
+    {
+      before,
+      after,
+      slider: {
+        firstAdvance: firstSliderAdvance,
+        secondAdvance: secondSliderAdvance,
+      },
+    },
+    null,
+    2,
+  ),
+);
 
 if (
   before.buttonDisplay === "none" ||
   before.slideCount !== 8 ||
+  before.dotCount < 2 ||
   after.menuDisplay === "none" ||
-  !after.buttonClass.includes("w--open")
+  !after.buttonClass.includes("w--open") ||
+  firstSliderAdvance === null ||
+  secondSliderAdvance === null
 ) {
   throw new Error("Mobile interaction smoke test failed.");
 }
