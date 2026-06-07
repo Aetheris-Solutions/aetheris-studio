@@ -1,27 +1,12 @@
 {
-  "name": "aetheris-solutions-homepage",
-  "version": "0.1.0",
+  "name": "aetheris-studio",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint",
-    "test:email": "node scripts/test-email.mjs",
-    "test:email:real": "npx --yes tsx scripts/test-email-real.ts"
-  },
-  "dependencies": {
-    "next": "^16.2.4",
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  },
-  "devDependencies": {
-    "@types/node": "20.16.11",
-    "@types/react": "18.3.11",
-    "@types/react-dom": "18.3.0",
-    "autoprefixer": "10.4.20",
-    "postcss": "8.4.47",
-    "tailwindcss": "3.4.13",
-    "typescript": "5.6.3"
+    "dev": "python3 -m http.server 4173 --directory webflow-site",
+    "import:webflow": "node scripts/import-webflow.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "test:browser": "node scripts/browser-smoke.mjs"
   }
 }
