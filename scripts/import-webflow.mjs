@@ -17,6 +17,18 @@ const pages = [
   { route: "/cookies-policy", output: "cookies-policy/index.html" },
 ];
 
+function canonicalPath(route) {
+  return route === "/" ? "/" : `${route}/`;
+}
+
+function rewriteInternalLinks(html) {
+  for (const { route } of pages) {
+    if (route === "/") continue;
+    html = html.replaceAll(`href="${route}"`, `href="${canonicalPath(route)}"`);
+  }
+  return html;
+}
+
 const downloadableHosts = new Set([
   "cdn.prod.website-files.com",
   "d3e54v103j8qbb.cloudfront.net",
@@ -184,11 +196,13 @@ function rewritePage(html, route, assetMap) {
     .replace('data-wf-domain="aetheris-studio-stg.webflow.io"', 'data-wf-domain="aetherisstudio.com"')
     .replace(' data-wf-status="1"', "")
     .replace("<html ", '<html lang="en" ')
-    .replaceAll('href="#" class="contact-button', 'href="/contact" class="contact-button')
+    .replaceAll('href="#" class="contact-button', 'href="/contact/" class="contact-button')
     .replace(/\s+integrity="[^"]*"/g, "")
     .replace(/\s+crossorigin="anonymous"/g, "");
 
-  const canonical = route === "/" ? "/" : route;
+  html = rewriteInternalLinks(html);
+
+  const canonical = canonicalPath(route);
   html = html.replace(
     "</head>",
     `<link rel="canonical" href="${productionOrigin}${canonical}"/></head>`,
@@ -291,7 +305,7 @@ async function main() {
 ${pages
   .map(
     ({ route }) =>
-      `  <url><loc>${productionOrigin}${route === "/" ? "/" : route}</loc></url>`,
+      `  <url><loc>${productionOrigin}${canonicalPath(route)}</loc></url>`,
   )
   .join("\n")}
 </urlset>

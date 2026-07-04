@@ -32,8 +32,9 @@ The active domain is `aetherisstudio.com`. Add both:
 - `aetherisstudio.com`
 - `www.aetherisstudio.com`
 
-Choose one as canonical and redirect the other. The generated pages use
-`https://aetherisstudio.com` as canonical.
+`aetherisstudio.com` is canonical. `functions/_middleware.js` redirects
+`www.aetherisstudio.com` to the apex while preserving path and query string.
+The generated pages and sitemap use `https://aetherisstudio.com` canonical URLs.
 
 ## Email
 
