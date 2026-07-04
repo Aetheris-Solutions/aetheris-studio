@@ -116,14 +116,33 @@ async function fetchResource(url) {
   return response;
 }
 
-function rewriteAnalytics(html) {
-  const loader =
-    '<script async src="https://www.googletagmanager.com/gtag/js?id=G-JGLL5F1B9D"></script>';
+const GOOGLE_TAG_MANAGER_ID = "GTM-NP3QDXFS";
+const GOOGLE_TAG_MANAGER_HEAD = `<!-- Google Tag Manager --><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GOOGLE_TAG_MANAGER_ID}');</script><!-- End Google Tag Manager -->`;
+const GOOGLE_TAG_MANAGER_BODY = `<!-- Google Tag Manager (noscript) --><noscript><iframe src="https://www.googletagmanager.com/ns.html?id=${GOOGLE_TAG_MANAGER_ID}"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript><!-- End Google Tag Manager (noscript) -->`;
 
-  return html.replace(
-    /<script>\(function\(w,i,g\)[\s\S]*?<\/script><script async="" src="\/0oar[^"]+"><\/script>/,
-    loader,
-  );
+function rewriteAnalytics(html) {
+  html = html
+    .replace(
+      /<script async src="https:\/\/www\.googletagmanager\.com\/gtag\/js\?id=G-[^"]+"><\/script><script type="text\/javascript">window\.dataLayer[\s\S]*?gtag\('config', 'G-[^']+'\);<\/script>/g,
+      "",
+    )
+    .replace(
+      /<script>\(function\(w,i,g\)[\s\S]*?<\/script><script async="" src="\/0oar[^"]+"><\/script>/g,
+      "",
+    );
+
+  if (!html.includes(GOOGLE_TAG_MANAGER_ID)) {
+    html = html
+      .replace("<head>", `<head>${GOOGLE_TAG_MANAGER_HEAD}`)
+      .replace(/(<body[^>]*>)/, `$1${GOOGLE_TAG_MANAGER_BODY}`);
+  }
+
+  return html;
 }
 
 function rewriteContactForm(html) {
