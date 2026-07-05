@@ -1,12 +1,12 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
-const GOOGLE_TAG_MANAGER_ID = "GTM-NP3QDXFS";
+const GOOGLE_TAG_ID = "G-WL5GGPH5LS";
 const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
-const CONSENT_SCRIPT = "aetheris-analytics-consent.v1.js";
-const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=ec8de1e`;
+const CONSENT_SCRIPT = "aetheris-analytics-consent.v2.js";
+const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=29eeedf`;
 const GOAFFPRO_SCRIPT =
   "e029bcdc-66412d12cd05d437c465a049-65cb7898cbbe85d801f67382-68fcd1a97ec621129fc82785-goaffpro-1.0.0.js";
 
@@ -305,7 +305,7 @@ function stripManagedHead(html) {
       "",
     )
     .replace(
-      /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v1)\.js(?:\?v=[^"]+)?" type="text\/javascript" defer><\/script>/gi,
+      /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v[0-9]+)\.js(?:\?v=[^"]+)?" type="text\/javascript" defer><\/script>/gi,
       "",
     )
     .replace(/<!-- Google Tag Manager -->[\s\S]*?<!-- End Google Tag Manager -->/gi, "")
@@ -397,7 +397,7 @@ function analyticsConsentScript() {
   return `(function () {
   "use strict";
 
-  var tagManagerId = "${GOOGLE_TAG_MANAGER_ID}";
+  var googleTagId = "${GOOGLE_TAG_ID}";
   var storageKey = "aetheris.analyticsConsent";
   var loaded = false;
 
@@ -431,16 +431,17 @@ function analyticsConsentScript() {
   }
 
   function loadAnalytics() {
-    if (loaded || document.querySelector('script[data-aetheris-analytics="gtm"]')) return;
+    if (loaded || document.querySelector('script[data-aetheris-analytics="gtag"]')) return;
     loaded = true;
-    window.dataLayer.push({
-      "gtm.start": new Date().getTime(),
-      event: "gtm.js"
-    });
     var script = document.createElement("script");
     script.async = true;
-    script.dataset.aetherisAnalytics = "gtm";
-    script.src = "https://www.googletagmanager.com/gtm.js?id=" + encodeURIComponent(tagManagerId);
+    script.dataset.aetherisAnalytics = "gtag";
+    script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(googleTagId);
+    script.addEventListener("load", function () {
+      window.gtag("config", googleTagId, {
+        send_page_view: true
+      });
+    });
     document.head.appendChild(script);
   }
 
@@ -800,7 +801,7 @@ export async function applySeoToSite({
   await writeFile(path.join(outputRoot, "llms.txt"), llms(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "_headers"), headers(), "utf8");
 
-  return { pages: pages.length, tagManagerId: GOOGLE_TAG_MANAGER_ID };
+  return { pages: pages.length, googleTagId: GOOGLE_TAG_ID };
 }
 
 export { pages };
