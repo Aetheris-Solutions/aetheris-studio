@@ -67,7 +67,7 @@ test("public pages expose distinct static SEO metadata", async () => {
     assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image"/>'));
     assert.ok(
       html.includes(
-        '<script src="/assets/js/aetheris-analytics-consent.v2.js?v=29eeedf" type="text/javascript" defer></script>',
+        '<script src="/assets/js/aetheris-analytics-consent.v3.js?v=ga4-consent-mode" type="text/javascript" defer></script>',
       ),
     );
     assert.equal(count(html, /googletagmanager\.com\/gtag\/js\?id=/g), 0, `${page.file} raw GA loader`);
@@ -92,7 +92,7 @@ test("crawlability files and consent scripts are present", async () => {
   const robots = await readFile(path.join(root, "robots.txt"), "utf8");
   const llms = await readFile(path.join(root, "llms.txt"), "utf8");
   const headers = await readFile(path.join(root, "_headers"), "utf8");
-  const consent = await readFile(path.join(root, "assets/js/aetheris-analytics-consent.v2.js"), "utf8");
+  const consent = await readFile(path.join(root, "assets/js/aetheris-analytics-consent.v3.js"), "utf8");
   const goaffpro = await readFile(
     path.join(
       root,
@@ -117,6 +117,7 @@ test("crawlability files and consent scripts are present", async () => {
   assert.ok(consent.includes('analytics_storage: "denied"'));
   assert.ok(consent.includes("https://www.googletagmanager.com/gtag/js?id="));
   assert.ok(consent.includes('window.gtag("config", googleTagId'));
+  assert.ok(consent.includes("loadAnalytics();"));
   assert.ok(goaffpro.includes('window.localStorage.getItem(storageKey) === "granted"'));
   assert.ok(goaffpro.includes("aetheris:consent"));
   assert.ok(goaffpro.includes("https://api.goaffpro.com/loader.js"));

@@ -59,7 +59,6 @@
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
       detail: { analytics: granted }
     }));
-    if (granted) loadAnalytics();
   }
 
   window.aetherisTrack = function (eventName, params) {
@@ -132,8 +131,10 @@
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
+      loadAnalytics();
       return;
     }
+    loadAnalytics();
     renderBanner(false);
   });
 })();

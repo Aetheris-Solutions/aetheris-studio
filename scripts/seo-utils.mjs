@@ -5,8 +5,8 @@ const GOOGLE_TAG_ID = "G-WL5GGPH5LS";
 const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
-const CONSENT_SCRIPT = "aetheris-analytics-consent.v2.js";
-const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=29eeedf`;
+const CONSENT_SCRIPT = "aetheris-analytics-consent.v3.js";
+const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=ga4-consent-mode`;
 const GOAFFPRO_SCRIPT =
   "e029bcdc-66412d12cd05d437c465a049-65cb7898cbbe85d801f67382-68fcd1a97ec621129fc82785-goaffpro-1.0.0.js";
 
@@ -455,7 +455,6 @@ function analyticsConsentScript() {
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
       detail: { analytics: granted }
     }));
-    if (granted) loadAnalytics();
   }
 
   window.aetherisTrack = function (eventName, params) {
@@ -528,8 +527,10 @@ function analyticsConsentScript() {
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
+      loadAnalytics();
       return;
     }
+    loadAnalytics();
     renderBanner(false);
   });
 })();`;
