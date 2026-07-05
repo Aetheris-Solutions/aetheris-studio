@@ -6,6 +6,7 @@ const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
 const CONSENT_SCRIPT = "aetheris-analytics-consent.v1.js";
+const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=ec8de1e`;
 const GOAFFPRO_SCRIPT =
   "e029bcdc-66412d12cd05d437c465a049-65cb7898cbbe85d801f67382-68fcd1a97ec621129fc82785-goaffpro-1.0.0.js";
 
@@ -283,7 +284,7 @@ function managedHead(origin, page) {
     `<meta name="twitter:description" content="${escapeAttribute(page.description)}"/>`,
     `<meta name="twitter:image" content="${escapeAttribute(image)}"/>`,
     `<script type="application/ld+json">${jsonLd}</script>`,
-    `<script src="/assets/js/${CONSENT_SCRIPT}" type="text/javascript" defer></script>`,
+    `<script src="${CONSENT_SCRIPT_SRC}" type="text/javascript" defer></script>`,
   ].join("");
 }
 
@@ -304,7 +305,7 @@ function stripManagedHead(html) {
       "",
     )
     .replace(
-      /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v1)\.js" type="text\/javascript" defer><\/script>/gi,
+      /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v1)\.js(?:\?v=[^"]+)?" type="text\/javascript" defer><\/script>/gi,
       "",
     )
     .replace(/<!-- Google Tag Manager -->[\s\S]*?<!-- End Google Tag Manager -->/gi, "")

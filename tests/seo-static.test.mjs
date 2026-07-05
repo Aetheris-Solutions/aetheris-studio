@@ -65,7 +65,11 @@ test("public pages expose distinct static SEO metadata", async () => {
     assert.ok(html.includes(`<link rel="canonical" href="${canonical(page.route)}"/>`));
     assert.ok(html.includes(`<meta property="og:url" content="${canonical(page.route)}"/>`));
     assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image"/>'));
-    assert.ok(html.includes('<script src="/assets/js/aetheris-analytics-consent.v1.js" type="text/javascript" defer></script>'));
+    assert.ok(
+      html.includes(
+        '<script src="/assets/js/aetheris-analytics-consent.v1.js?v=ec8de1e" type="text/javascript" defer></script>',
+      ),
+    );
     assert.equal(count(html, /googletagmanager\.com\/gtag\/js\?id=/g), 0, `${page.file} raw GA loader`);
     assert.equal(count(html, /googletagmanager\.com\/gtm\.js\?id=/g), 0, `${page.file} raw GTM loader`);
     assert.equal(count(html, /googletagmanager\.com\/ns\.html\?id=/g), 0, `${page.file} raw GTM noscript`);
