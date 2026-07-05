@@ -65,7 +65,7 @@ test("public pages expose distinct static SEO metadata", async () => {
     assert.ok(html.includes(`<link rel="canonical" href="${canonical(page.route)}"/>`));
     assert.ok(html.includes(`<meta property="og:url" content="${canonical(page.route)}"/>`));
     assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image"/>'));
-    assert.ok(html.includes('<script src="/assets/js/analytics-consent.js" type="text/javascript" defer></script>'));
+    assert.ok(html.includes('<script src="/assets/js/aetheris-analytics-consent.v1.js" type="text/javascript" defer></script>'));
     assert.equal(count(html, /googletagmanager\.com\/gtag\/js\?id=/g), 0, `${page.file} raw GA loader`);
     assert.equal(count(html, /googletagmanager\.com\/gtm\.js\?id=/g), 0, `${page.file} raw GTM loader`);
     assert.equal(count(html, /googletagmanager\.com\/ns\.html\?id=/g), 0, `${page.file} raw GTM noscript`);
@@ -88,7 +88,7 @@ test("crawlability files and consent scripts are present", async () => {
   const robots = await readFile(path.join(root, "robots.txt"), "utf8");
   const llms = await readFile(path.join(root, "llms.txt"), "utf8");
   const headers = await readFile(path.join(root, "_headers"), "utf8");
-  const consent = await readFile(path.join(root, "assets/js/analytics-consent.js"), "utf8");
+  const consent = await readFile(path.join(root, "assets/js/aetheris-analytics-consent.v1.js"), "utf8");
   const goaffpro = await readFile(
     path.join(
       root,

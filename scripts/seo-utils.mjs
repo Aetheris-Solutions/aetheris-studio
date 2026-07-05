@@ -5,6 +5,7 @@ const GOOGLE_TAG_MANAGER_ID = "GTM-NP3QDXFS";
 const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
+const CONSENT_SCRIPT = "aetheris-analytics-consent.v1.js";
 const GOAFFPRO_SCRIPT =
   "e029bcdc-66412d12cd05d437c465a049-65cb7898cbbe85d801f67382-68fcd1a97ec621129fc82785-goaffpro-1.0.0.js";
 
@@ -282,7 +283,7 @@ function managedHead(origin, page) {
     `<meta name="twitter:description" content="${escapeAttribute(page.description)}"/>`,
     `<meta name="twitter:image" content="${escapeAttribute(image)}"/>`,
     `<script type="application/ld+json">${jsonLd}</script>`,
-    `<script src="/assets/js/analytics-consent.js" type="text/javascript" defer></script>`,
+    `<script src="/assets/js/${CONSENT_SCRIPT}" type="text/javascript" defer></script>`,
   ].join("");
 }
 
@@ -303,7 +304,7 @@ function stripManagedHead(html) {
       "",
     )
     .replace(
-      /<script src="\/assets\/js\/analytics-consent\.js" type="text\/javascript" defer><\/script>/gi,
+      /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v1)\.js" type="text\/javascript" defer><\/script>/gi,
       "",
     )
     .replace(/<!-- Google Tag Manager -->[\s\S]*?<!-- End Google Tag Manager -->/gi, "")
@@ -783,7 +784,7 @@ export async function applySeoToSite({
 
   await mkdir(path.join(outputRoot, "assets/js"), { recursive: true });
   await writeFile(
-    path.join(outputRoot, "assets/js/analytics-consent.js"),
+    path.join(outputRoot, "assets/js", CONSENT_SCRIPT),
     analyticsConsentScript(),
     "utf8",
   );
