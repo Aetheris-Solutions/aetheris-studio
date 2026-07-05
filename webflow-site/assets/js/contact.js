@@ -110,6 +110,13 @@
           );
         }
 
+        if (window.aetherisTrack) {
+          window.aetherisTrack("contact_form_submit", {
+            form_id: "email-form",
+            event_category: "lead",
+          });
+        }
+
         form.style.display = "none";
         if (success) success.style.display = "block";
         form.reset();

@@ -4632,3 +4632,96 @@ p {
   color: inherit;
   text-decoration: underline;
 }
+
+/* Aetheris SEO and consent additions */
+h1.text-block-10,
+h2.section-heading,
+h2.heading-2,
+h2.heading-10,
+h2.project-name-preview,
+h3.stage-heading {
+  margin-top: 0;
+}
+
+.aetheris-cookie-banner {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 9999;
+  display: flex;
+  max-width: min(420px, calc(100vw - 32px));
+  gap: 16px;
+  align-items: center;
+  padding: 16px;
+  color: #f7f7f2;
+  background: #111;
+  border: 1px solid rgba(244, 201, 93, 0.65);
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+}
+
+.aetheris-cookie-banner p {
+  margin: 0;
+  color: #f7f7f2;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.aetheris-cookie-actions {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.aetheris-cookie-banner button,
+.aetheris-cookie-preferences {
+  border: 1px solid #f4c95d;
+  border-radius: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.aetheris-cookie-banner button {
+  min-height: 38px;
+  padding: 0 12px;
+  font-size: 0.75rem;
+}
+
+.aetheris-cookie-accept {
+  color: #111;
+  background: #f4c95d;
+}
+
+.aetheris-cookie-reject {
+  color: #f7f7f2;
+  background: transparent;
+}
+
+.aetheris-cookie-preferences {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 9998;
+  padding: 9px 11px;
+  color: #111;
+  background: rgba(247, 247, 242, 0.94);
+  font-size: 0.72rem;
+}
+
+@media screen and (max-width: 560px) {
+  .aetheris-cookie-banner {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: none;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .aetheris-cookie-actions {
+    justify-content: stretch;
+  }
+
+  .aetheris-cookie-actions button {
+    flex: 1 1 0;
+  }
+}

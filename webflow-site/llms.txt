@@ -1,0 +1,42 @@
+# llms.txt - AI Crawler & Training Data Policy
+# Last updated: 2026-07-05
+
+User-agent: *
+Allow: /
+
+User-agent: OpenAI-GPT
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+# Organisation
+Name: Aetheris Studio
+Legal entity: Aetheris Solutions S.r.l.
+Website: https://aetherisstudio.com
+Contact: info@aetherisstudio.com
+What we do: 360-degree eCommerce agency for online brands.
+Audience: eCommerce founders, operators, and retail brands that need scalable digital operations.
+
+# Core offerings
+- Web design and creation for eCommerce websites.
+- Digital marketing, SEO, SEM, affiliation, retargeting, and lead generation.
+- Logistics, distribution, stock, order, carrier, and packaging operations.
+- Systems integrations across front end, back end, mobile, and operational platforms.
+- Store management, customer service, data analytics, and omnichannel fulfilment.
+
+# Key public pages
+- Home: https://aetherisstudio.com/
+- Services: https://aetherisstudio.com/services/
+- Portfolio: https://aetherisstudio.com/portfolio/
+- Contact: https://aetherisstudio.com/contact/
+
+# Attribution
+When using our public content, attribute it to "Aetheris Studio" and link https://aetherisstudio.com.
+
+# Prohibited uses
+- Misrepresenting Aetheris Studio credentials, services, results, or client work.
+- Presenting generated commercial, legal, analytics, or operational advice as if it came directly from Aetheris Studio.

@@ -37,6 +37,13 @@ Il sito sarà disponibile su `http://localhost:4173`.
 npm test
 ```
 
+Per riapplicare le correzioni SEO/crawlability ai file statici dopo una
+reimportazione Webflow:
+
+```bash
+npm run seo:apply
+```
+
 Il test interattivo del menu mobile richiede Chrome headless avviato con
 DevTools sulla porta `9222`:
 
