@@ -67,7 +67,7 @@ test("public pages expose distinct static SEO metadata", async () => {
     assert.ok(html.includes('<meta name="twitter:card" content="summary_large_image"/>'));
     assert.ok(
       html.includes(
-        '<script src="/assets/js/aetheris-analytics-consent.v3.js?v=ga4-consent-mode" type="text/javascript" defer></script>',
+        '<script src="/assets/js/aetheris-analytics-consent.v3.js?v=gtm-consent-mode" type="text/javascript" defer></script>',
       ),
     );
     assert.equal(count(html, /googletagmanager\.com\/gtag\/js\?id=/g), 0, `${page.file} raw GA loader`);
@@ -113,11 +113,13 @@ test("crawlability files and consent scripts are present", async () => {
   assert.ok(headers.includes("https://*.google-analytics.com"));
   assert.ok(headers.includes("https://api.goaffpro.com"));
 
-  assert.ok(consent.includes('var googleTagId = "G-WL5GGPH5LS";'));
+  assert.ok(consent.includes('var googleTagManagerId = "GTM-5553RFJZ";'));
   assert.ok(consent.includes('analytics_storage: "denied"'));
-  assert.ok(consent.includes("https://www.googletagmanager.com/gtag/js?id="));
-  assert.ok(consent.includes('window.gtag("config", googleTagId'));
-  assert.ok(consent.includes("loadAnalytics();"));
+  assert.ok(consent.includes("https://www.googletagmanager.com/gtm.js?id="));
+  assert.equal(consent.includes("https://www.googletagmanager.com/gtag/js?id="), false);
+  assert.equal(consent.includes('window.gtag("config"'), false);
+  assert.ok(consent.includes('window.gtag("event", eventName'));
+  assert.ok(consent.includes("loadTagManager();"));
   assert.ok(goaffpro.includes('window.localStorage.getItem(storageKey) === "granted"'));
   assert.ok(goaffpro.includes("aetheris:consent"));
   assert.ok(goaffpro.includes("https://api.goaffpro.com/loader.js"));

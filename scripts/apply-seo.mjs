@@ -12,5 +12,5 @@ const result = await applySeoToSite({
 });
 
 console.log(
-  `Applied SEO, crawlability, and analytics consent updates to ${result.pages} pages using Google tag ${result.googleTagId}.`,
+  `Applied SEO, crawlability, and analytics consent updates to ${result.pages} pages using Google Tag Manager ${result.googleTagManagerId}.`,
 );

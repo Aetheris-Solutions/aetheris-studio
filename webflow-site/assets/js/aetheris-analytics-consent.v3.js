@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var googleTagId = "G-WL5GGPH5LS";
+  var googleTagManagerId = "GTM-5553RFJZ";
   var storageKey = "aetheris.analyticsConsent";
   var loaded = false;
 
@@ -16,8 +16,6 @@
     ad_personalization: "denied",
     analytics_storage: "denied"
   });
-  window.gtag("js", new Date());
-
   function currentChoice() {
     try {
       return window.localStorage.getItem(storageKey);
@@ -34,18 +32,17 @@
     }
   }
 
-  function loadAnalytics() {
-    if (loaded || document.querySelector('script[data-aetheris-analytics="gtag"]')) return;
+  function loadTagManager() {
+    if (loaded || document.querySelector('script[data-aetheris-analytics="gtm"]')) return;
     loaded = true;
+    window.dataLayer.push({
+      "gtm.start": new Date().getTime(),
+      event: "gtm.js"
+    });
     var script = document.createElement("script");
     script.async = true;
-    script.dataset.aetherisAnalytics = "gtag";
-    script.src = "https://www.googletagmanager.com/gtag/js?id=" + encodeURIComponent(googleTagId);
-    script.addEventListener("load", function () {
-      window.gtag("config", googleTagId, {
-        send_page_view: true
-      });
-    });
+    script.dataset.aetherisAnalytics = "gtm";
+    script.src = "https://www.googletagmanager.com/gtm.js?id=" + encodeURIComponent(googleTagManagerId);
     document.head.appendChild(script);
   }
 
@@ -63,8 +60,8 @@
 
   window.aetherisTrack = function (eventName, params) {
     if (currentChoice() !== "granted") return;
-    loadAnalytics();
-    window.dataLayer.push(Object.assign({ event: eventName }, params || {}));
+    loadTagManager();
+    window.gtag("event", eventName, params || {});
   };
 
   function removeBanner() {
@@ -131,10 +128,10 @@
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
-      loadAnalytics();
+      loadTagManager();
       return;
     }
-    loadAnalytics();
+    loadTagManager();
     renderBanner(false);
   });
 })();
