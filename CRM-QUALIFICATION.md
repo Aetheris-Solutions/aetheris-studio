@@ -11,7 +11,7 @@
 - The existing six bindings are present as encrypted values in both Pages `production` and `preview`: `ATTIO_API_KEY`, `ATTIO_WEBSITE_INBOUND_LIST_ID`, `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`, `ALLOWED_ORIGINS`, `TURNSTILE_EXPECTED_HOSTNAMES`.
 - The fixed internal Attio People record is provisioned. Its UUID is pinned server-side to the verified live Website Inbound list ID and may be overridden with `ATTIO_WEBSITE_INTAKE_RECORD_ID` in hosting. This is intentionally not a submitted lead; unknown list configurations still fail closed while the binding is absent.
 
-No real lead was created while provisioning these resources. The first end-to-end CRM smoke remains a separately authorised launch action.
+No real customer lead was created while provisioning these resources. One explicitly authorised synthetic QA submission was subsequently written and read back through the final Function contract; its identifiers and assertions are recorded in `PROOF-LAYER-QA.md`.
 
 The public form posts JSON to the same-origin endpoint `POST /api/qualification`. The Cloudflare Pages Function validates and scores the request before writing to Attio. The browser never receives an Attio key, an internal score, an Attio record ID, or another lead's data.
 

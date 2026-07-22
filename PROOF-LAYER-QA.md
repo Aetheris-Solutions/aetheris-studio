@@ -11,7 +11,8 @@ Date: 22 July 2026
 
 ## Automated gates
 
-- Targeted Attio boundary and retry suite: 2 files, 19/19 tests passed. Re-run the full `npm test` gate after all concurrent launch changes are integrated.
+- Full `npm test` gate: 40/40 Vitest checks plus 11/11 legacy/static checks passed (51/51 total).
+- Targeted Attio boundary and retry suite: 2 files, 19/19 tests passed.
 - `npm run build`: TypeScript and Vite production build passed.
 - Dynamic contrast: 32/32 sampled desktop, mobile and tablet frames passed; stable and every-frame gates passed.
 - Attio tests use a fetch double. No real Turnstile token, Attio record or Cal.com booking was created.
@@ -48,4 +49,4 @@ Date: 22 July 2026
 - [x] Existing Cloudflare bindings stored encrypted in both production and preview.
 - [x] Dedicated managed Turnstile widget created with the canonical hostname allowlist.
 - [x] Create the five additional Website Inbound identity attributes and provision the fixed internal intake record. The verified live list/record pair is pinned in the server Function; hosting may supply `ATTIO_WEBSITE_INTAKE_RECORD_ID` as an override.
-- [ ] Perform one explicitly authorised synthetic submission and verify the fixed parent ID, unique Website Inbound entry, canonical evidence hash and full ledger. Confirm that no submitted Person or Company was queried, created or modified. No real lead was created during provisioning.
+- [x] Explicitly authorised synthetic submission written and read back: submission `website_smoke_1784756927748-6cb84c09`, entry `f410cbef-2f8f-4bfc-9bfd-ac3ddb35d319`, fixed parent `02ec4555-ba27-4799-a2ce-b0468d3aff0e`. All eleven entry fields, canonical SHA-256, ledger identity/consent/security flags and token exclusion verified. The official Cloudflare always-pass testing credential exercised Siteverify; no submitted Person record was created and the Function has no submitted Company write path.
