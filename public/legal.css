@@ -333,6 +333,7 @@ a:focus-visible {
 
 .legal-document {
   width: min(100%, calc(var(--measure) + var(--page-gutter) * 2));
+  min-width: 0;
   padding: 3.5rem var(--page-gutter) clamp(6rem, 10vw, 10rem);
 }
 
@@ -400,9 +401,18 @@ a:focus-visible {
 }
 
 .policy-table-wrap {
+  width: 100%;
+  max-width: 100%;
   margin: 2rem 0;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
   border: 1px solid var(--line);
+  -webkit-overflow-scrolling: touch;
+}
+
+.policy-table-wrap:focus-visible {
+  outline: 0.16rem solid var(--celestial);
+  outline-offset: 0.2rem;
 }
 
 .policy-table {
@@ -542,4 +552,3 @@ a:focus-visible {
     scroll-behavior: auto;
   }
 }
-

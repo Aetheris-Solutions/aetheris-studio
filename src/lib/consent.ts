@@ -366,6 +366,9 @@ function expireCookie(name: string): void {
     if (hostname === 'aetherisstudio.com' || hostname.endsWith('.aetherisstudio.com')) {
       hosts.add('.aetherisstudio.com');
     }
+    if (hostname === 'aetheris-studio.pages.dev' || hostname.endsWith('.aetheris-studio.pages.dev')) {
+      hosts.add('.aetheris-studio.pages.dev');
+    }
   }
 
   for (const domain of hosts) {

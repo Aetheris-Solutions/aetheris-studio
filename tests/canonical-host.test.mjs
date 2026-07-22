@@ -16,6 +16,7 @@ test("redirects www host to apex while preserving path and query", async () => {
     response.headers.get("location"),
     "https://aetherisstudio.com/services/?utm=test",
   );
+  assert.equal(response.headers.get("strict-transport-security"), "max-age=31536000");
 });
 
 test("passes canonical host requests through", async () => {
@@ -30,6 +31,7 @@ test("passes canonical host requests through", async () => {
   assert.equal(await response.text(), "ok");
   assert.match(response.headers.get("content-security-policy"), /challenges\.cloudflare\.com/);
   assert.equal(response.headers.get("cache-control"), "no-cache");
+  assert.equal(response.headers.get("strict-transport-security"), "max-age=31536000");
 });
 
 test("redirects legacy indexed routes to their new homepage sections", async () => {
@@ -42,6 +44,7 @@ test("redirects legacy indexed routes to their new homepage sections", async () 
 
   assert.equal(response.status, 301);
   assert.equal(response.headers.get("location"), "https://aetherisstudio.com/?utm=test#work");
+  assert.equal(response.headers.get("strict-transport-security"), "max-age=31536000");
 });
 
 test("blocks preview crawling at robots.txt before serving static content", async () => {
@@ -56,4 +59,5 @@ test("blocks preview crawling at robots.txt before serving static content", asyn
   assert.equal(await response.text(), "User-agent: *\nDisallow: /\n");
   assert.equal(response.headers.get("cache-control"), "no-store");
   assert.equal(response.headers.get("x-robots-tag"), "noindex, nofollow, noarchive");
+  assert.equal(response.headers.get("strict-transport-security"), "max-age=31536000");
 });

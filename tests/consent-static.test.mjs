@@ -13,6 +13,7 @@ test('production security policies allow only the consented analytics providers'
     assert.match(policy, /https:\/\/\*\.google-analytics\.com/);
     assert.match(policy, /https:\/\/\*\.clarity\.ms/);
     assert.match(policy, /https:\/\/c\.bing\.com/);
+    assert.match(policy, /Strict-Transport-Security/);
   }
 });
 
@@ -28,4 +29,10 @@ test('GTM is initialised through the consent bootstrap rather than index markup'
   assert.match(consent, /GTM-5553RFJZ/);
   assert.match(consent, /analytics_storage: 'denied'/);
   assert.match(consent, /document\.head\.appendChild\(script\)/);
+});
+
+test('Turnstile is deferred until the final qualification step', async () => {
+  const qualification = await readFile('src/components/QualificationForm.tsx', 'utf8');
+
+  assert.match(qualification, /TURNSTILE_SITE_KEY && step === 3/);
 });

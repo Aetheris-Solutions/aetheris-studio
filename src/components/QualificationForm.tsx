@@ -342,6 +342,10 @@ export function QualificationForm() {
   };
 
   const goToStep = (nextStep: number) => {
+    if (step === 3 && nextStep < 3 && TURNSTILE_SITE_KEY) {
+      setTurnstileToken('');
+      setTurnstileResetKey((current) => current + 1);
+    }
     setStep(nextStep);
     setErrors({});
     requestAnimationFrame(() => stepHeadingRef.current?.focus({ preventScroll: true }));
@@ -938,7 +942,7 @@ export function QualificationForm() {
               />
             </div>
 
-            {TURNSTILE_SITE_KEY && (
+            {TURNSTILE_SITE_KEY && step === 3 && (
               <div className="qualification-security qualification-field--wide">
                 <TurnstileField
                   key={turnstileResetKey}

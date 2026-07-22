@@ -26,9 +26,20 @@ const SECURITY_HEADERS = {
   "Content-Security-Policy": CONTENT_SECURITY_POLICY,
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+  "Strict-Transport-Security": "max-age=31536000",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
 };
+
+function redirectWithSecurityHeaders(url, status = 301) {
+  return new Response(null, {
+    status,
+    headers: {
+      Location: url,
+      ...SECURITY_HEADERS,
+    },
+  });
+}
 
 export async function onRequest(context) {
   const url = new URL(context.request.url);
@@ -36,7 +47,7 @@ export async function onRequest(context) {
 
   if (hostname === WWW_HOST) {
     url.hostname = CANONICAL_HOST;
-    return Response.redirect(url.toString(), 301);
+    return redirectWithSecurityHeaders(url.toString());
   }
 
   if (hostname.endsWith(PAGES_PREVIEW_SUFFIX) && url.pathname === "/robots.txt") {
@@ -56,7 +67,7 @@ export async function onRequest(context) {
     const [pathname, hash] = legacyTarget.split("#");
     url.pathname = pathname;
     url.hash = hash ? `#${hash}` : "";
-    return Response.redirect(url.toString(), 301);
+    return redirectWithSecurityHeaders(url.toString());
   }
 
   const response = await context.next();

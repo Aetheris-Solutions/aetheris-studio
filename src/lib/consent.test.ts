@@ -49,6 +49,7 @@ function installBrowser() {
     scripts.set(script.id, script);
     return script;
   });
+  const cookieWrites: string[] = [];
   let cookieValue = '_ga=analytics; _clck=clarity; _gcl_aw=marketing';
 
   const location = {
@@ -116,6 +117,7 @@ function installBrowser() {
       return cookieValue;
     },
     set cookie(value: string) {
+      cookieWrites.push(value);
       cookieValue = value;
     }
   };
@@ -143,6 +145,7 @@ function installBrowser() {
     listeners,
     appendChild,
     scripts,
+    cookieWrites,
     browserWindow,
     history
   };
@@ -247,6 +250,21 @@ describe('consent management', () => {
     expect(browser.removeItem).toHaveBeenCalledWith('aetheris_studio_attribution_v1');
     expect(browser.scripts.size).toBe(0);
     expect(browser.browserWindow.__aetherisGtmLoaded).toBe(false);
+  });
+
+  it('expires analytics cookies on the project-scoped Cloudflare Pages parent domain', () => {
+    const browser = installBrowser();
+    browser.browserWindow.location.hostname = '59c04be7.aetheris-studio.pages.dev';
+    initialiseConsentManagement();
+
+    saveConsent({ analytics: false, marketing: false }, 'preferences');
+
+    const pagesExpiry = browser.cookieWrites.find((write) => (
+      write.includes('Domain=.aetheris-studio.pages.dev') && write.startsWith('_ga=')
+    ));
+    expect(pagesExpiry, browser.cookieWrites.join('\n')).toBe(
+      '_ga=; Max-Age=0; Path=/; Domain=.aetheris-studio.pages.dev; SameSite=Lax'
+    );
   });
 
   it('falls through to a valid local choice when session storage is blocked', () => {
