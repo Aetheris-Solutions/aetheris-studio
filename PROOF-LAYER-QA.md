@@ -11,7 +11,7 @@ Date: 22 July 2026
 
 ## Automated gates
 
-- `npm test`: 3 files, 20/20 tests passed.
+- Targeted Attio boundary and retry suite: 2 files, 19/19 tests passed. Re-run the full `npm test` gate after all concurrent launch changes are integrated.
 - `npm run build`: TypeScript and Vite production build passed.
 - Dynamic contrast: 32/32 sampled desktop, mobile and tablet frames passed; stable and every-frame gates passed.
 - Attio tests use a fetch double. No real Turnstile token, Attio record or Cal.com booking was created.
@@ -33,15 +33,19 @@ Date: 22 July 2026
 
 - Browser → same-origin `POST /api/qualification`; no Attio credential is present in the client bundle.
 - Origin, content type, 32 KB body limit, honeypot and server-side Turnstile validation fail closed.
-- Company is upserted by domain; person by work email; the list entry is asserted with `PUT` into the dedicated Website Inbound list.
-- Writes are limited to `aetheris_business_unit`, `aetheris_priority` and append-only `aetheris_hook_log`. Outbound track/status fields are untouched.
-- Existing hook history is never truncated to make room for a new submission.
+- No submitted Person or Company is queried, created or updated from unverified public claims.
+- Every entry is parented to one pre-provisioned internal intake record used only as the stable technical parent for the People-backed Website Inbound list.
+- Every submission is a separate Website Inbound entry created with `POST`. Identity remains in dedicated entry attributes, never canonical Person/Company fields.
+- Unique `website_submission_id` plus a contract-versioned hash of canonical source evidence makes an unchanged ambiguous retry idempotent. The hash excludes derived scoring, server time and Turnstile token.
+- The browser freezes the attempt payload across ambiguous retries and refreshes only Turnstile. Form or consent changes mint a new attempt.
+- Outbound and canonical lead fields are untouched. The ledger records Turnstile-only identity assurance and blocks marketing activation until email verification.
 - The browser receives only `qualified` or `review`; score, reasons and Attio IDs remain server-side.
 - Analytics uses a non-PII allowlist. Contact data, free text, store URL and click IDs stay out of `dataLayer`.
 
 ## Live CRM activation state
 
 - [x] Dedicated Attio **Website Inbound** list created and independently read back.
-- [x] Required Cloudflare bindings stored encrypted in both production and preview.
+- [x] Existing Cloudflare bindings stored encrypted in both production and preview.
 - [x] Dedicated managed Turnstile widget created with the canonical hostname allowlist.
-- [ ] Perform one explicitly authorised synthetic submission and verify the resulting Attio company, person, hook ledger and list entry. No real lead was created during provisioning.
+- [x] Create the five additional Website Inbound identity attributes and provision the fixed internal intake record. The verified live list/record pair is pinned in the server Function; hosting may supply `ATTIO_WEBSITE_INTAKE_RECORD_ID` as an override.
+- [ ] Perform one explicitly authorised synthetic submission and verify the fixed parent ID, unique Website Inbound entry, canonical evidence hash and full ledger. Confirm that no submitted Person or Company was queried, created or modified. No real lead was created during provisioning.

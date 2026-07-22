@@ -8,9 +8,9 @@ const LEGACY_ROUTE_TARGETS = new Map([
 ]);
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com",
-  "connect-src 'self' https://challenges.cloudflare.com",
-  "img-src 'self' data: blob:",
+  "script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms",
+  "connect-src 'self' https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://c.bing.com",
+  "img-src 'self' data: blob: https://www.google-analytics.com https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms https://c.bing.com",
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self'",
   "frame-src https://challenges.cloudflare.com",

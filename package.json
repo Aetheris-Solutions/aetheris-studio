@@ -11,6 +11,7 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "qa:contrast": "npm run build && node qa/dynamic-contrast.mjs",
+    "qa:consent": "node qa/consent-network.mjs",
     "test": "vitest run && npm run test:legacy",
     "test:legacy": "node --test tests/*.test.mjs",
     "test:watch": "vitest"

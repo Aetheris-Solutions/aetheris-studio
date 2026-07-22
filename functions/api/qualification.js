@@ -1,6 +1,25 @@
 const MAX_BODY_BYTES = 32 * 1024;
 const ATTIO_API_BASE = "https://api.attio.com/v2";
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const QUALIFICATION_NOTICE_VERSION = "2026-07-22";
+const ANALYTICS_CONSENT_SCHEMA_VERSION = "1";
+const WEBSITE_PAYLOAD_CONTRACT_VERSION = 1;
+const KNOWN_INTAKE_RECORDS = new Map([
+  ["ea94e071-c5a1-4255-aff3-429b033c7d39", "02ec4555-ba27-4799-a2ce-b0468d3aff0e"],
+]);
+const WEBSITE_ENTRY_ATTRIBUTES = Object.freeze({
+  submissionId: "website_submission_id",
+  receivedAt: "website_received_at",
+  payloadSha256: "website_payload_sha256",
+  ledgerJson: "website_ledger_json",
+  fit: "website_fit",
+  priority: "website_priority",
+  contactName: "website_contact_name",
+  workEmail: "website_work_email",
+  role: "website_role",
+  company: "website_company",
+  storeUrl: "website_store_url",
+});
 
 const REVENUE_ALIASES = new Map([
   ["under-500k", "under-500k"],
@@ -78,6 +97,12 @@ function cleanString(value, maxLength) {
   return value.replace(/\u0000/g, "").trim().slice(0, maxLength);
 }
 
+function resolveIntakeRecordId(env) {
+  const configured = cleanString(env.ATTIO_WEBSITE_INTAKE_RECORD_ID, 100);
+  if (configured) return configured;
+  return KNOWN_INTAKE_RECORDS.get(cleanString(env.ATTIO_WEBSITE_INBOUND_LIST_ID, 100)) || "";
+}
+
 function canonical(value, aliases) {
   const cleaned = cleanString(value, 80).toLowerCase();
   return aliases.get(cleaned) || "";
@@ -96,10 +121,19 @@ function normalizeUrl(value, { required = false } = {}) {
   }
 }
 
+function normalizeAttributionUrl(value) {
+  const normalized = normalizeUrl(value);
+  if (!normalized) return "";
+  const url = new URL(normalized);
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
 function normalizeAttribution(raw) {
   const input = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const landingUrl = normalizeUrl(input.landingUrl);
-  const referrer = normalizeUrl(input.referrer);
+  const landingUrl = normalizeAttributionUrl(input.landingUrl);
+  const referrer = normalizeAttributionUrl(input.referrer);
   return {
     utmSource: cleanString(input.utmSource, 180),
     utmMedium: cleanString(input.utmMedium, 180),
@@ -139,10 +173,18 @@ export function validateSubmission(raw) {
   const constraint = cleanString(input.constraint, 1200);
   const privacyVersion = cleanString(input.privacyVersion, 64);
   const privacyAcceptedAt = cleanString(input.privacyAcceptedAt, 64);
+  const marketingConsent = input.marketingConsent === true;
+  const marketingConsentAt = cleanString(input.marketingConsentAt, 64);
+  const marketingConsentVersion = cleanString(input.marketingConsentVersion, 64);
+  const marketingConsentSource = cleanString(input.marketingConsentSource, 64);
+  const analyticsConsent = input.analyticsConsent === true;
+  const analyticsConsentAt = cleanString(input.analyticsConsentAt, 64);
+  const analyticsConsentVersion = cleanString(input.analyticsConsentVersion, 64);
+  const analyticsConsentSource = cleanString(input.analyticsConsentSource, 64);
   const turnstileToken = cleanString(input.turnstileToken, 2048);
 
   const workstreams = Array.isArray(input.workstreams)
-    ? [...new Set(input.workstreams.map((item) => cleanString(item, 100).toLowerCase()).filter(Boolean))].slice(0, 12)
+    ? [...new Set(input.workstreams.map((item) => cleanString(item, 100).toLowerCase()).filter(Boolean))].slice(0, 12).sort()
     : [];
 
   if (!/^[A-Za-z0-9_-]{12,100}$/.test(submissionId)) errors.submissionId = "invalid";
@@ -162,8 +204,19 @@ export function validateSubmission(raw) {
   if (!projectBudget) errors.projectBudget = "invalid";
   if (!ownerReadiness) errors.ownerReadiness = "invalid";
   if (input.privacyAccepted !== true) errors.privacyAccepted = "required";
-  if (!privacyVersion) errors.privacyVersion = "required";
-  if (privacyAcceptedAt && Number.isNaN(Date.parse(privacyAcceptedAt))) errors.privacyAcceptedAt = "invalid";
+  if (privacyVersion !== QUALIFICATION_NOTICE_VERSION) errors.privacyVersion = "invalid";
+  if (!privacyAcceptedAt || Number.isNaN(Date.parse(privacyAcceptedAt))) errors.privacyAcceptedAt = "invalid";
+  if (marketingConsent) {
+    if (!marketingConsentAt || Number.isNaN(Date.parse(marketingConsentAt))) errors.marketingConsentAt = "invalid";
+    if (marketingConsentVersion !== QUALIFICATION_NOTICE_VERSION) errors.marketingConsentVersion = "invalid";
+    if (marketingConsentSource !== "website_qualification") errors.marketingConsentSource = "invalid";
+  }
+  if (analyticsConsent) {
+    if (!analyticsConsentAt || Number.isNaN(Date.parse(analyticsConsentAt))) errors.analyticsConsentAt = "invalid";
+    if (analyticsConsentVersion !== ANALYTICS_CONSENT_SCHEMA_VERSION) errors.analyticsConsentVersion = "invalid";
+    if (!new Set(["banner", "preferences"]).has(analyticsConsentSource)) errors.analyticsConsentSource = "invalid";
+  }
+  if (constraint.length < 3) errors.constraint = "required";
 
   const valid = Object.keys(errors).length === 0;
   if (!valid) return { valid, errors };
@@ -192,8 +245,15 @@ export function validateSubmission(raw) {
       privacyAccepted: true,
       privacyVersion,
       privacyAcceptedAt,
-      marketingConsent: input.marketingConsent === true,
-      attribution: normalizeAttribution(input.attribution),
+      marketingConsent,
+      marketingConsentAt: marketingConsent ? marketingConsentAt : "",
+      marketingConsentVersion: marketingConsent ? marketingConsentVersion : "",
+      marketingConsentSource: marketingConsent ? marketingConsentSource : "",
+      analyticsConsent,
+      analyticsConsentAt: analyticsConsent ? analyticsConsentAt : "",
+      analyticsConsentVersion: analyticsConsent ? analyticsConsentVersion : "",
+      analyticsConsentSource: analyticsConsent ? analyticsConsentSource : "",
+      attribution: analyticsConsent ? normalizeAttribution(input.attribution) : null,
       turnstileToken,
     },
   };
@@ -261,22 +321,6 @@ export function scoreSubmission(submission) {
       ownerReady,
     },
   };
-}
-
-/** Append once per submission while preserving the existing Attio text value. */
-export function appendHookLog(existing, entry, submissionId, maxLength = 16000) {
-  const prior = typeof existing === "string" ? existing.trim() : "";
-  const marker = `[website:${submissionId}]`;
-  if (prior.includes(marker)) return prior;
-  const line = `${marker} ${cleanString(entry, 8000)}`.trim();
-  if (!prior) return line.slice(0, maxLength);
-
-  // Existing CRM history wins over new enrichment. If the attribute is near
-  // its safe payload ceiling, append only what fits and never cut the front of
-  // the established ledger.
-  const available = maxLength - prior.length - 1;
-  if (available <= marker.length) return prior;
-  return `${prior}\n${line.slice(0, available)}`;
 }
 
 function jsonResponse(body, status = 200, extraHeaders = {}) {
@@ -382,87 +426,194 @@ function attioTextValue(attribute) {
   return attribute.map((item) => item?.value || item?.text || "").filter(Boolean).join("\n");
 }
 
-function storeDomain(storeUrl) {
-  return new URL(storeUrl).hostname.toLowerCase().replace(/^www\./, "");
+async function sha256Hex(value) {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function qualificationLedger(submission, qualification, receivedAt) {
-  const record = {
+  return {
+    schemaVersion: 1,
+    source: "website_qualification",
+    submissionId: submission.submissionId,
     receivedAt,
-    fit: qualification.fit,
-    score: qualification.score,
-    platform: submission.platform,
-    annualRevenue: submission.annualRevenue,
-    monthlyAdSpend: submission.monthlyAdSpend,
-    primaryMarket: submission.primaryMarket,
-    workstreams: submission.workstreams,
-    problem: submission.problem,
-    trigger: submission.trigger,
-    timeline: submission.timeline,
-    projectBudget: submission.projectBudget,
-    ownerReadiness: submission.ownerReadiness,
-    constraint: submission.constraint,
+    identity: {
+      name: submission.name,
+      workEmail: submission.workEmail,
+      role: submission.role,
+      company: submission.company,
+      storeUrl: submission.storeUrl,
+      emailVerified: false,
+      identityAssurance: "turnstile-only",
+    },
+    qualification: {
+      fit: qualification.fit,
+      priority: qualification.priority,
+      score: qualification.score,
+      signals: qualification.signals,
+      inputs: {
+        platform: submission.platform,
+        annualRevenue: submission.annualRevenue,
+        monthlyAdSpend: submission.monthlyAdSpend,
+        primaryMarket: submission.primaryMarket,
+        workstreams: submission.workstreams,
+        problem: submission.problem,
+        trigger: submission.trigger,
+        timeline: submission.timeline,
+        projectBudget: submission.projectBudget,
+        ownerReadiness: submission.ownerReadiness,
+        constraint: submission.constraint,
+      },
+    },
     attribution: submission.attribution,
     consent: {
-      privacyAccepted: true,
-      privacyVersion: submission.privacyVersion,
-      clientAcceptedAt: submission.privacyAcceptedAt || null,
-      serverReceivedAt: receivedAt,
-      marketingConsent: submission.marketingConsent,
+      privacyNotice: {
+        acknowledged: true,
+        noticeVersion: QUALIFICATION_NOTICE_VERSION,
+        clientRecordedAt: submission.privacyAcceptedAt || null,
+        serverRecordedAt: receivedAt,
+      },
+      marketing: {
+        requested: submission.marketingConsent,
+        clientRecordedAt: submission.marketingConsentAt || null,
+        serverRecordedAt: submission.marketingConsent ? receivedAt : null,
+        wordingVersion: submission.marketingConsent ? QUALIFICATION_NOTICE_VERSION : null,
+        source: submission.marketingConsentSource || null,
+        emailVerified: false,
+        activationPermitted: false,
+      },
+      analytics: {
+        granted: submission.analyticsConsent,
+        clientRecordedAt: submission.analyticsConsentAt || null,
+        serverRecordedAt: receivedAt,
+        schemaVersion: submission.analyticsConsent ? ANALYTICS_CONSENT_SCHEMA_VERSION : null,
+        source: submission.analyticsConsentSource || null,
+      },
+    },
+    security: {
+      turnstileVerified: true,
     },
   };
-  return `Website inbound ${JSON.stringify(record)}`;
+}
+
+export function canonicalSubmissionEvidence(submission) {
+  return {
+    contractVersion: WEBSITE_PAYLOAD_CONTRACT_VERSION,
+    source: "website_qualification",
+    submissionId: submission.submissionId,
+    identity: {
+      name: submission.name,
+      workEmail: submission.workEmail,
+      role: submission.role,
+      company: submission.company,
+      storeUrl: submission.storeUrl,
+    },
+    qualificationInputs: {
+      platform: submission.platform,
+      annualRevenue: submission.annualRevenue,
+      monthlyAdSpend: submission.monthlyAdSpend,
+      primaryMarket: submission.primaryMarket,
+      workstreams: submission.workstreams,
+      problem: submission.problem,
+      trigger: submission.trigger,
+      timeline: submission.timeline,
+      projectBudget: submission.projectBudget,
+      ownerReadiness: submission.ownerReadiness,
+      constraint: submission.constraint,
+    },
+    attribution: submission.attribution,
+    consent: {
+      privacyNotice: {
+        acknowledged: submission.privacyAccepted,
+        noticeVersion: submission.privacyVersion,
+        clientRecordedAt: submission.privacyAcceptedAt,
+      },
+      marketing: {
+        requested: submission.marketingConsent,
+        clientRecordedAt: submission.marketingConsentAt || null,
+        wordingVersion: submission.marketingConsentVersion || null,
+        source: submission.marketingConsentSource || null,
+      },
+      analytics: {
+        granted: submission.analyticsConsent,
+        clientRecordedAt: submission.analyticsConsentAt || null,
+        schemaVersion: submission.analyticsConsentVersion || null,
+        source: submission.analyticsConsentSource || null,
+      },
+    },
+  };
+}
+
+async function findWebsiteEntry(fetchImpl, token, listId, submissionId) {
+  const result = await attioRequest(
+    fetchImpl,
+    token,
+    "POST",
+    `lists/${encodeURIComponent(listId)}/entries/query`,
+    {
+      filter: { [WEBSITE_ENTRY_ATTRIBUTES.submissionId]: { value: { $eq: submissionId } } },
+      limit: 2,
+      offset: 0,
+    },
+  );
+  const matches = Array.isArray(result?.data) ? result.data : [];
+  if (matches.length > 1) throw new AttioError(409, "duplicate_website_submission_id");
+  return matches[0] || null;
+}
+
+function entryHash(entry) {
+  return attioTextValue(entry?.entry_values?.[WEBSITE_ENTRY_ATTRIBUTES.payloadSha256]);
 }
 
 async function persistToAttio(submission, qualification, env, fetchImpl, receivedAt) {
   const token = env.ATTIO_API_KEY;
   const inboundListId = env.ATTIO_WEBSITE_INBOUND_LIST_ID;
-  const domain = storeDomain(submission.storeUrl);
+  const intakeRecordId = resolveIntakeRecordId(env);
+  const ledgerJson = JSON.stringify(qualificationLedger(submission, qualification, receivedAt));
+  const deterministicEvidence = JSON.stringify(canonicalSubmissionEvidence(submission));
+  const payloadSha256 = await sha256Hex(deterministicEvidence);
 
-  await attioRequest(fetchImpl, token, "PUT", "objects/companies/records?matching_attribute=domains", {
-    data: { values: { name: submission.company, domains: [{ domain }] } },
-  });
+  const existingEntry = await findWebsiteEntry(fetchImpl, token, inboundListId, submission.submissionId);
+  if (existingEntry) {
+    if (entryHash(existingEntry) !== payloadSha256) throw new AttioError(409, "website_submission_id");
+    return existingEntry;
+  }
 
-  const personValues = {
-    name: submission.name,
-    email_addresses: [submission.workEmail],
-    job_title: submission.role,
-    company: [{ target_object: "companies", domains: [{ domain }] }],
-  };
-  const personResult = await attioRequest(fetchImpl, token, "PUT", "objects/people/records?matching_attribute=email_addresses", {
-    data: { values: personValues },
-  });
-  const personRecordId = personResult?.data?.id?.record_id;
-  if (!personRecordId) throw new AttioError(502, "objects/people/records");
-
-  const person = await attioRequest(fetchImpl, token, "GET", `objects/people/records/${encodeURIComponent(personRecordId)}`);
-  const hookAttribute = cleanString(env.ATTIO_HOOK_LOG_ATTRIBUTE, 100) || "aetheris_hook_log";
-  const unitAttribute = cleanString(env.ATTIO_BUSINESS_UNIT_ATTRIBUTE, 100) || "aetheris_business_unit";
-  const priorityAttribute = cleanString(env.ATTIO_PRIORITY_ATTRIBUTE, 100) || "aetheris_priority";
-  const currentHook = attioTextValue(person?.data?.values?.[hookAttribute]);
-  const hookLog = appendHookLog(
-    currentHook,
-    qualificationLedger(submission, qualification, receivedAt),
-    submission.submissionId,
-  );
-
-  await attioRequest(fetchImpl, token, "PATCH", `objects/people/records/${encodeURIComponent(personRecordId)}`, {
+  const entryBody = {
     data: {
-      values: {
-        [unitAttribute]: "Studio",
-        [priorityAttribute]: qualification.priority,
-        [hookAttribute]: hookLog,
+      parent_record_id: intakeRecordId,
+      parent_object: "people",
+      entry_values: {
+        [WEBSITE_ENTRY_ATTRIBUTES.submissionId]: submission.submissionId,
+        [WEBSITE_ENTRY_ATTRIBUTES.receivedAt]: receivedAt,
+        [WEBSITE_ENTRY_ATTRIBUTES.payloadSha256]: payloadSha256,
+        [WEBSITE_ENTRY_ATTRIBUTES.ledgerJson]: ledgerJson,
+        [WEBSITE_ENTRY_ATTRIBUTES.fit]: qualification.fit,
+        [WEBSITE_ENTRY_ATTRIBUTES.priority]: qualification.priority,
+        [WEBSITE_ENTRY_ATTRIBUTES.contactName]: submission.name,
+        [WEBSITE_ENTRY_ATTRIBUTES.workEmail]: submission.workEmail,
+        [WEBSITE_ENTRY_ATTRIBUTES.role]: submission.role,
+        [WEBSITE_ENTRY_ATTRIBUTES.company]: submission.company,
+        [WEBSITE_ENTRY_ATTRIBUTES.storeUrl]: submission.storeUrl,
       },
     },
-  });
+  };
 
-  await attioRequest(fetchImpl, token, "PUT", `lists/${encodeURIComponent(inboundListId)}/entries`, {
-    data: {
-      parent_record_id: personRecordId,
-      parent_object: "people",
-      entry_values: {},
-    },
-  });
+  try {
+    return await attioRequest(
+      fetchImpl,
+      token,
+      "POST",
+      `lists/${encodeURIComponent(inboundListId)}/entries`,
+      entryBody,
+    );
+  } catch (error) {
+    if (!(error instanceof AttioError)) throw error;
+    const raced = await findWebsiteEntry(fetchImpl, token, inboundListId, submission.submissionId);
+    if (!raced || entryHash(raced) !== payloadSha256) throw error;
+    return raced;
+  }
 }
 
 export async function onRequestPost(context) {
@@ -512,7 +663,7 @@ export async function onRequestPost(context) {
   }
   if (!human) return jsonResponse({ status: "review", error: { code: "verification_failed" } }, 403);
 
-  if (!env.ATTIO_API_KEY || !env.ATTIO_WEBSITE_INBOUND_LIST_ID) {
+  if (!env.ATTIO_API_KEY || !env.ATTIO_WEBSITE_INBOUND_LIST_ID || !resolveIntakeRecordId(env)) {
     return jsonResponse({ status: "review", error: { code: "temporarily_unavailable" } }, 503);
   }
 

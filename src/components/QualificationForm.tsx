@@ -15,6 +15,12 @@ import {
   type AttributionSnapshot,
   type AttributionTouch
 } from '../lib/tracking';
+import { readConsent } from '../lib/consent';
+import {
+  qualificationRequestPayload,
+  reuseOrCreateQualificationAttempt,
+  type QualificationAttempt
+} from '../lib/qualificationAttempt';
 
 const BOOKING_URL = 'https://cal.com/aetherisstudio';
 const PRIVACY_URL = '/privacy-policy/';
@@ -224,7 +230,7 @@ function validateStep(step: number, values: FormValues, turnstileToken: string):
     if (!values.projectBudget) errors.projectBudget = 'Select the available project budget.';
     if (!values.ownerReadiness) errors.ownerReadiness = 'Select the closest ownership and data-readiness state.';
     if (!values.constraint.trim()) errors.constraint = 'Name the constraint most likely to slow progress.';
-    if (!values.privacyAccepted) errors.privacyAccepted = 'Please confirm that you have read the privacy policy.';
+    if (!values.privacyAccepted) errors.privacyAccepted = 'Please confirm that you have read the privacy notice.';
     if (TURNSTILE_SITE_KEY && !turnstileToken) errors.turnstile = 'Complete the security check before sending.';
   }
 
@@ -232,16 +238,7 @@ function validateStep(step: number, values: FormValues, turnstileToken: string):
 }
 
 function submissionAttribution(snapshot: AttributionSnapshot): Omit<AttributionTouch, 'capturedAt'> {
-  const currentHasCampaign = Boolean(
-    snapshot.currentTouch.utmSource
-    || snapshot.currentTouch.utmMedium
-    || snapshot.currentTouch.utmCampaign
-    || snapshot.currentTouch.gclid
-    || snapshot.currentTouch.wbraid
-    || snapshot.currentTouch.gbraid
-  );
-  const touch = currentHasCampaign ? snapshot.currentTouch : snapshot.firstTouch;
-  const { capturedAt: _capturedAt, ...attribution } = touch;
+  const { capturedAt: _capturedAt, ...attribution } = snapshot.firstTouch;
   return attribution;
 }
 
@@ -269,12 +266,12 @@ export function QualificationForm() {
   const [outcome, setOutcome] = useState<SubmissionOutcome | null>(null);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
-  const [attribution] = useState<AttributionSnapshot>(() => captureAttribution());
   const sectionRef = useRef<HTMLElement>(null);
   const stepHeadingRef = useRef<HTMLHeadingElement>(null);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
   const viewedRef = useRef(false);
+  const attemptRef = useRef<QualificationAttempt | null>(null);
 
   const activeStep = steps[step - 1];
   const stepTitleId = `${idPrefix}-step-title`;
@@ -319,6 +316,7 @@ export function QualificationForm() {
     event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const value = event.target.value;
+    attemptRef.current = null;
     setValues((current) => ({ ...current, [field]: value }));
     setErrors((current) => withoutErrors(current, field, 'submit'));
   };
@@ -326,12 +324,14 @@ export function QualificationForm() {
   const setBooleanValue = (field: 'privacyAccepted' | 'marketingConsent') => (
     event: ChangeEvent<HTMLInputElement>
   ) => {
+    attemptRef.current = null;
     setValues((current) => ({ ...current, [field]: event.target.checked }));
     setErrors((current) => withoutErrors(current, field, 'submit'));
   };
 
   const toggleWorkstream = (event: ChangeEvent<HTMLInputElement>) => {
     const { checked, value } = event.target;
+    attemptRef.current = null;
     setValues((current) => ({
       ...current,
       workstreams: checked
@@ -385,15 +385,28 @@ export function QualificationForm() {
       stepName: 'brief'
     });
 
-    const privacyAcceptedAt = new Date().toISOString();
-    const payload = {
-      submissionId: createSubmissionId(),
-      ...values,
-      privacyVersion: QUALIFICATION_FORM_VERSION,
-      privacyAcceptedAt,
-      attribution: submissionAttribution(attribution),
-      turnstileToken
-    };
+    const analyticsConsent = readConsent();
+    const analyticsGranted = analyticsConsent?.analytics === true;
+    const attemptKey = JSON.stringify({ values, consent: analyticsConsent });
+    const attempt = reuseOrCreateQualificationAttempt(attemptRef.current, attemptKey, () => {
+      const privacyAcceptedAt = new Date().toISOString();
+      return {
+        submissionId: createSubmissionId(),
+        ...values,
+        privacyVersion: QUALIFICATION_FORM_VERSION,
+        privacyAcceptedAt,
+        marketingConsentAt: values.marketingConsent ? privacyAcceptedAt : '',
+        marketingConsentVersion: QUALIFICATION_FORM_VERSION,
+        marketingConsentSource: 'website_qualification',
+        analyticsConsent: analyticsGranted,
+        analyticsConsentAt: analyticsGranted ? analyticsConsent.updatedAt : '',
+        analyticsConsentVersion: analyticsGranted ? String(analyticsConsent.version) : '',
+        analyticsConsentSource: analyticsGranted ? analyticsConsent.source : '',
+        attribution: analyticsGranted ? submissionAttribution(captureAttribution()) : null
+      };
+    });
+    attemptRef.current = attempt;
+    const payload = qualificationRequestPayload(attempt, turnstileToken);
 
     try {
       const response = await fetch('/api/qualification', {
@@ -411,6 +424,7 @@ export function QualificationForm() {
         throw new Error('Submission was not accepted.');
       }
 
+      attemptRef.current = null;
       setOutcome(status);
       trackQualificationEvent('qualification_result', {
         surface: 'homepage',
@@ -550,6 +564,7 @@ export function QualificationForm() {
 
         <form
           className="qualification-form"
+          data-clarity-mask="true"
           noValidate
           onFocusCapture={startTracking}
           onSubmit={handleSubmit}
@@ -777,8 +792,11 @@ export function QualificationForm() {
                 value={values.problem}
                 onChange={setTextValue('problem')}
                 aria-invalid={Boolean(errors.problem)}
-                aria-describedby={errors.problem ? `${fieldIds.problem}-error` : undefined}
+                aria-describedby={errors.problem
+                  ? `${fieldIds.problem}-privacy-hint ${fieldIds.problem}-error`
+                  : `${fieldIds.problem}-privacy-hint`}
               />
+              <small id={`${fieldIds.problem}-privacy-hint`}>Do not include payment data, health or criminal-offence data, or confidential personal information about other people.</small>
               <FieldError id={`${fieldIds.problem}-error`} message={errors.problem} />
             </label>
 
@@ -886,7 +904,7 @@ export function QualificationForm() {
                   aria-describedby={errors.privacyAccepted ? `${fieldIds.privacyAccepted}-error` : undefined}
                 />
                 <span>
-                  I have read the <a href={PRIVACY_URL} target="_blank" rel="noreferrer">privacy policy</a> and agree to be contacted about this request. <i>Required</i>
+                  I have read the <a href={PRIVACY_URL} target="_blank" rel="noreferrer">privacy notice</a>. I understand that the information marked “Required” is needed to assess and answer my enquiry; without it, this form cannot be submitted. This acknowledgement is not consent to marketing. <i>Required</i>
                 </span>
               </label>
               <FieldError id={`${fieldIds.privacyAccepted}-error`} message={errors.privacyAccepted} />
@@ -899,7 +917,7 @@ export function QualificationForm() {
                   checked={values.marketingConsent}
                   onChange={setBooleanValue('marketingConsent')}
                 />
-                <span>Occasionally send me useful commerce research and studio updates. <i>Optional</i></span>
+                <span>Yes, I would like to receive occasional Aetheris Studio commerce research, service updates and event invitations by email. This is optional; a separate email confirmation is required before subscription, and I can unsubscribe at any time. <i>Optional</i></span>
               </label>
             </div>
 

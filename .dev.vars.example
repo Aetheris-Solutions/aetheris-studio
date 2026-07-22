@@ -1,14 +1,10 @@
 # Copy to .dev.vars for local Cloudflare Pages development. Never commit real values.
 ATTIO_API_KEY=replace-with-local-test-token
 ATTIO_WEBSITE_INBOUND_LIST_ID=ea94e071-c5a1-4255-aff3-429b033c7d39
+ATTIO_WEBSITE_INTAKE_RECORD_ID=replace-with-fixed-internal-people-record-uuid
 TURNSTILE_SECRET_KEY=replace-with-turnstile-secret
 ALLOWED_ORIGINS=http://localhost:8788,http://127.0.0.1:8788
 TURNSTILE_EXPECTED_HOSTNAMES=localhost,127.0.0.1
 
 # Localhost only. Never set this in Cloudflare production or preview.
 ALLOW_UNVERIFIED_LOCAL_SUBMISSIONS=true
-
-# Optional attribute overrides (defaults shown).
-ATTIO_HOOK_LOG_ATTRIBUTE=aetheris_hook_log
-ATTIO_BUSINESS_UNIT_ATTRIBUTE=aetheris_business_unit
-ATTIO_PRIORITY_ATTRIBUTE=aetheris_priority

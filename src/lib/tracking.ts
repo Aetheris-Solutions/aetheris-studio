@@ -1,3 +1,5 @@
+import { hasAnalyticsConsent } from './consent';
+
 export const QUALIFICATION_FORM_VERSION = '2026-07-22';
 
 export type QualificationEventName =
@@ -37,13 +39,8 @@ export type AttributionSnapshot = {
   currentTouch: AttributionTouch;
 };
 
-declare global {
-  interface Window {
-    dataLayer?: Array<Record<string, SafeTrackingValue>>;
-  }
-}
-
 const ATTRIBUTION_STORAGE_KEY = 'aetheris_studio_attribution_v1';
+const ATTRIBUTION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1_000;
 const TRACKING_KEYS = new Set<keyof QualificationEventPayload>([
   'surface',
   'step',
@@ -104,17 +101,27 @@ function isAttributionTouch(value: unknown): value is AttributionTouch {
 }
 
 function readFirstTouch(): AttributionTouch | null {
+  if (!hasAnalyticsConsent()) return null;
+
   try {
     const stored = localStorage.getItem(ATTRIBUTION_STORAGE_KEY);
     if (!stored) return null;
     const parsed: unknown = JSON.parse(stored);
-    return isAttributionTouch(parsed) ? parsed : null;
+    if (!isAttributionTouch(parsed)) return null;
+    const capturedAt = Date.parse(parsed.capturedAt);
+    if (!Number.isFinite(capturedAt) || Date.now() - capturedAt > ATTRIBUTION_MAX_AGE_MS) {
+      localStorage.removeItem(ATTRIBUTION_STORAGE_KEY);
+      return null;
+    }
+    return parsed;
   } catch {
     return null;
   }
 }
 
 function rememberFirstTouch(touch: AttributionTouch): void {
+  if (!hasAnalyticsConsent()) return;
+
   try {
     localStorage.setItem(ATTRIBUTION_STORAGE_KEY, JSON.stringify(touch));
   } catch {
@@ -123,7 +130,17 @@ function rememberFirstTouch(touch: AttributionTouch): void {
 }
 
 export function captureAttribution(): AttributionSnapshot {
+  if (!hasAnalyticsConsent()) {
+    const emptyTouch: AttributionTouch = {
+      landingUrl: '',
+      referrer: '',
+      capturedAt: ''
+    };
+    return { firstTouch: emptyTouch, currentTouch: emptyTouch };
+  }
+
   const touch = currentTouch();
+
   const storedFirstTouch = readFirstTouch();
   const firstTouch = storedFirstTouch ?? touch;
   if (!storedFirstTouch) rememberFirstTouch(firstTouch);
@@ -139,7 +156,7 @@ export function trackQualificationEvent(
   event: QualificationEventName,
   payload: QualificationEventPayload = {}
 ): void {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return;
 
   const safePayload: Record<string, SafeTrackingValue> = {
     event,

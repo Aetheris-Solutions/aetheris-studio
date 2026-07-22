@@ -1,11 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
+import { createHash } from "node:crypto";
 import {
-  appendHookLog,
+  canonicalSubmissionEvidence,
   hostnameMatchesRule,
   onRequestPost,
   scoreSubmission,
   validateSubmission,
 } from "../functions/api/qualification.js";
+
+const attioEnv = {
+  ALLOW_UNVERIFIED_LOCAL_SUBMISSIONS: "true",
+  ATTIO_API_KEY: "server-only-test-key",
+  ATTIO_WEBSITE_INBOUND_LIST_ID: "website-inbound-list",
+  ATTIO_WEBSITE_INTAKE_RECORD_ID: "internal-intake-record",
+};
 
 describe("hostnameMatchesRule", () => {
   it("accepts exact canonical hosts and explicit Pages preview subdomains only", () => {
@@ -38,6 +46,13 @@ const highFitPayload = {
   privacyVersion: "2026-07-22",
   privacyAcceptedAt: "2026-07-22T09:00:00.000Z",
   marketingConsent: false,
+  marketingConsentAt: "",
+  marketingConsentVersion: "2026-07-22",
+  marketingConsentSource: "website_qualification",
+  analyticsConsent: true,
+  analyticsConsentAt: "2026-07-22T08:55:00.000Z",
+  analyticsConsentVersion: "1",
+  analyticsConsentSource: "banner",
   attribution: {
     utmSource: "google",
     utmMedium: "cpc",
@@ -69,6 +84,8 @@ describe("validateSubmission", () => {
     expect(result.value.workEmail).toBe("ada@example-brand.com");
     expect(result.value.storeUrl).toBe("https://shop.example-brand.com/it");
     expect(result.value.workstreams).toEqual(["cro", "tracking"]);
+    expect(result.value.attribution.landingUrl).toBe("https://aetherisstudio.com/");
+    expect(result.value.attribution.referrer).toBe("https://www.google.com/");
     expect(result.value).not.toHaveProperty("website");
   });
 
@@ -77,6 +94,80 @@ describe("validateSubmission", () => {
     expect(result.valid).toBe(false);
     expect(result.errors).toEqual(expect.objectContaining({ workEmail: "invalid", privacyAccepted: "required" }));
     expect(JSON.stringify(result.errors)).not.toContain("not-an-email");
+  });
+
+  it("requires timestamp, wording version and source when optional marketing is granted", () => {
+    const invalid = validateSubmission({
+      ...highFitPayload,
+      marketingConsent: true,
+      marketingConsentAt: "",
+      marketingConsentVersion: "",
+      marketingConsentSource: "",
+    });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errors).toEqual(expect.objectContaining({
+      marketingConsentAt: "invalid",
+      marketingConsentVersion: "invalid",
+      marketingConsentSource: "invalid",
+    }));
+
+    const valid = validateSubmission({
+      ...highFitPayload,
+      marketingConsent: true,
+      marketingConsentAt: "2026-07-22T09:00:00.000Z",
+    });
+    expect(valid.valid).toBe(true);
+    expect(valid.value.marketingConsent).toBe(true);
+    expect(valid.value.marketingConsentSource).toBe("website_qualification");
+  });
+
+  it("discards crafted attribution unless analytics consent evidence is present", () => {
+    const result = validateSubmission({
+      ...highFitPayload,
+      analyticsConsent: false,
+      analyticsConsentAt: "",
+      analyticsConsentVersion: "",
+      analyticsConsentSource: "",
+      attribution: {
+        landingUrl: "https://aetherisstudio.com/?email=private@example.com#brief",
+        utmSource: "crafted",
+      },
+    });
+
+    expect(result.valid).toBe(true);
+    expect(result.value.analyticsConsent).toBe(false);
+    expect(result.value.attribution).toBeNull();
+  });
+
+  it("requires complete analytics evidence before retaining sanitized attribution", () => {
+    const invalid = validateSubmission({
+      ...highFitPayload,
+      analyticsConsentAt: "",
+      analyticsConsentVersion: "",
+      analyticsConsentSource: "forged",
+    });
+    expect(invalid.valid).toBe(false);
+    expect(invalid.errors).toEqual(expect.objectContaining({
+      analyticsConsentAt: "invalid",
+      analyticsConsentVersion: "invalid",
+      analyticsConsentSource: "invalid",
+    }));
+  });
+
+  it("builds versioned canonical source evidence without token, server time or derived scoring", () => {
+    const validated = validateSubmission(highFitPayload);
+    expect(validated.valid).toBe(true);
+    const evidence = canonicalSubmissionEvidence(validated.value);
+
+    expect(evidence).toEqual(expect.objectContaining({
+      contractVersion: 1,
+      source: "website_qualification",
+      submissionId: highFitPayload.submissionId,
+      qualificationInputs: expect.objectContaining({ annualRevenue: "1m-5m" }),
+    }));
+    expect(evidence).not.toHaveProperty("receivedAt");
+    expect(evidence).not.toHaveProperty("qualification");
+    expect(JSON.stringify(evidence)).not.toContain("test-token");
   });
 });
 
@@ -102,23 +193,6 @@ describe("scoreSubmission", () => {
     });
     expect(validated.valid).toBe(true);
     expect(scoreSubmission(validated.value)).toEqual(expect.objectContaining({ fit: "low", priority: "P3 (Low)" }));
-  });
-});
-
-describe("appendHookLog", () => {
-  it("preserves history and appends a submission exactly once", () => {
-    const first = appendHookLog("2026-07-01 - Existing CRM history", "Website inbound {}", "abc_123456789");
-    const retry = appendHookLog(first, "Website inbound {\"retry\":true}", "abc_123456789");
-    expect(first).toContain("Existing CRM history");
-    expect(first).toContain("[website:abc_123456789]");
-    expect(retry).toBe(first);
-  });
-
-  it("never drops existing CRM history when the hook attribute is nearly full", () => {
-    const history = `oldest-entry:${"x".repeat(90)}`;
-    const result = appendHookLog(history, `Website inbound ${"y".repeat(200)}`, "new_123456789", 140);
-    expect(result.startsWith(history)).toBe(true);
-    expect(result.length).toBeLessThanOrEqual(140);
   });
 });
 
@@ -150,22 +224,8 @@ describe("onRequestPost", () => {
     expect(await response.json()).toEqual({ status: "review", error: { code: "verification_failed" } });
   });
 
-  it("upserts only the dedicated website CRM path and returns no PII", async () => {
-    const calls = [];
-    const fetchMock = vi.fn(async (url, init = {}) => {
-      calls.push({ url: String(url), init });
-      if (String(url).includes("objects/people/records?matching_attribute=email_addresses")) {
-        return new Response(JSON.stringify({ data: { id: { record_id: "person-record-1" } } }), { status: 200 });
-      }
-      if (init.method === "GET" && String(url).includes("objects/people/records/person-record-1")) {
-        return new Response(
-          JSON.stringify({ data: { values: { aetheris_hook_log: [{ value: "2026-07-01 - Existing note" }] } } }),
-          { status: 200 },
-        );
-      }
-      return new Response(JSON.stringify({ data: {} }), { status: 200 });
-    });
-
+  it("fails closed before Attio when the fixed intake record is not configured", async () => {
+    const fetchMock = vi.fn();
     const response = await onRequestPost({
       request: request(),
       env: {
@@ -176,26 +236,147 @@ describe("onRequestPost", () => {
       fetch: fetchMock,
     });
 
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ status: "review", error: { code: "temporarily_unavailable" } });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("creates one append-only entry on the fixed intake record without querying or writing lead records", async () => {
+    const calls = [];
+    const fetchMock = vi.fn(async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).includes("lists/website-inbound-list/entries/query")) {
+        return new Response(JSON.stringify({ data: [] }), { status: 200 });
+      }
+      if (String(url).endsWith("lists/website-inbound-list/entries")) {
+        const body = JSON.parse(init.body);
+        return new Response(JSON.stringify({
+          data: {
+            id: { entry_id: "entry-1" },
+            parent_record_id: body.data.parent_record_id,
+            entry_values: body.data.entry_values,
+          },
+        }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "unexpected test request" }), { status: 500 });
+    });
+
+    const response = await onRequestPost({
+      request: request(),
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
     expect(response.status).toBe(201);
     expect(await response.json()).toEqual({ status: "qualified" });
-    expect(calls).toHaveLength(5);
-    expect(calls[0].url).toContain("objects/companies/records?matching_attribute=domains");
-    expect(calls[1].url).toContain("objects/people/records?matching_attribute=email_addresses");
-    expect(calls[4].url).toContain("lists/website-inbound-list/entries");
+    expect(calls).toHaveLength(2);
+    expect(calls[0].url).toContain("lists/website-inbound-list/entries/query");
+    expect(calls[1].url).toMatch(/lists\/website-inbound-list\/entries$/);
+    expect(calls.every(({ url }) => !url.includes("objects/"))).toBe(true);
+    expect(calls.every(({ init }) => !["PUT", "PATCH"].includes(init.method))).toBe(true);
     expect(calls.every(({ url }) => !url.toLowerCase().includes("outbound"))).toBe(true);
 
-    const patchCall = calls.find(({ init }) => init.method === "PATCH");
-    const patchBody = JSON.parse(patchCall.init.body);
-    expect(patchBody.data.values).toEqual(
-      expect.objectContaining({
-        aetheris_business_unit: "Studio",
-        aetheris_priority: "P1 (High)",
+    const entryBody = JSON.parse(calls[1].init.body);
+    expect(entryBody.data.parent_record_id).toBe("internal-intake-record");
+    expect(entryBody.data.parent_object).toBe("people");
+    expect(entryBody.data.entry_values.website_submission_id).toBe("website_01JABCDEF0123456789");
+    const validated = validateSubmission(highFitPayload);
+    expect(validated.valid).toBe(true);
+    const expectedHash = createHash("sha256")
+      .update(JSON.stringify(canonicalSubmissionEvidence(validated.value)))
+      .digest("hex");
+    expect(entryBody.data.entry_values.website_payload_sha256).toBe(expectedHash);
+    expect(entryBody.data.entry_values).toEqual(expect.objectContaining({
+      website_contact_name: "Ada Lovelace",
+      website_work_email: "ada@example-brand.com",
+      website_role: "Ecommerce Director",
+      website_company: "Example Brand",
+      website_store_url: "https://shop.example-brand.com/it",
+    }));
+    const ledger = JSON.parse(entryBody.data.entry_values.website_ledger_json);
+    expect(ledger).toEqual(expect.objectContaining({
+      submissionId: "website_01JABCDEF0123456789",
+      identity: expect.objectContaining({ emailVerified: false, identityAssurance: "turnstile-only" }),
+      security: { turnstileVerified: true },
+    }));
+    expect(ledger.consent.marketing.activationPermitted).toBe(false);
+    expect(JSON.stringify(ledger)).not.toContain("test-token");
+  });
+
+  it("keeps all submitted identity claims entry-scoped when analytics consent is denied", async () => {
+    const calls = [];
+    const fetchMock = vi.fn(async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).includes("lists/website-inbound-list/entries/query")) {
+        return new Response(JSON.stringify({ data: [] }), { status: 200 });
+      }
+      if (String(url).endsWith("lists/website-inbound-list/entries")) {
+        return new Response(JSON.stringify({ data: { id: { entry_id: "entry-existing" } } }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "unexpected test request" }), { status: 500 });
+    });
+
+    const response = await onRequestPost({
+      request: request({
+        ...highFitPayload,
+        analyticsConsent: false,
+        analyticsConsentAt: "",
+        analyticsConsentVersion: "",
+        analyticsConsentSource: "",
       }),
-    );
-    expect(patchBody.data.values.aetheris_hook_log).toContain("Existing note");
-    expect(patchBody.data.values.aetheris_hook_log).toContain("[website:website_01JABCDEF0123456789]");
-    expect(patchBody.data.values.aetheris_hook_log).toContain('"privacyVersion":"2026-07-22"');
-    expect(patchBody.data.values).not.toHaveProperty("aetheris_outreach_status");
-    expect(patchBody.data.values).not.toHaveProperty("aetheris_track");
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(201);
+    expect(calls).toHaveLength(2);
+    expect(calls.every(({ url }) => !url.includes("objects/"))).toBe(true);
+    expect(calls.every(({ init }) => !["PUT", "PATCH"].includes(init.method))).toBe(true);
+    const entryBody = JSON.parse(calls[1].init.body);
+    expect(entryBody.data.parent_record_id).toBe("internal-intake-record");
+    expect(entryBody.data.entry_values.website_work_email).toBe("ada@example-brand.com");
+    const ledger = JSON.parse(entryBody.data.entry_values.website_ledger_json);
+    expect(ledger.attribution).toBeNull();
+    expect(ledger.consent.analytics.granted).toBe(false);
+  });
+
+  it("treats a repeated submission ID with the same deterministic hash as an idempotent success", async () => {
+    let storedEntry = null;
+    const fetchMock = vi.fn(async (url, init = {}) => {
+      const target = String(url);
+      if (target.includes("lists/website-inbound-list/entries/query")) {
+        return new Response(JSON.stringify({ data: storedEntry ? [storedEntry] : [] }), { status: 200 });
+      }
+      if (target.endsWith("lists/website-inbound-list/entries")) {
+        const body = JSON.parse(init.body);
+        storedEntry = {
+          id: { entry_id: "entry-idempotent" },
+          parent_record_id: body.data.parent_record_id,
+          entry_values: Object.fromEntries(
+            Object.entries(body.data.entry_values).map(([key, value]) => [key, [{ value }]]),
+          ),
+        };
+        return new Response(JSON.stringify({ data: storedEntry }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "unexpected test request" }), { status: 500 });
+    });
+    const context = {
+      env: attioEnv,
+      fetch: fetchMock,
+    };
+
+    const first = await onRequestPost({ ...context, request: request() });
+    const second = await onRequestPost({ ...context, request: request() });
+    const conflictingReuse = await onRequestPost({
+      ...context,
+      request: request({ ...highFitPayload, company: "Different payload, same ID" }),
+    });
+
+    expect(first.status).toBe(201);
+    expect(second.status).toBe(201);
+    expect(conflictingReuse.status).toBe(502);
+    expect(await conflictingReuse.json()).toEqual({ status: "review", error: { code: "temporarily_unavailable" } });
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith("lists/website-inbound-list/entries"))).toHaveLength(1);
+    expect(fetchMock.mock.calls.every(([url]) => !String(url).includes("objects/"))).toBe(true);
   });
 });

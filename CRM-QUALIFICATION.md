@@ -8,7 +8,8 @@
 - Cloudflare account: `Info@aetheris-solutions.com's Account` (`cd46c98eac675a734eb9a8da628976a5`).
 - Pages project: `aetheris-studio`; canonical hostnames `aetherisstudio.com`, `www.aetherisstudio.com`, plus `aetheris-studio.pages.dev`.
 - Turnstile widget: `Aetheris Studio — Website Qualification`, managed mode, no pre-clearance. Its public site key is recorded in `.env.example`; its private key is stored only as an encrypted Pages secret. Server verification accepts the canonical hosts plus explicit `*.aetheris-studio.pages.dev` preview subdomains.
-- The six required bindings are present as encrypted values in both Pages `production` and `preview`: `ATTIO_API_KEY`, `ATTIO_WEBSITE_INBOUND_LIST_ID`, `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`, `ALLOWED_ORIGINS`, `TURNSTILE_EXPECTED_HOSTNAMES`.
+- The existing six bindings are present as encrypted values in both Pages `production` and `preview`: `ATTIO_API_KEY`, `ATTIO_WEBSITE_INBOUND_LIST_ID`, `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`, `ALLOWED_ORIGINS`, `TURNSTILE_EXPECTED_HOSTNAMES`.
+- The fixed internal Attio People record is provisioned. Its UUID is pinned server-side to the verified live Website Inbound list ID and may be overridden with `ATTIO_WEBSITE_INTAKE_RECORD_ID` in hosting. This is intentionally not a submitted lead; unknown list configurations still fail closed while the binding is absent.
 
 No real lead was created while provisioning these resources. The first end-to-end CRM smoke remains a separately authorised launch action.
 
@@ -19,11 +20,26 @@ The public form posts JSON to the same-origin endpoint `POST /api/qualification`
 - Attio remains the source of truth.
 - Website submissions enter a dedicated **Website Inbound** list through `ATTIO_WEBSITE_INBOUND_LIST_ID`.
 - The function never writes to the Outbound Pipeline and never changes `aetheris_track` or `aetheris_outreach_status`.
-- It upserts the company by store domain and the person by work email, then patches only:
-  - `aetheris_business_unit = Studio`
-  - `aetheris_priority = P1 (High) | P2 (Mid) | P3 (Low)`
-  - `aetheris_hook_log`, preserving existing history
-- The list entry uses `PUT`, so retries do not create duplicate entries for the same person. The hook ledger includes `[website:<submissionId>]` and will not append the same submission twice.
+- It never queries, creates or updates a submitted Person or Company. Unverified identity claims never enter canonical Person/Company attributes.
+- Every Website Inbound entry is parented to one pre-provisioned internal People record identified by `ATTIO_WEBSITE_INTAKE_RECORD_ID`. That record is only a stable technical parent for the People-backed list.
+- Each accepted submission creates its own list entry with `POST`; identity and commerce claims remain entry-scoped.
+- `website_submission_id` is unique. `website_payload_sha256` hashes canonical normalized source evidence under contract version `1`, excluding Turnstile token, server receipt time and derived qualification. Same-attempt retries are idempotent and conflicting ID reuse fails closed.
+- The browser freezes the submission ID, consent timestamps and remaining request evidence across an ambiguous retry, refreshing only the Turnstile token. Any form or consent change starts a new attempt.
+- The entry stores receipt, hash, ledger, fit/priority and the five submitted identity fields listed below. This is application-append-only, not WORM storage.
+
+Application-required Website Inbound entry attributes (Attio does not permit `is_required: true` on list attributes, so completeness is enforced by the Function and the smoke gate):
+
+- `website_submission_id` — text, unique;
+- `website_received_at` — timestamp;
+- `website_payload_sha256` — text;
+- `website_ledger_json` — text;
+- `website_fit` — text;
+- `website_priority` — text;
+- `website_contact_name` — text;
+- `website_work_email` — text;
+- `website_role` — text;
+- `website_company` — text;
+- `website_store_url` — text.
 
 ## Public request contract
 
@@ -45,11 +61,18 @@ The public form posts JSON to the same-origin endpoint `POST /api/qualification`
   "timeline": "this-quarter",
   "projectBudget": "15k-30k",
   "ownerReadiness": "decision-maker",
-  "constraint": "Optional context",
+  "constraint": "The main delivery constraint",
   "privacyAccepted": true,
   "privacyVersion": "2026-07-22",
   "privacyAcceptedAt": "2026-07-22T09:00:00.000Z",
   "marketingConsent": false,
+  "marketingConsentAt": "",
+  "marketingConsentVersion": "2026-07-22",
+  "marketingConsentSource": "website_qualification",
+  "analyticsConsent": true,
+  "analyticsConsentAt": "2026-07-22T08:55:00.000Z",
+  "analyticsConsentVersion": "1",
+  "analyticsConsentSource": "banner",
   "attribution": {
     "utmSource": "google",
     "utmMedium": "cpc",
@@ -103,7 +126,7 @@ High fit requires all of the following:
 - project budget of at least EUR 10k;
 - a decision maker, budget owner, or direct sponsor path.
 
-Everything else returns `review`; there is no public rejection response. Internally the CRM priority is P1/P2/P3. The exact deterministic score is stored in the private Attio hook ledger, not sent to analytics or the browser.
+Everything else returns `review`; there is no public rejection response. Internally the list entry records fit and P1/P2/P3 priority. The exact deterministic score is stored in the private per-submission Attio ledger, not sent to analytics or the browser.
 
 ## Cloudflare configuration
 
@@ -113,15 +136,13 @@ Required:
 
 - `ATTIO_API_KEY`: server-only Attio token with record/list read-write access.
 - `ATTIO_WEBSITE_INBOUND_LIST_ID`: the dedicated Website Inbound list ID, never the outbound list ID.
+- `ATTIO_WEBSITE_INTAKE_RECORD_ID`: optional hosting override for the fixed internal People record used only as the technical parent for Website Inbound entries. The verified live list/record pair is pinned server-side; every unknown list configuration returns `503` and performs no Attio request when this override is absent.
 - `TURNSTILE_SECRET_KEY`: server-side Turnstile secret.
 - `ALLOWED_ORIGINS`: comma-separated canonical origins, for example `https://aetherisstudio.com,https://www.aetherisstudio.com`.
 
 Recommended:
 
 - `TURNSTILE_EXPECTED_HOSTNAMES`: comma-separated hostnames returned by Siteverify, for example `aetherisstudio.com,www.aetherisstudio.com`. Explicit `*.example.com` rules are supported for controlled preview subdomains. When omitted, the request hostname is enforced.
-- `ATTIO_HOOK_LOG_ATTRIBUTE` (default `aetheris_hook_log`).
-- `ATTIO_BUSINESS_UNIT_ATTRIBUTE` (default `aetheris_business_unit`).
-- `ATTIO_PRIORITY_ATTRIBUTE` (default `aetheris_priority`).
 
 Frontend-only:
 
@@ -132,7 +153,9 @@ Frontend-only:
 ## Privacy and measurement
 
 - Update `privacyVersion` whenever the published notice changes.
-- Privacy acceptance and optional marketing consent are separate booleans. The ledger records the client acceptance time and the authoritative server receipt time.
+- Privacy acknowledgement, analytics consent and optional marketing request are separate. The server binds the current wording/schema versions and its receipt time; client times are supplementary only.
+- A website marketing request remains `emailVerified: false` and `activationPermitted: false` until a separate email confirmation succeeds.
+- Attribution is discarded server-side unless valid analytics-consent evidence accompanies the submission. Landing/referrer values are sanitised again to origin + path.
 - Send only lifecycle events such as `qualification_start`, `qualification_step_complete`, `qualification_submit`, and the returned status to analytics. Do not send names, emails, companies, URLs, free text, click IDs, or Attio IDs to `dataLayer`, Meta, Clarity, or Langfuse.
 - Turnstile is verified server-side and fails closed. Origin checks, JSON/body-size limits, the honeypot, and `Cache-Control: no-store` are enforced before the CRM write.
 
@@ -141,7 +164,7 @@ Frontend-only:
 Unit tests use a local fetch double and never call Turnstile or Attio:
 
 ```sh
-npm test -- functions/api/qualification.test.js
+npx vitest run tests/qualification-function.test.js src/lib/qualificationAttempt.test.ts
 ```
 
-Before launch, create the Website Inbound list, set its ID, verify the Attio attribute slugs in a non-production record, and submit one explicitly authorized test lead. Do not use a real customer's identity for that smoke test.
+Before launch, create the five additional Website Inbound identity attributes, provision and bind the fixed internal intake record, verify all eleven attribute slugs, and then submit one explicitly authorised synthetic lead. Assert that its unique entry, parent ID, source-evidence SHA-256 and ledger match, and that no lead Person or Company was queried, created or changed. Do not use a real customer's identity for that smoke test.

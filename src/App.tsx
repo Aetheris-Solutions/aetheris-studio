@@ -10,6 +10,7 @@ import {
 } from 'react';
 import { AetherisMark } from './components/AetherisMark';
 import { CanvasErrorBoundary } from './components/CanvasErrorBoundary';
+import { ConsentManager } from './components/ConsentManager';
 import { HomeSections } from './components/HomeSections';
 import { QUALIFICATION_URL } from './content/home';
 import type { AssetStatus } from './components/OculusCanvas';
@@ -494,6 +495,7 @@ export default function App() {
 
         <HomeSections />
       </main>
+      <ConsentManager />
     </>
   );
 }

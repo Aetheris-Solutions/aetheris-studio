@@ -54,6 +54,7 @@ npm test
 npm run dev
 npm run build
 npm run qa:contrast -- --strict-transitions
+npm run qa:consent -- https://your-immutable-preview.pages.dev/
 npm run preview
 ```
 
@@ -81,6 +82,12 @@ creates a real Attio inbound record.
 The previous email contact Function is retained under
 `legacy-pages-functions/` for regression coverage only. It sits outside the
 routable `functions/` directory and is not included in this preview.
+
+Run `qa:consent` only against the immutable Pages URL produced by the current
+deploy. It exercises fresh, close, reject, accept, revoke and clean-reload
+paths at 390×844, requires zero Google/Clarity requests before consent and
+after withdrawal, checks the exact GTM container plus GA4/Clarity responses,
+and proves that a synthetic PII query sentinel never reaches those requests.
 
 Development defaults to `http://127.0.0.1:4182`; preview defaults to port
 `4183`.

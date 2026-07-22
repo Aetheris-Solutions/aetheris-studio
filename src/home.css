@@ -1848,6 +1848,267 @@ p {
   color: var(--plaster);
 }
 
+.footer-consent-button {
+  width: max-content;
+  min-height: 24px;
+  padding: 0;
+  color: rgba(237, 231, 218, 0.72);
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  font: 500 13px/1.4 var(--sans);
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.footer-consent-button:hover,
+.footer-consent-button:focus-visible {
+  color: var(--plaster);
+}
+
+.consent-panel {
+  position: fixed;
+  z-index: 240;
+  right: max(18px, env(safe-area-inset-right, 0px));
+  bottom: max(18px, env(safe-area-inset-bottom, 0px));
+  left: max(18px, env(safe-area-inset-left, 0px));
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(22px, 2.5vw, 34px);
+  border: 1px solid rgba(169, 201, 255, 0.32);
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: clamp(24px, 3vw, 52px);
+  align-items: end;
+  color: var(--plaster);
+  background:
+    linear-gradient(110deg, rgba(23, 59, 120, 0.23), transparent 45%),
+    rgba(8, 11, 15, 0.985);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.5);
+}
+
+.consent-panel--expanded {
+  max-width: 900px;
+  max-height: min(760px, calc(100dvh - 36px));
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.consent-panel__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(237, 231, 218, 0.34);
+  display: grid;
+  place-items: center;
+  color: var(--plaster);
+  background: rgba(8, 11, 15, 0.72);
+  font: 400 25px/1 var(--sans);
+  cursor: pointer;
+}
+
+.consent-panel__close:hover,
+.consent-panel__close:focus-visible {
+  border-color: var(--celestial);
+  color: var(--ink);
+  background: var(--celestial);
+}
+
+.consent-panel__intro {
+  max-width: 680px;
+}
+
+.consent-panel__kicker {
+  margin: 0 0 10px;
+  color: var(--celestial);
+  font: 600 9px/1 var(--sans);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.consent-panel__intro h2 {
+  margin: 0;
+  font: 500 clamp(28px, 3vw, 44px)/0.96 var(--serif);
+  letter-spacing: -0.035em;
+}
+
+.consent-panel__intro > p:not(.consent-panel__kicker) {
+  max-width: 620px;
+  margin: 15px 0 0;
+  color: rgba(237, 231, 218, 0.74);
+  font: 500 13px/1.55 var(--sans);
+}
+
+.consent-panel__intro > a {
+  margin-top: 14px;
+  border-bottom: 1px solid rgba(237, 231, 218, 0.42);
+  display: inline-flex;
+  color: var(--plaster);
+  font: 600 10px/1.6 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.consent-panel__actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(128px, 1fr));
+  gap: 10px;
+}
+
+.consent-action {
+  min-height: 50px;
+  padding: 0 18px;
+  border: 1px solid rgba(237, 231, 218, 0.38);
+  color: var(--plaster);
+  background: transparent;
+  font: 600 9px/1 var(--sans);
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+/* Accept and reject deliberately share the exact same visual prominence. */
+.consent-action--decision {
+  border-color: var(--celestial);
+  color: var(--ink);
+  background: var(--celestial);
+}
+
+.consent-action:hover,
+.consent-action:focus-visible {
+  border-color: var(--plaster);
+  color: var(--ink);
+  background: var(--plaster);
+}
+
+.consent-action--secondary {
+  color: var(--plaster);
+  background: rgba(237, 231, 218, 0.04);
+}
+
+.consent-preferences {
+  border-top: 1px solid rgba(237, 231, 218, 0.16);
+  display: grid;
+}
+
+.consent-preference {
+  position: relative;
+  min-height: 88px;
+  padding: 18px 4px;
+  border-bottom: 1px solid rgba(237, 231, 218, 0.16);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 28px;
+  align-items: center;
+  cursor: pointer;
+}
+
+.consent-preference > span:first-child,
+.consent-preference > div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.consent-preference strong {
+  font: 500 20px/1 var(--serif);
+}
+
+.consent-preference strong + span {
+  color: rgba(237, 231, 218, 0.64);
+  font: 500 11px/1.5 var(--sans);
+}
+
+.consent-preference--essential {
+  cursor: default;
+}
+
+.consent-preference--essential > span:last-child {
+  color: var(--celestial);
+  font: 600 9px/1 var(--sans);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.consent-preference input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.consent-preference i {
+  position: relative;
+  width: 48px;
+  height: 26px;
+  border: 1px solid rgba(237, 231, 218, 0.48);
+  border-radius: 999px;
+  background: rgba(237, 231, 218, 0.08);
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.consent-preference i::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--plaster);
+  transition: transform 180ms ease, background 180ms ease;
+}
+
+.consent-preference input:checked + i {
+  border-color: var(--celestial);
+  background: rgba(169, 201, 255, 0.22);
+}
+
+.consent-preference input:checked + i::after {
+  background: var(--celestial);
+  transform: translateX(22px);
+}
+
+.consent-preference input:focus-visible + i {
+  outline: 2px solid var(--celestial);
+  outline-offset: 4px;
+  box-shadow: 0 0 0 6px rgba(8, 11, 15, 0.95);
+}
+
+@media (max-width: 840px) {
+  .consent-panel {
+    max-height: min(760px, calc(100dvh - 24px));
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    left: max(12px, env(safe-area-inset-left, 0px));
+    padding: 22px;
+    grid-template-columns: 1fr;
+    gap: 22px;
+    overflow-y: auto;
+  }
+
+  .consent-panel__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .consent-panel__actions .consent-action--secondary {
+    grid-row: 3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .consent-action,
+  .consent-preference i,
+  .consent-preference i::after {
+    transition: none;
+  }
+}
+
 @media (max-aspect-ratio: 0.8/1) {
   .site-header {
     grid-template-columns: 1fr auto;

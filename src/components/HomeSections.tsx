@@ -7,6 +7,7 @@ import { CommerceDiagnostic } from './CommerceDiagnostic';
 import { ProofIndex } from './ProofIndex';
 import { QualificationForm } from './QualificationForm';
 import { WorkFolios } from './WorkFolios';
+import { requestConsentPreferences } from '../lib/consent';
 
 function useScrollReveal() {
   const rootRef = useRef<HTMLDivElement>(null);
@@ -209,6 +210,9 @@ export const HomeSections = memo(function HomeSections() {
             <span>Legal</span>
             <a href="/privacy-policy/">Privacy</a>
             <a href="/cookies-policy/">Cookies</a>
+            <button className="footer-consent-button" type="button" onClick={requestConsentPreferences}>
+              Cookie choices
+            </button>
           </div>
         </nav>
         <div className="footer-base">
