@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "1.0.0",
+  "motionId": "aetheris-hero-motion-v1",
+  "geometry": {
+    "runtimePathFile": "production/hero/runtime/aetheris-b8-paths.json",
+    "sourceSvgSha256": "aef49dcef176b3313ab93a3e26bf4de1275c6b19c9e8556c4cafe21aee9b63ac",
+    "exactRepresentation": "canonical-inline-svg",
+    "derivedRepresentationAfterGate": "webgl-aperture"
+  },
+  "timelineModel": {
+    "unit": "seconds",
+    "profileAuthored": true,
+    "sharedNormalizedMaster": false,
+    "diagnosticNormalization": "profile-time-divided-by-profile-duration"
+  },
+  "pivot": {
+    "basis": "canonical-viewBox-centre",
+    "svgPoint": [240, 301.5],
+    "modelPoint": [0, 0, 0]
+  },
+  "easings": {
+    "hold": {
+      "type": "step-hold"
+    },
+    "smootherstep": {
+      "type": "polynomial",
+      "formula": "6t^5 - 15t^4 + 10t^3",
+      "endpointVelocity": "zero",
+      "endpointAcceleration": "zero",
+      "overshoot": false
+    }
+  },
+  "rotation": {
+    "axis": "+Z",
+    "space": "right-handed-y-up",
+    "svgDegrees": {
+      "from": 0,
+      "to": -90
+    },
+    "sceneDegrees": {
+      "from": 0,
+      "to": 90
+    },
+    "sceneRadians": {
+      "from": 0,
+      "to": 1.5707963267948966
+    },
+    "easing": "smootherstep",
+    "overshoot": false
+  },
+  "geometryFidelityGate": {
+    "rule": "exact-through-end-of-horus-hold",
+    "inclusive": true,
+    "profiles": {
+      "desktop": {
+        "endSeconds": 1.78,
+        "normalizedEnd": 0.37083333333333335
+      },
+      "mobile": {
+        "endSeconds": 1.48,
+        "normalizedEnd": 0.37
+      }
+    },
+    "invariants": {
+      "rotationMode": "rigid-z",
+      "scaleMode": "uniform",
+      "scaleXOverScaleY": 1,
+      "transformDeterminant": 1,
+      "frontParallel": true,
+      "perPathMotion": false,
+      "topologyChange": false,
+      "perspectiveTilt": false,
+      "bezierMutation": false
+    }
+  },
+  "logoScale": {
+    "fidelityGateValue": 1,
+    "mode": "uniform",
+    "afterGate": "derived-and-authorable"
+  },
+  "profiles": {
+    "desktop": {
+      "durationSeconds": 4.8,
+      "phases": [
+        { "id": "vertical-hold", "startSeconds": 0, "endSeconds": 0.58, "state": "exact-vertical-aes", "easing": "hold", "allowedTransforms": [] },
+        { "id": "rigid-rotation", "startSeconds": 0.58, "endSeconds": 1.48, "state": "exact-rigid-rotation", "easing": "smootherstep", "allowedTransforms": ["rigid-rotation-z"] },
+        { "id": "horus-hold", "startSeconds": 1.48, "endSeconds": 1.78, "state": "exact-horus-reading", "easing": "hold", "allowedTransforms": [] },
+        { "id": "camera-dolly", "startSeconds": 1.78, "endSeconds": 2.48, "state": "exact-matte-camera-approach", "easing": "smootherstep", "allowedTransforms": ["uniform-scale", "camera-dolly"] },
+        { "id": "aperture-reveal", "startSeconds": 2.48, "endSeconds": 3.24, "state": "occluded-handoff-to-atelier", "easing": "smootherstep", "allowedTransforms": ["uniform-scale", "camera-dolly", "occlusion-shutter"] },
+        { "id": "atelier-settle", "startSeconds": 3.24, "endSeconds": 4.8, "state": "settled-celestial-atelier", "easing": "smootherstep", "allowedTransforms": ["camera-settle", "subtle-parallax"] }
+      ],
+      "copySchedule": {
+        "startSeconds": 2.84,
+        "endSeconds": 4.12,
+        "representation": "live-dom",
+        "sequence": "eyebrow-headline-body-cta",
+        "easing": "smootherstep"
+      }
+    },
+    "mobile": {
+      "durationSeconds": 4,
+      "phases": [
+        { "id": "vertical-hold", "startSeconds": 0, "endSeconds": 0.42, "state": "exact-vertical-aes", "easing": "hold", "allowedTransforms": [] },
+        { "id": "rigid-rotation", "startSeconds": 0.42, "endSeconds": 1.24, "state": "exact-rigid-rotation", "easing": "smootherstep", "allowedTransforms": ["rigid-rotation-z"] },
+        { "id": "horus-hold", "startSeconds": 1.24, "endSeconds": 1.48, "state": "exact-horus-reading", "easing": "hold", "allowedTransforms": [] },
+        { "id": "camera-dolly", "startSeconds": 1.48, "endSeconds": 2.28, "state": "exact-matte-camera-approach", "easing": "smootherstep", "allowedTransforms": ["uniform-scale", "camera-dolly"] },
+        { "id": "aperture-reveal", "startSeconds": 2.28, "endSeconds": 2.86, "state": "occluded-handoff-to-atelier", "easing": "smootherstep", "allowedTransforms": ["uniform-scale", "camera-dolly", "occlusion-shutter"] },
+        { "id": "atelier-settle", "startSeconds": 2.86, "endSeconds": 4, "state": "settled-celestial-atelier", "easing": "smootherstep", "allowedTransforms": ["camera-settle", "subtle-parallax"] }
+      ],
+      "copySchedule": {
+        "startSeconds": 2.62,
+        "endSeconds": 3.8,
+        "representation": "live-dom",
+        "sequence": "eyebrow-headline-body-cta",
+        "easing": "smootherstep"
+      }
+    }
+  },
+  "skipTransition": {
+    "durationMs": 120,
+    "targetState": "settled-celestial-atelier",
+    "easing": "smootherstep"
+  },
+  "cameraEndpoints": {
+    "logoExact": {
+      "projection": "orthographic",
+      "frontParallel": true,
+      "targetSvgPoint": [240, 301.5],
+      "minimumStageDiagonalSvgUnits": 770.66,
+      "minimumOverscanRatio": 0.08
+    },
+    "desktopSettle": {
+      "apertureCenterViewport": [0.73, 0.5],
+      "protectedCopyField": {
+        "axis": "x",
+        "range": [0, 0.42]
+      },
+      "figurePropExclusionBeforeX": 0.43,
+      "fullFrameLensMmRange": [30, 40],
+      "dutchAngleDegrees": 0
+    },
+    "mobileSettle": {
+      "apertureCenterViewport": [0.64, 0.72],
+      "protectedCopyField": {
+        "axis": "y",
+        "range": [0, 0.42]
+      },
+      "currentLiveCopyMaximumY": 0.442,
+      "composition": "native-portrait"
+    }
+  },
+  "breakpointMapping": {
+    "desktop": {
+      "minAspectRatio": 1.15,
+      "camera": "desktopSettle"
+    },
+    "mobile": {
+      "maxAspectRatio": 0.8,
+      "camera": "mobileSettle"
+    },
+    "tablet": {
+      "aspectRatioRange": [0.8, 1.15],
+      "camera": "authored-tablet-or-constrained-rig-interpolation"
+    }
+  },
+  "reducedMotion": {
+    "autoplay": false,
+    "state": "settled-atelier-poster",
+    "liveDomCopy": true,
+    "transitionDurationMs": 160,
+    "transitionEasing": "smootherstep"
+  }
+}

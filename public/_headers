@@ -1,0 +1,36 @@
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+  X-Frame-Options: DENY
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; frame-src https://challenges.cloudflare.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/posters/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/draco/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/proof/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/cases/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/materials/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/aetheris-mark.svg
+  Cache-Control: public, max-age=0, must-revalidate
+
+/legal.css
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: no-cache

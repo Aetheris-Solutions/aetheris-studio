@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Aetheris viewport QA frame</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body { min-height: 100%; margin: 0; }
+      body {
+        display: grid;
+        place-items: start center;
+        padding: 20px;
+        color: #ede7da;
+        background: #20242c;
+        font: 12px/1.4 system-ui, sans-serif;
+      }
+      iframe { border: 1px solid #a9c9ff; background: #080b0f; }
+      output {
+        position: fixed;
+        right: 12px;
+        bottom: 12px;
+        padding: 8px 10px;
+        color: #080b0f;
+        background: #a9c9ff;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe id="viewport" title="Responsive site viewport"></iframe>
+    <output id="status">Loading…</output>
+    <script>
+      const parameters = new URLSearchParams(location.search);
+      const width = Math.max(320, Number(parameters.get('width')) || 390);
+      const height = Math.max(568, Number(parameters.get('height')) || 700);
+      const targetId = parameters.get('target') || 'work';
+      const offset = Number(parameters.get('offset')) || 0;
+      const frame = document.getElementById('viewport');
+      const status = document.getElementById('status');
+
+      frame.width = String(width);
+      frame.height = String(height);
+      frame.src = `/?static=1&viewport-frame=${encodeURIComponent(width)}`;
+      frame.addEventListener('load', () => {
+        const settle = () => {
+          const target = frame.contentDocument?.getElementById(targetId);
+          if (!target || !frame.contentWindow) return;
+          frame.contentDocument.documentElement.style.scrollBehavior = 'auto';
+          frame.contentWindow.scrollTo(0, target.getBoundingClientRect().top + frame.contentWindow.scrollY - 72 + offset);
+          const overflow = frame.contentDocument.documentElement.scrollWidth - frame.contentWindow.innerWidth;
+          status.textContent = `${width}×${height} · ${targetId}+${offset} · overflow ${Math.max(0, Math.round(overflow))}px`;
+        };
+        [180, 650, 1450].forEach((delay) => setTimeout(settle, delay));
+      });
+    </script>
+  </body>
+</html>

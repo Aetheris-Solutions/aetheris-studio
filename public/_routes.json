@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": [
+    "/assets/*",
+    "/cases/*",
+    "/draco/*",
+    "/fonts/*",
+    "/materials/*",
+    "/posters/*",
+    "/proof/*",
+    "/aetheris-mark.svg",
+    "/legal.css"
+  ]
+}

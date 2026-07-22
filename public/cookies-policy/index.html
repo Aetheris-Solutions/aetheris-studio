@@ -1,0 +1,198 @@
+<!doctype html>
+<!--
+  PREVIEW LEGAL DRAFT — NOT APPROVED FOR PRODUCTION.
+  This browser-storage notice must receive qualified legal review and written
+  approval before the production domain is switched to this build. Any future
+  analytics or advertising integration requires a fresh consent assessment.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080b0f" />
+    <meta
+      name="description"
+      content="Preview draft explaining cookies and browser storage used by the Aetheris Studio website and qualification form."
+    />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <link rel="canonical" href="https://aetherisstudio.com/cookies-policy/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aetheris Studio" />
+    <meta property="og:title" content="Cookies &amp; browser storage — Aetheris Studio" />
+    <meta
+      property="og:description"
+      content="The browser storage and abuse-protection technologies used by Aetheris Studio."
+    />
+    <meta property="og:url" content="https://aetherisstudio.com/cookies-policy/" />
+    <title>Cookies &amp; browser storage — Aetheris Studio</title>
+    <link rel="icon" href="/aetheris-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#policy">Skip to the notice</a>
+    <div class="legal-shell">
+      <header class="legal-header">
+        <a class="legal-brand" href="/" aria-label="Aetheris Studio home">
+          <img src="/aetheris-mark.svg" alt="" width="35" height="35" />
+          <span>Aetheris Studio</span>
+        </a>
+        <a class="legal-home-link" href="/">Return to the studio <span aria-hidden="true">↗</span></a>
+      </header>
+
+      <main id="policy">
+        <section class="legal-hero" aria-labelledby="page-title">
+          <div class="legal-hero-copy">
+            <p class="legal-kicker">Aetheris Studio · Legal folio</p>
+            <h1 class="legal-title" id="page-title">Cookies &amp; <em>storage.</em></h1>
+            <p class="legal-deck">
+              A plain account of the browser storage, security checks and measurement hooks used by the current Aetheris Studio build.
+            </p>
+            <p class="legal-meta">Preview draft · Revision 22 July 2026 · English</p>
+          </div>
+        </section>
+
+        <aside class="draft-notice" aria-label="Legal review status">
+          <strong>Legal review required</strong>
+          <p>
+            This notice describes the current preview implementation. It is not approved for production. Any analytics, advertising or consent-management activation must be inventoried and legally reviewed before the production switch.
+          </p>
+        </aside>
+
+        <div class="legal-layout">
+          <nav class="legal-index" aria-label="Cookies notice sections">
+            <div class="legal-index-inner">
+              <p class="legal-section-label">In this notice</p>
+              <ol>
+                <li><a href="#meaning">Cookies and storage</a></li>
+                <li><a href="#current-use">What this build uses</a></li>
+                <li><a href="#turnstile">Turnstile security</a></li>
+                <li><a href="#measurement">Measurement status</a></li>
+                <li><a href="#controls">Your controls</a></li>
+                <li><a href="#changes">Changes and contact</a></li>
+              </ol>
+            </div>
+          </nav>
+
+          <article class="legal-document">
+            <section class="policy-section" id="meaning">
+              <p class="legal-section-label">Overview</p>
+              <h2>Cookies and browser storage are not the same thing</h2>
+              <p>
+                Cookies are small values a website or service can ask a browser to send with later requests. Local storage can retain information for a site across browser sessions, while session storage normally lasts for the current tab or browsing session. Similar technologies can also use scripts, pixels, device signals or in-memory values.
+              </p>
+              <p>
+                This notice covers those technologies together so that the actual behaviour of the site is easier to understand. The related handling of personal data is described in the <a href="/privacy-policy/">privacy notice</a>.
+              </p>
+            </section>
+
+            <section class="policy-section" id="current-use">
+              <p class="legal-section-label">Current inventory</p>
+              <h2>What the preview build stores</h2>
+              <div class="policy-table-wrap">
+                <table class="policy-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Technology</th>
+                      <th scope="col">Purpose</th>
+                      <th scope="col">Duration or control</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>aetheris-production-hero-intro-v1</code><br />Session storage</td>
+                      <td>Remembers that the opening visual sequence has been seen, so it is not replayed unnecessarily in the same browsing session.</td>
+                      <td>Normally ends with the browser tab or session. It can be removed through browser site-data controls.</td>
+                    </tr>
+                    <tr>
+                      <td><code>aetheris_studio_attribution_v1</code><br />Local storage</td>
+                      <td>Remembers the first campaign/source touch used to contextualise a qualification request. It can include UTM values, ad click IDs, a sanitised landing path, a sanitised referrer and a timestamp.</td>
+                      <td>The current code sets no automatic expiry. It remains until site data is cleared or the implementation changes. The form still works if storage is unavailable.</td>
+                    </tr>
+                    <tr>
+                      <td>Turnstile widget<br />Cloudflare security technology</td>
+                      <td>Assesses whether a form interaction is abusive and produces the short-lived token the server must verify before writing to the CRM.</td>
+                      <td>Controlled by Cloudflare's security service and browser/site-data settings. See the Turnstile section below.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                The first-touch attribution record is sent to Aetheris only when you submit the qualification form. Stored landing and referrer URLs omit query strings and fragments; campaign parameters and recognised click identifiers are captured as separate fields.
+              </p>
+            </section>
+
+            <section class="policy-section" id="turnstile">
+              <p class="legal-section-label">Security</p>
+              <h2>Cloudflare Turnstile</h2>
+              <p>
+                The final step of the qualification form loads Cloudflare Turnstile from <strong>challenges.cloudflare.com</strong>. Turnstile uses browser, device, network and interaction signals to distinguish legitimate requests from automated abuse. It may use cookies or similar storage needed to provide that security function.
+              </p>
+              <p>
+                The browser receives a short-lived token. Aetheris's server sends that token and, where available, the connecting IP address to Cloudflare for verification. If verification fails, the server does not write the request to Attio. Turnstile is configured as a security control, not as an advertising tool.
+              </p>
+              <p>
+                Cloudflare's own terms and privacy materials provide more detail about its processing. Provider roles, transfer safeguards and the final legal basis must be confirmed in the required pre-production legal review.
+              </p>
+            </section>
+
+            <section class="policy-section" id="measurement">
+              <p class="legal-section-label">Measurement</p>
+              <h2>What is—and is not—active in this preview</h2>
+              <p>
+                The qualification interface creates a small allowlisted set of lifecycle events in the page's in-memory <strong>dataLayer</strong>, such as form view, step completion, submission and result. The event payload deliberately excludes names, email addresses, companies, store URLs, free text, campaign values and CRM identifiers.
+              </p>
+              <p>
+                In this preview build, those event hooks do not by themselves install an analytics or advertising cookie. If Aetheris later connects them to Google Analytics, an advertising platform, a session-replay product or another measurement service, the production inventory, consent mechanism and this notice must be updated before activation.
+              </p>
+              <p class="policy-note">
+                No statement in this preview draft authorises the installation of non-essential analytics or advertising technologies without the consent assessment required by applicable law.
+              </p>
+            </section>
+
+            <section class="policy-section" id="controls">
+              <p class="legal-section-label">Controls</p>
+              <h2>How to manage browser data</h2>
+              <p>You can use your browser to inspect, block or remove cookies and site storage. The exact controls depend on the browser and device. Common options include:</p>
+              <ul>
+                <li>clearing cookies and site data for <strong>aetherisstudio.com</strong>;</li>
+                <li>blocking third-party cookies or limiting cross-site tracking;</li>
+                <li>using private browsing for a session that should not retain local storage after it closes; and</li>
+                <li>using browser developer or privacy tools to inspect values stored for the site.</li>
+              </ul>
+              <p>
+                Removing the hero session value may cause the opening sequence to play again. Removing attribution storage clears the remembered first-touch context. Blocking Turnstile or its required scripts can prevent the protected qualification form from being sent; you can still contact Aetheris at <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a>.
+              </p>
+            </section>
+
+            <section class="policy-section" id="changes">
+              <p class="legal-section-label">Status</p>
+              <h2>Changes, controller and contact</h2>
+              <p>
+                The controller is <strong>Aetheris Solutions S.r.l.</strong>, operating through Aetheris Studio, VAT number <strong>14468170965</strong>. Questions about storage or data protection can be sent to <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> or <a href="mailto:masiello.lorenzo@pec.it">masiello.lorenzo@pec.it</a>.
+              </p>
+              <p>
+                This inventory must be revisited whenever a storage key, provider, analytics tag, advertising integration or consent flow changes.
+              </p>
+              <p class="policy-note">
+                This 22 July 2026 version is a preview draft. Qualified legal review and approval are required before it can replace the production cookies notice.
+              </p>
+            </section>
+          </article>
+        </div>
+      </main>
+
+      <footer class="legal-footer">
+        <div>
+          <strong>Aetheris Studio</strong>
+          <span>A business unit of Aetheris Solutions S.r.l. · VAT 14468170965</span>
+        </div>
+        <nav aria-label="Legal footer">
+          <a href="/privacy-policy/">Privacy</a>
+          <a href="mailto:info@aetherisstudio.com">Contact</a>
+          <a href="#page-title">Back to top ↑</a>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
+
