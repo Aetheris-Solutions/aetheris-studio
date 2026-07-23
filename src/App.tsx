@@ -13,6 +13,7 @@ import { CanvasErrorBoundary } from './components/CanvasErrorBoundary';
 import { ConsentManager } from './components/ConsentManager';
 import { HomeSections } from './components/HomeSections';
 import { QUALIFICATION_URL } from './content/home';
+import { translate as t } from './i18n';
 import type { AssetStatus } from './components/OculusCanvas';
 import { SiteHeader } from './components/SiteHeader';
 import {
@@ -372,15 +373,15 @@ export default function App() {
   };
   const statusCopy =
     introState === 'playing'
-      ? 'Aetheris Studio opening motion in progress. Press Escape or interact to skip.'
+      ? t('Aetheris Studio opening motion in progress. Press Escape or interact to skip.')
       : completionReason === 'timeline'
-        ? 'Aetheris Studio opening motion complete.'
-        : 'Aetheris Studio opening motion skipped; final content is ready.';
+        ? t('Aetheris Studio opening motion complete.')
+        : t('Aetheris Studio opening motion skipped; final content is ready.');
 
   return (
     <>
       <a className="skip-link" href="#hero-copy">
-        Skip to hero content
+        {t('Skip to hero content')}
       </a>
 
       <SiteHeader style={revealStyle(snapshot.copy.header, -10)} />
@@ -447,40 +448,39 @@ export default function App() {
 
           <div className="hero-copy" id="hero-copy">
             <p className="eyebrow" style={revealStyle(snapshot.copy.eyebrow, 10)}>
-              Integrated commerce growth · Europe
+              {t('Integrated commerce growth · Europe')}
             </p>
             <h1 id="hero-title">
               <span className="headline-safe-box">
                 <span className="headline-reveal" style={headlineRevealStyle(snapshot.copy.titlePrimary, 30)}>
-                  Commerce,
+                  {t('Commerce,')}
                 </span>
               </span>
               <span className="headline-safe-box">
                 <em className="headline-reveal" style={headlineRevealStyle(snapshot.copy.titleSecondary, 28)}>
-                  seen whole.
+                  {t('seen whole.')}
                 </em>
               </span>
             </h1>
             <p className="hero-intro" style={revealStyle(snapshot.copy.body, 16)}>
-              We connect storefront, measurement, acquisition, conversion and retention into one accountable growth
-              system for ambitious European consumer brands.
+              {t('We connect storefront, measurement, acquisition, conversion and retention into one accountable growth system for ambitious European consumer brands.')}
             </p>
             <div className="hero-actions" style={revealStyle(snapshot.copy.actions, 12)}>
               <a className="button-primary" href={QUALIFICATION_URL}>
-                Qualify your project <span aria-hidden="true">↓</span>
+                {t('Qualify your project')} <span aria-hidden="true">↓</span>
               </a>
               <a className="text-link" href="#work">
-                See selected work <span aria-hidden="true">↓</span>
+                {t('See selected work')} <span aria-hidden="true">↓</span>
               </a>
             </div>
             <p className="hero-fit" style={revealStyle(snapshot.copy.actions, 10)}>
-              For established consumer brands with active eCommerce across Europe.
+              {t('For established consumer brands with active eCommerce across Europe.')}
             </p>
           </div>
 
           {introState === 'playing' && (
             <button className="intro-skip" type="button" onClick={() => skip('button')}>
-              Skip intro
+              {t('Skip intro')}
             </button>
           )}
 

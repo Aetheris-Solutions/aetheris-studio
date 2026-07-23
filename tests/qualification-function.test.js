@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   canonicalSubmissionEvidence,
   hostnameMatchesRule,
+  onRequest,
   onRequestPost,
   scoreSubmission,
   validateSubmission,
@@ -14,6 +15,28 @@ const attioEnv = {
   ATTIO_WEBSITE_INBOUND_LIST_ID: "website-inbound-list",
   ATTIO_WEBSITE_INTAKE_RECORD_ID: "internal-intake-record",
 };
+
+describe("qualification route methods", () => {
+  it.each(["GET", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"])(
+    "returns JSON 405 for %s requests",
+    async (method) => {
+    const response = await onRequest({
+      request: new Request("https://aetherisstudio.com/api/qualification", { method }),
+      env: {},
+      fetch: vi.fn(),
+    });
+
+    expect(response.status).toBe(405);
+    expect(response.headers.get("allow")).toBe("POST");
+    expect(response.headers.get("cache-control")).toContain("no-store");
+    if (method === "HEAD") {
+      expect(await response.text()).toBe("");
+    } else {
+      await expect(response.json()).resolves.toMatchObject({ error: "method_not_allowed" });
+    }
+    },
+  );
+});
 
 describe("hostnameMatchesRule", () => {
   it("accepts exact canonical hosts and explicit Pages preview subdomains only", () => {
@@ -96,29 +119,14 @@ describe("validateSubmission", () => {
     expect(JSON.stringify(result.errors)).not.toContain("not-an-email");
   });
 
-  it("requires timestamp, wording version and source when optional marketing is granted", () => {
-    const invalid = validateSubmission({
-      ...highFitPayload,
-      marketingConsent: true,
-      marketingConsentAt: "",
-      marketingConsentVersion: "",
-      marketingConsentSource: "",
-    });
-    expect(invalid.valid).toBe(false);
-    expect(invalid.errors).toEqual(expect.objectContaining({
-      marketingConsentAt: "invalid",
-      marketingConsentVersion: "invalid",
-      marketingConsentSource: "invalid",
-    }));
-
-    const valid = validateSubmission({
+  it("rejects a crafted marketing opt-in because this build does not offer one", () => {
+    const result = validateSubmission({
       ...highFitPayload,
       marketingConsent: true,
       marketingConsentAt: "2026-07-22T09:00:00.000Z",
     });
-    expect(valid.valid).toBe(true);
-    expect(valid.value.marketingConsent).toBe(true);
-    expect(valid.value.marketingConsentSource).toBe("website_qualification");
+    expect(result.valid).toBe(false);
+    expect(result.errors).toEqual(expect.objectContaining({ marketingConsent: "unsupported" }));
   });
 
   it("discards crafted attribution unless analytics consent evidence is present", () => {
@@ -215,6 +223,28 @@ describe("onRequestPost", () => {
     });
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ status: "review" });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("stops reading an undeclared oversized payload before Turnstile or Attio", async () => {
+    const fetchMock = vi.fn();
+    const oversized = request({
+      ...highFitPayload,
+      constraint: "x".repeat(40 * 1024),
+    });
+    expect(oversized.headers.has("content-length")).toBe(false);
+
+    const response = await onRequestPost({
+      request: oversized,
+      env: {},
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(413);
+    expect(await response.json()).toEqual({
+      status: "review",
+      error: { code: "payload_too_large" },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

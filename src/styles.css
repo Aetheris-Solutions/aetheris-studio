@@ -195,19 +195,37 @@ canvas {
 }
 
 .header-cta {
-  justify-self: end;
   min-height: 43px;
   padding: 0 17px;
   border: 1px solid rgba(237, 231, 218, 0.48);
   display: inline-flex;
   align-items: center;
   gap: 14px;
-  background: rgba(8, 11, 15, 0.4);
-  backdrop-filter: blur(6px);
+  background: rgba(8, 11, 15, 0.62);
+  backdrop-filter: blur(8px);
   font: 600 10px/1 var(--sans);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   transition: background 240ms ease, color 240ms ease, border-color 240ms ease;
+}
+
+.header-actions {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.locale-switch {
+  min-width: 43px;
+  min-height: 43px;
+  border: 1px solid rgba(237, 231, 218, 0.35);
+  display: inline-grid;
+  place-items: center;
+  color: inherit;
+  background: rgba(8, 11, 15, 0.3);
+  font: 600 10px/1 var(--sans);
+  letter-spacing: 0.12em;
 }
 
 .header-cta:hover {
@@ -262,7 +280,7 @@ canvas {
   z-index: 3;
   pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(8, 11, 15, 0.9) 0%, rgba(8, 11, 15, 0.72) 25%, rgba(8, 11, 15, 0.13) 55%, transparent 77%),
+    linear-gradient(90deg, rgba(8, 11, 15, 0.92) 0%, rgba(8, 11, 15, 0.76) 27%, rgba(8, 11, 15, 0.22) 58%, transparent 80%),
     linear-gradient(0deg, rgba(8, 11, 15, 0.45), transparent 45%),
     linear-gradient(180deg, rgba(8, 11, 15, 0.28), transparent 28%);
 }
@@ -341,6 +359,15 @@ canvas {
 .hero h1 em {
   color: var(--celestial);
   font-weight: 440;
+}
+
+/* The Italian secondary line carries more characters than the English lockup.
+   Keep it inside the authored dark copy field on landscape viewports instead
+   of letting the italic terminals run over the bright oculus stone. */
+@media (min-aspect-ratio: 0.801/1) {
+  html[lang="it"] .hero h1 {
+    font-size: clamp(60px, 6.3vw, 104px);
+  }
 }
 
 .headline-safe-box {

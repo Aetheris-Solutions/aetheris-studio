@@ -9,12 +9,25 @@ const ATTRIBUTION_STORAGE_KEY = 'aetheris_studio_attribution_v1';
 const CONSENT_SESSION_OVERRIDE_KEY = 'aetheris_consent_session_override_v1';
 const ATTRIBUTION_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1_000;
 const SAFE_FRAGMENT_IDS = new Set([
+  '#top',
+  '#hero-copy',
   '#proof',
   '#work',
+  '#system',
+  '#diagnostic',
+  '#engagement',
+  '#operating-layer',
+  '#studio',
   '#atelier',
   '#team',
   '#qualification',
-  '#contact'
+  '#contact',
+  '#cookie-choices',
+  '#case-thats-it',
+  '#case-cielo',
+  '#agent-google',
+  '#agent-social',
+  '#agent-lead-gen'
 ]);
 
 export type ConsentChoices = {

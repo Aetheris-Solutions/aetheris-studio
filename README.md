@@ -1,9 +1,27 @@
-# Aetheris Studio — production Home
+# Aetheris Studio — Home release candidate
 
 Production-oriented React + TypeScript + Vite site for Aetheris Studio. The
 opening B8-to-oculus sequence passes through authored architectural geometry;
 the complete conversion journey remains semantic HTML from selected work to
 the qualified Cal.com call.
+
+## Release status — 23 July 2026
+
+This repository is still a **preview-only release candidate**. No Production
+cutover of the new Vite application has taken place. The current known-good
+Production rollback target remains the legacy Webflow deployment at
+`https://0debe4ae.aetheris-studio.pages.dev`, sourced from commit `12d9b5f`.
+Do not deploy this candidate to the `main` Pages environment while the
+documented legal and operational blockers remain open.
+
+The public team roster is intentionally empty. Six anonymous layout
+placeholders remain until each identity, role, source image and publication
+right passes `docs/TEAM-ASSET-REGISTER.md`; this release does not populate the
+real team.
+
+The current release evidence and unresolved gates are recorded in
+`docs/RELEASE-STATUS-2026-07-23.md`. The privacy/legal no-go is maintained in
+`docs/LEGAL-PRIVACY-REVIEW-2026-07-22.md`.
 
 ## Home architecture
 
@@ -14,14 +32,15 @@ Celestial oculus hero
 → five-discipline commerce system
 → That’s It / Cielo / operating-infrastructure folios
 → 90-day engagement
-→ Google Agent / Social Agent system demos
+→ Google Agent / Social Agent / Lead Gen Agent system demos
 → Aetheris atelier
 → qualified call + footer
 ```
 
 The live booking destination is `https://cal.com/aetherisstudio`. Case-study
 copy avoids unsupported performance claims; the agent interfaces are labelled
-as system demos rather than client dashboards.
+as system demos rather than client dashboards. The canonical asset, claim and
+rights ledger is `docs/PROOF-ASSETS.md`.
 
 ## Contracts and invariants
 
@@ -60,34 +79,39 @@ npm run preview
 
 ## Cloudflare Pages preview
 
-The canonical Pages project remains `aetheris-studio`. Production continues to
-build `main` from the legacy `webflow-site` directory until the final switch.
-This branch is previewed with a direct Wrangler upload so the Vite `dist/`
-bundle and root `functions/` directory are deployed together without changing
-the production build settings.
+The canonical Pages project is `aetheris-studio`. The deployable application is
+the Vite `dist/` bundle plus the root `functions/` directory; the legacy
+`webflow-site/` export is not a release artifact. Direct Wrangler previews let
+the complete candidate be verified before the atomic Production cutover
+documented in `CLOUDFLARE.md`.
 
 ```bash
-VITE_TURNSTILE_SITE_KEY=<public-site-key> npm run build
+VITE_TURNSTILE_SITE_KEY=<public-site-key> npm run build:release
 npx wrangler pages deploy dist \
   --project-name aetheris-studio \
   --branch codex-new-site-preview-20260722
 ```
 
-The Turnstile site key is public and documented in `.env.example`; the matching
-secret and the Attio token exist only as encrypted Cloudflare bindings. Preview
-hosts receive `X-Robots-Tag: noindex` from the Pages middleware. Do not submit a
-completed qualification form during routine visual QA because a valid token
-creates a real Attio inbound record.
+The Turnstile site key is public, documented in `.env.example` and configured
+as a non-secret `plain_text` build variable. The matching Turnstile secret and
+the Attio token remain encrypted Cloudflare bindings. Preview hosts receive
+`X-Robots-Tag: noindex` from the Pages middleware. Do not submit a completed
+qualification form during routine visual QA because a valid token creates a
+real Attio inbound record. One authorised synthetic Attio smoke was completed
+on 22 July 2026; it must not be repeated without a new explicit authorisation.
+No Cal.com booking is part of the routine release gate.
 
 The previous email contact Function is retained under
 `legacy-pages-functions/` for regression coverage only. It sits outside the
 routable `functions/` directory and is not included in this preview.
 
 Run `qa:consent` only against the immutable Pages URL produced by the current
-deploy. It exercises fresh, close, reject, accept, revoke and clean-reload
-paths at 390×844, requires zero Google/Clarity requests before consent and
-after withdrawal, checks the exact GTM container plus GA4/Clarity responses,
-and proves that a synthetic PII query sentinel never reaches those requests.
+deploy. It independently exercises English and Italian fresh, close, reject,
+accept, revoke and clean-reload paths at 390×844; verifies focus trap,
+background inertness and focus restoration; requires zero Google/Clarity
+requests before consent and after withdrawal; checks the exact GTM container
+plus GA4/Clarity responses; and proves that a synthetic PII query sentinel
+never reaches those requests.
 
 Development defaults to `http://127.0.0.1:4182`; preview defaults to port
 `4183`.
@@ -162,9 +186,10 @@ poster, so a slow or stalled asset can never expose a late topology handoff.
 
 - AVIF posters are 59 KB desktop and 19 KB mobile; WebP fallbacks are 106 KB
   and 41 KB.
-- R3F/Three is a lazy chunk. The initial application + React runtime is about
-  75 KB gzip in the current build; CSS is under 9 KB gzip. Both remain inside
-  the declared gate budgets.
+- R3F/Three remains isolated in a lazy `webgl-runtime` chunk. Use the size table
+  printed by the current `npm run build` as release evidence; this document
+  intentionally does not freeze bundle-size claims that become stale as the
+  Home and localized content evolve.
 - DPR is clamped to `1–1.75` desktop and `1–1.25` mobile.
 - `frameloop="demand"` prevents a render loop after settle.
 - The timeline pauses when the hero leaves the viewport or the document is
@@ -180,10 +205,10 @@ poster, so a slow or stalled asset can never expose a late topology handoff.
 `src/motion/controller.test.ts` verifies smootherstep endpoints, both fidelity
 gates, authored durations, copy order, post-gate depth and deterministic
 completion clamping. `npm run qa:contrast` then builds the site, launches an
-isolated preview and Chrome session, and measures paired shown/backdrop
-captures at 12 desktop and 9 mobile timeline frames. The strict variant passes
-only when every sampled frame meets WCAG contrast. Browser QA should
-additionally check:
+isolated preview and Chrome session, and measures English and Italian
+shown/backdrop captures across desktop, mobile, portrait tablet and landscape
+timeline frames. The strict variant passes only when every sampled rendered
+frame meets WCAG contrast. Browser QA should additionally check:
 
 1. no GLB or WebGL chunk request on every static path;
 2. no visible topology switch at 0.5× playback;
@@ -191,19 +216,10 @@ additionally check:
 4. keyboard focus, skip interaction and the live CTA remain usable;
 5. `production/hero/webgl-gate-v2.manifest.json` passes the project validator.
 
-Current review captures:
-
-- `qa-desktop-production-final.webm`
-- `qa-desktop-production-final-contact-sheet.png`
-- `qa-mobile-production-final.webm`
-- `qa-mobile-production-final-contact-sheet.png`
-
-The core engineering gate reports `330 passed / 0 failed`. The automated
-dynamic-contrast gate passes both final compositions and every sampled motion
-frame. Mac Safari and Mac Chrome have physical captures; iPhone Safari, iPad
-Safari and mid-range Android Chrome remain pending until those devices are
-attached. `--strict` is the complete launch gate and fails closed;
-`--core-strict` intentionally excludes physical evidence and prints a warning.
-The repeatable workflow is documented in
-`production/hero/qa/PHYSICAL-DEVICE-QA-PROTOCOL.md`; no emulated measurement is
-promoted into a physical-device slot.
+Current machine-readable review evidence is kept under `qa/artifacts/`.
+`npm test`, `npm run build:release`, the strict dynamic-contrast run and the
+immutable preview consent/network run must be executed again for each release
+commit; their live output is authoritative, not a pass count copied into this
+README.
+The agreed iPhone/iPad coverage used Xcode Simulator and is recorded as
+simulator evidence, never as a physical-device result.

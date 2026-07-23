@@ -1,5 +1,6 @@
 import { useEffect, useId, useRef, useState, type CSSProperties } from 'react';
 import { QUALIFICATION_URL } from '../content/home';
+import { localeSwitchPath, siteLocale, translate as t } from '../i18n';
 import { AetherisMark } from './AetherisMark';
 
 type SiteHeaderProps = {
@@ -57,6 +58,8 @@ export function SiteHeader({ style }: SiteHeaderProps) {
     const previousOverflow = document.body.style.overflow;
     const menu = menuRef.current;
     const toggle = menuToggleRef.current;
+    const main = document.querySelector<HTMLElement>('main');
+    if (main) main.inert = true;
     const focusFirstItem = requestAnimationFrame(() => {
       menu?.querySelector<HTMLElement>('a[href]')?.focus({ preventScroll: true });
     });
@@ -88,6 +91,7 @@ export function SiteHeader({ style }: SiteHeaderProps) {
     return () => {
       cancelAnimationFrame(focusFirstItem);
       document.body.style.overflow = previousOverflow;
+      if (main) main.inert = false;
       document.removeEventListener('keydown', handleMenuKeys);
     };
   }, [menuOpen]);
@@ -102,27 +106,38 @@ export function SiteHeader({ style }: SiteHeaderProps) {
         data-tone={menuOpen ? 'dark' : tone}
         style={style}
       >
-        <a className="brand" href="#top" aria-label="Aetheris Studio, back to top" onClick={closeMenu}>
+        <a className="brand" href="#top" aria-label={t('Aetheris Studio, back to top')} onClick={closeMenu}>
           <AetherisMark className="brand-mark" idPrefix="brand" />
           <span>Aetheris Studio</span>
         </a>
 
-        <nav className="primary-nav" aria-label="Primary navigation">
-          <a href="#work">Work</a>
-          <a href="#system">System</a>
-          <a href="#engagement">Engagement</a>
-          <a href="#studio">Studio</a>
+        <nav className="primary-nav" aria-label={t('Primary navigation')}>
+          <a href="#work">{t('Work')}</a>
+          <a href="#system">{t('System')}</a>
+          <a href="#engagement">{t('Engagement')}</a>
+          <a href="#studio">{t('Studio')}</a>
         </nav>
 
-        <a className="header-cta" href={QUALIFICATION_URL}>
-          Qualify a project <span aria-hidden="true">↓</span>
-        </a>
+        <div className="header-actions">
+          <a className="header-cta" href={QUALIFICATION_URL}>
+            {t('Qualify a project')} <span aria-hidden="true">↓</span>
+          </a>
+          <a
+            className="locale-switch"
+            href={localeSwitchPath()}
+            hrefLang={siteLocale === 'it' ? 'en' : 'it'}
+            lang={siteLocale === 'it' ? 'en' : 'it'}
+            aria-label={siteLocale === 'it' ? 'View this site in English' : 'Visualizza il sito in italiano'}
+          >
+            {siteLocale === 'it' ? 'EN' : 'IT'}
+          </a>
+        </div>
 
         <button
           ref={menuToggleRef}
           className="menu-toggle"
           type="button"
-          aria-label={menuOpen ? 'Close navigation' : 'Open navigation'}
+          aria-label={menuOpen ? t('Close navigation') : t('Open navigation')}
           aria-expanded={menuOpen}
           aria-controls={menuId}
           onClick={() => setMenuOpen((open) => !open)}
@@ -131,16 +146,24 @@ export function SiteHeader({ style }: SiteHeaderProps) {
         </button>
       </header>
 
-      <nav ref={menuRef} className="mobile-menu" id={menuId} aria-label="Mobile navigation" hidden={!menuOpen}>
-        <div className="mobile-menu-index"><span>Aetheris Studio</span><span>Menu</span></div>
+      <nav ref={menuRef} className="mobile-menu" id={menuId} aria-label={t('Mobile navigation')} hidden={!menuOpen}>
+        <div className="mobile-menu-index"><span>Aetheris Studio</span><span>{t('Menu')}</span></div>
         <div className="mobile-menu-links">
-          <a href="#work" onClick={closeMenu}><small>01</small>Work</a>
-          <a href="#system" onClick={closeMenu}><small>02</small>The system</a>
-          <a href="#engagement" onClick={closeMenu}><small>03</small>Engagement</a>
-          <a href="#studio" onClick={closeMenu}><small>04</small>Studio</a>
+          <a href="#work" onClick={closeMenu}><small>01</small>{t('Work')}</a>
+          <a href="#system" onClick={closeMenu}><small>02</small>{t('The system')}</a>
+          <a href="#engagement" onClick={closeMenu}><small>03</small>{t('Engagement')}</a>
+          <a href="#studio" onClick={closeMenu}><small>04</small>{t('Studio')}</a>
         </div>
         <a className="mobile-menu-cta" href={QUALIFICATION_URL} onClick={closeMenu}>
-          Qualify a project <span aria-hidden="true">↓</span>
+          {t('Qualify a project')} <span aria-hidden="true">↓</span>
+        </a>
+        <a
+          className="mobile-menu-locale"
+          href={localeSwitchPath()}
+          hrefLang={siteLocale === 'it' ? 'en' : 'it'}
+          lang={siteLocale === 'it' ? 'en' : 'it'}
+        >
+          {siteLocale === 'it' ? 'View in English' : 'Visualizza in italiano'} <span aria-hidden="true">↗</span>
         </a>
       </nav>
     </>

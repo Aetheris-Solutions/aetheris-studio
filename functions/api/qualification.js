@@ -4,6 +4,8 @@ const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/sit
 const QUALIFICATION_NOTICE_VERSION = "2026-07-22";
 const ANALYTICS_CONSENT_SCHEMA_VERSION = "1";
 const WEBSITE_PAYLOAD_CONTRACT_VERSION = 1;
+const TURNSTILE_TIMEOUT_MS = 8_000;
+const ATTIO_TIMEOUT_MS = 10_000;
 const KNOWN_INTAKE_RECORDS = new Map([
   ["ea94e071-c5a1-4255-aff3-429b033c7d39", "02ec4555-ba27-4799-a2ce-b0468d3aff0e"],
 ]);
@@ -97,6 +99,32 @@ function cleanString(value, maxLength) {
   return value.replace(/\u0000/g, "").trim().slice(0, maxLength);
 }
 
+async function readRequestBodyWithinLimit(request, maxBytes) {
+  if (!request.body) return { tooLarge: false, text: "" };
+
+  const reader = request.body.getReader();
+  const decoder = new TextDecoder();
+  const chunks = [];
+  let bytesRead = 0;
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bytesRead += value.byteLength;
+      if (bytesRead > maxBytes) {
+        await reader.cancel("payload_too_large").catch(() => {});
+        return { tooLarge: true, text: "" };
+      }
+      chunks.push(decoder.decode(value, { stream: true }));
+    }
+    chunks.push(decoder.decode());
+    return { tooLarge: false, text: chunks.join("") };
+  } finally {
+    reader.releaseLock();
+  }
+}
+
 function resolveIntakeRecordId(env) {
   const configured = cleanString(env.ATTIO_WEBSITE_INTAKE_RECORD_ID, 100);
   if (configured) return configured;
@@ -173,7 +201,8 @@ export function validateSubmission(raw) {
   const constraint = cleanString(input.constraint, 1200);
   const privacyVersion = cleanString(input.privacyVersion, 64);
   const privacyAcceptedAt = cleanString(input.privacyAcceptedAt, 64);
-  const marketingConsent = input.marketingConsent === true;
+  const marketingConsentRequested = input.marketingConsent === true;
+  const marketingConsent = false;
   const marketingConsentAt = cleanString(input.marketingConsentAt, 64);
   const marketingConsentVersion = cleanString(input.marketingConsentVersion, 64);
   const marketingConsentSource = cleanString(input.marketingConsentSource, 64);
@@ -206,11 +235,7 @@ export function validateSubmission(raw) {
   if (input.privacyAccepted !== true) errors.privacyAccepted = "required";
   if (privacyVersion !== QUALIFICATION_NOTICE_VERSION) errors.privacyVersion = "invalid";
   if (!privacyAcceptedAt || Number.isNaN(Date.parse(privacyAcceptedAt))) errors.privacyAcceptedAt = "invalid";
-  if (marketingConsent) {
-    if (!marketingConsentAt || Number.isNaN(Date.parse(marketingConsentAt))) errors.marketingConsentAt = "invalid";
-    if (marketingConsentVersion !== QUALIFICATION_NOTICE_VERSION) errors.marketingConsentVersion = "invalid";
-    if (marketingConsentSource !== "website_qualification") errors.marketingConsentSource = "invalid";
-  }
+  if (marketingConsentRequested) errors.marketingConsent = "unsupported";
   if (analyticsConsent) {
     if (!analyticsConsentAt || Number.isNaN(Date.parse(analyticsConsentAt))) errors.analyticsConsentAt = "invalid";
     if (analyticsConsentVersion !== ANALYTICS_CONSENT_SCHEMA_VERSION) errors.analyticsConsentVersion = "invalid";
@@ -364,6 +389,16 @@ function isLocalRequest(request) {
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
 }
 
+async function fetchWithTimeout(fetchImpl, input, init, timeoutMs) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort("upstream_timeout"), timeoutMs);
+  try {
+    return await fetchImpl(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export function hostnameMatchesRule(hostname, rule) {
   const candidate = cleanString(hostname, 253).toLowerCase();
   const expected = cleanString(rule, 253).toLowerCase();
@@ -384,7 +419,12 @@ async function verifyTurnstile(request, env, token, fetchImpl) {
   const connectingIp = request.headers.get("cf-connecting-ip");
   if (connectingIp) form.set("remoteip", connectingIp);
 
-  const response = await fetchImpl(TURNSTILE_VERIFY_URL, { method: "POST", body: form });
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    TURNSTILE_VERIFY_URL,
+    { method: "POST", body: form },
+    TURNSTILE_TIMEOUT_MS,
+  );
   if (!response.ok) return false;
   const result = await response.json();
   if (!result?.success) return false;
@@ -406,15 +446,20 @@ class AttioError extends Error {
 }
 
 async function attioRequest(fetchImpl, token, method, path, body) {
-  const response = await fetchImpl(`${ATTIO_API_BASE}/${path.replace(/^\//, "")}`, {
-    method,
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-      accept: "application/json",
+  const response = await fetchWithTimeout(
+    fetchImpl,
+    `${ATTIO_API_BASE}/${path.replace(/^\//, "")}`,
+    {
+      method,
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+        accept: "application/json",
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
     },
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+    ATTIO_TIMEOUT_MS,
+  );
   if (!response.ok) throw new AttioError(response.status, path);
   const text = await response.text();
   return text ? JSON.parse(text) : {};
@@ -634,11 +679,11 @@ export async function onRequestPost(context) {
 
   let raw;
   try {
-    const body = await request.text();
-    if (new TextEncoder().encode(body).byteLength > MAX_BODY_BYTES) {
+    const body = await readRequestBodyWithinLimit(request, MAX_BODY_BYTES);
+    if (body.tooLarge) {
       return jsonResponse({ status: "review", error: { code: "payload_too_large" } }, 413);
     }
-    raw = JSON.parse(body);
+    raw = JSON.parse(body.text);
   } catch {
     return jsonResponse({ status: "review", error: { code: "invalid_json" } }, 400);
   }
@@ -675,4 +720,19 @@ export async function onRequestPost(context) {
   }
 
   return jsonResponse({ status: qualification.fit === "high" ? "qualified" : "review" }, 201);
+}
+
+export async function onRequest(context) {
+  if (context.request.method !== "POST") {
+    const response = jsonResponse(
+      { ok: false, error: "method_not_allowed" },
+      405,
+      { allow: "POST" },
+    );
+    if (context.request.method === "HEAD") {
+      return new Response(null, { status: response.status, headers: response.headers });
+    }
+    return response;
+  }
+  return onRequestPost(context);
 }

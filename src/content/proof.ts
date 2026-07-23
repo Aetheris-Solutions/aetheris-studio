@@ -86,7 +86,7 @@ export const proofIndexEntries: ProofIndexEntry[] = [
       width: 1512,
       height: 827,
     },
-    logo: { src: '/proof/thatsit-logo.jpg', alt: 'That’s It by Fabrizio Rosa' },
+    logo: { src: '/proof/thatsit-logo-256.webp', alt: 'That’s It by Fabrizio Rosa' },
   },
   {
     index: '02',
@@ -102,7 +102,7 @@ export const proofIndexEntries: ProofIndexEntry[] = [
       width: 768,
       height: 1344,
     },
-    logo: { src: '/proof/cielo-1914-logo.png', alt: 'Cielo Gioielli Milano 1914' },
+    logo: { src: '/proof/cielo-1914-logo-256.webp', alt: 'Cielo Gioielli Milano 1914' },
   },
   {
     index: '03',
@@ -166,7 +166,7 @@ export const caseStudies: CaseStudy[] = [
     outcome: 'A multilingual commerce system released to production and available to customers.',
     claimLimit: 'Production proves delivery. No revenue or conversion uplift is claimed without an approved baseline and period.',
     status: 'Production verified',
-    logo: { src: '/proof/thatsit-logo.jpg', alt: 'That’s It by Fabrizio Rosa logo' },
+    logo: { src: '/proof/thatsit-logo-256.webp', alt: 'That’s It by Fabrizio Rosa logo' },
     primaryImage: {
       src: '/proof/thatsit-live-home.png',
       alt: 'That’s It live production homepage showing the atelier-led brand and commerce experience.',
@@ -190,7 +190,7 @@ export const caseStudies: CaseStudy[] = [
     outcome: 'A repeatable content operation with source material, drafts, schedules and governance attached to the work.',
     claimLimit: 'This case does not claim Shopify delivery or commercial uplift. Third-party campaign media remains governed by retailer usage rights.',
     status: 'Operating archive verified',
-    logo: { src: '/proof/cielo-1914-logo.png', alt: 'Cielo Gioielli Milano 1914 logo' },
+    logo: { src: '/proof/cielo-1914-logo-256.webp', alt: 'Cielo Gioielli Milano 1914 logo' },
     primaryImage: {
       src: '/cases/cielo-violet-watch.webp',
       alt: 'Violet-dial watch content used in the Cielo 1914 operating archive.',

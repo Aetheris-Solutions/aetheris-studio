@@ -1,9 +1,10 @@
 import { agentProofs, proofIndexEntries } from '../content/proof';
+import { translate as t } from '../i18n';
 
 function EvidenceList({ items }: { items: string[] }) {
   return (
     <ul>
-      {items.map((item) => <li key={item}>{item}</li>)}
+      {items.map((item) => <li key={item}>{t(item)}</li>)}
     </ul>
   );
 }
@@ -17,11 +18,10 @@ export function AgentEvidence() {
       data-header-tone="dark"
     >
       <div className="operating-heading" data-reveal>
-        <p className="section-kicker">Built in-house · captured in production</p>
-        <h2 id="operating-title">Human judgement,<br /><em>backed by systems<br />we can show.</em></h2>
+        <p className="section-kicker">{t('Built in-house · captured in production')}</p>
+        <h2 id="operating-title">{t('Human judgement,')}<br /><em>{t('backed by systems')}<br />{t('we can show.')}</em></h2>
         <p>
-          These are dated, read-only captures from the operating systems—not interface mockups. Facts shown below are
-          limited to what each capture and its canonical source can verify.
+          {t('These are dated, read-only captures from the operating systems—not interface mockups. Facts shown below are limited to what each capture and its canonical source can verify.')}
         </p>
       </div>
 
@@ -41,25 +41,25 @@ export function AgentEvidence() {
               data-reveal
             >
               <div className="agent-folio-copy">
-                <p>{agent.index} / {agent.category}</p>
-                <div className="agent-verification" aria-label="Verification record">
-                  <span className="proof-status" data-status={status}>{status}</span>
-                  <span>{agent.capture}</span>
+                <p>{agent.index} / {t(agent.category)}</p>
+                <div className="agent-verification" aria-label={t('Verification record')}>
+                  <span className="proof-status" data-status={status}>{t(status)}</span>
+                  <span>{t(agent.capture)}</span>
                 </div>
                 <h3 id={titleId}>{agent.name}</h3>
-                <span>{agent.description}</span>
+                <span>{t(agent.description)}</span>
 
-                <dl className="agent-proof-ledger" aria-label={`${agent.name} evidence ledger`}>
+                <dl className="agent-proof-ledger" aria-label={`${agent.name} ${t('evidence ledger')}`}>
                   <div>
-                    <dt>Operating scope</dt>
+                    <dt>{t('Operating scope')}</dt>
                     <dd><EvidenceList items={agent.scope} /></dd>
                   </div>
                   <div>
-                    <dt>Evidence reviewed</dt>
+                    <dt>{t('Evidence reviewed')}</dt>
                     <dd><EvidenceList items={agent.evidence} /></dd>
                   </div>
                   <div>
-                    <dt>Facts visible at capture</dt>
+                    <dt>{t('Facts visible at capture')}</dt>
                     <dd><EvidenceList items={agent.captureFacts} /></dd>
                   </div>
                 </dl>
@@ -68,15 +68,15 @@ export function AgentEvidence() {
               <figure className="agent-evidence-media">
                 <img
                   src={agent.image.src}
-                  alt={agent.image.alt}
+                  alt={t(agent.image.alt)}
                   width={agent.image.width}
                   height={agent.image.height}
                   loading="lazy"
                   decoding="async"
                 />
                 <figcaption>
-                  <span>{status}</span>
-                  <span>{agent.capture}</span>
+                  <span>{t(status)}</span>
+                  <span>{t(agent.capture)}</span>
                 </figcaption>
               </figure>
             </article>
@@ -85,8 +85,7 @@ export function AgentEvidence() {
       </div>
 
       <p className="operating-close" data-reveal>
-        The systems preserve context and evidence. Named people remain accountable for every recommendation, approval
-        and release.
+        {t('The systems preserve context and evidence. Named people remain accountable for every recommendation, approval and release.')}
       </p>
     </section>
   );

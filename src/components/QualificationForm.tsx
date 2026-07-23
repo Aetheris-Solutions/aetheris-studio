@@ -21,10 +21,12 @@ import {
   reuseOrCreateQualificationAttempt,
   type QualificationAttempt
 } from '../lib/qualificationAttempt';
+import { localizedPath, translate as t } from '../i18n';
 
 const BOOKING_URL = 'https://cal.com/aetherisstudio';
-const PRIVACY_URL = '/privacy-policy/';
 const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() ?? '';
+const QUALIFICATION_REQUEST_TIMEOUT_MS = 25_000;
+const TURNSTILE_LOAD_TIMEOUT_MS = 12_000;
 
 const steps = [
   { number: 1, name: 'contact', label: 'You & the business', shortLabel: 'Business' },
@@ -116,15 +118,32 @@ function loadTurnstile(): Promise<TurnstileApi> {
   turnstileScriptPromise = new Promise<TurnstileApi>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>('script[data-aetheris-turnstile]');
     const script = existing ?? document.createElement('script');
+    let timeout = 0;
+
+    const cleanup = () => {
+      window.clearTimeout(timeout);
+      script.removeEventListener('load', finish);
+      script.removeEventListener('error', fail);
+    };
 
     const finish = () => {
-      if (window.turnstile) resolve(window.turnstile);
-      else reject(new Error('Turnstile did not initialise.'));
+      cleanup();
+      if (window.turnstile) {
+        resolve(window.turnstile);
+        return;
+      }
+      if (script.isConnected) script.remove();
+      reject(new Error('Turnstile did not initialise.'));
     };
-    const fail = () => reject(new Error('Turnstile could not be loaded.'));
+    const fail = () => {
+      cleanup();
+      if (!window.turnstile && script.isConnected) script.remove();
+      reject(new Error('Turnstile could not be loaded.'));
+    };
 
-    script.addEventListener('load', finish, { once: true });
-    script.addEventListener('error', fail, { once: true });
+    script.addEventListener('load', finish);
+    script.addEventListener('error', fail);
+    timeout = window.setTimeout(fail, TURNSTILE_LOAD_TIMEOUT_MS);
 
     if (!existing) {
       script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
@@ -167,12 +186,12 @@ function TurnstileField({
           'expired-callback': () => onToken(''),
           'error-callback': () => {
             onToken('');
-            onError('The security check needs another attempt.');
+            onError(t('The security check needs another attempt.'));
           }
         });
       })
       .catch(() => {
-        if (!cancelled) onError('The security check could not load. Check your connection and try again.');
+        if (!cancelled) onError(t('The security check could not load. Check your connection and try again.'));
       });
 
     return () => {
@@ -181,7 +200,7 @@ function TurnstileField({
     };
   }, [onError, onToken, siteKey]);
 
-  return <div className="qualification-turnstile" ref={containerRef} aria-label="Security check" />;
+  return <div className="qualification-turnstile" ref={containerRef} aria-label={t('Security check')} />;
 }
 
 function createSubmissionId(): string {
@@ -208,30 +227,30 @@ function validateStep(step: number, values: FormValues, turnstileToken: string):
   const errors: FieldErrors = {};
 
   if (step === 1) {
-    if (!values.name.trim()) errors.name = 'Tell us who we are speaking with.';
-    if (!isWorkEmail(values.workEmail)) errors.workEmail = 'Enter a valid work email address.';
-    if (!values.role.trim()) errors.role = 'Add your role in the business.';
-    if (!values.company.trim()) errors.company = 'Add the company or brand name.';
-    if (!isStoreUrl(values.storeUrl)) errors.storeUrl = 'Enter a valid store or company URL.';
+    if (!values.name.trim()) errors.name = t('Tell us who we are speaking with.');
+    if (!isWorkEmail(values.workEmail)) errors.workEmail = t('Enter a valid work email address.');
+    if (!values.role.trim()) errors.role = t('Add your role in the business.');
+    if (!values.company.trim()) errors.company = t('Add the company or brand name.');
+    if (!isStoreUrl(values.storeUrl)) errors.storeUrl = t('Enter a valid store or company URL.');
   }
 
   if (step === 2) {
-    if (!values.platform) errors.platform = 'Select the current commerce platform.';
-    if (!values.annualRevenue) errors.annualRevenue = 'Select the closest annual revenue range.';
-    if (!values.monthlyAdSpend) errors.monthlyAdSpend = 'Select the closest monthly media spend range.';
-    if (!values.primaryMarket.trim()) errors.primaryMarket = 'Add the primary market or region.';
+    if (!values.platform) errors.platform = t('Select the current commerce platform.');
+    if (!values.annualRevenue) errors.annualRevenue = t('Select the closest annual revenue range.');
+    if (!values.monthlyAdSpend) errors.monthlyAdSpend = t('Select the closest monthly media spend range.');
+    if (!values.primaryMarket.trim()) errors.primaryMarket = t('Add the primary market or region.');
   }
 
   if (step === 3) {
-    if (values.workstreams.length === 0) errors.workstreams = 'Select at least one relevant workstream.';
-    if (!values.problem.trim()) errors.problem = 'Describe the commercial problem you want to solve.';
-    if (!values.trigger.trim()) errors.trigger = 'Tell us what has made this a priority now.';
-    if (!values.timeline) errors.timeline = 'Select the intended timeline.';
-    if (!values.projectBudget) errors.projectBudget = 'Select the available project budget.';
-    if (!values.ownerReadiness) errors.ownerReadiness = 'Select the closest ownership and data-readiness state.';
-    if (!values.constraint.trim()) errors.constraint = 'Name the constraint most likely to slow progress.';
-    if (!values.privacyAccepted) errors.privacyAccepted = 'Please confirm that you have read the privacy notice.';
-    if (TURNSTILE_SITE_KEY && !turnstileToken) errors.turnstile = 'Complete the security check before sending.';
+    if (values.workstreams.length === 0) errors.workstreams = t('Select at least one relevant workstream.');
+    if (!values.problem.trim()) errors.problem = t('Describe the commercial problem you want to solve.');
+    if (!values.trigger.trim()) errors.trigger = t('Tell us what has made this a priority now.');
+    if (!values.timeline) errors.timeline = t('Select the intended timeline.');
+    if (!values.projectBudget) errors.projectBudget = t('Select the available project budget.');
+    if (!values.ownerReadiness) errors.ownerReadiness = t('Select the closest ownership and data-readiness state.');
+    if (!values.constraint.trim()) errors.constraint = t('Name the constraint most likely to slow progress.');
+    if (!values.privacyAccepted) errors.privacyAccepted = t('Please confirm that you have read the privacy notice.');
+    if (TURNSTILE_SITE_KEY && !turnstileToken) errors.turnstile = t('Complete the security check before sending.');
   }
 
   return errors;
@@ -243,7 +262,7 @@ function submissionAttribution(snapshot: AttributionSnapshot): Omit<AttributionT
 }
 
 function firstErrorMessage(errors: FieldErrors): string {
-  return Object.values(errors).find(Boolean) ?? 'Review the highlighted fields.';
+  return Object.values(errors).find(Boolean) ?? t('Review the highlighted fields.');
 }
 
 function withoutErrors(current: FieldErrors, ...fields: Array<keyof FieldErrors>): FieldErrors {
@@ -321,7 +340,7 @@ export function QualificationForm() {
     setErrors((current) => withoutErrors(current, field, 'submit'));
   };
 
-  const setBooleanValue = (field: 'privacyAccepted' | 'marketingConsent') => (
+  const setBooleanValue = (field: 'privacyAccepted') => (
     event: ChangeEvent<HTMLInputElement>
   ) => {
     attemptRef.current = null;
@@ -397,9 +416,10 @@ export function QualificationForm() {
       return {
         submissionId: createSubmissionId(),
         ...values,
+        marketingConsent: false,
         privacyVersion: QUALIFICATION_FORM_VERSION,
         privacyAcceptedAt,
-        marketingConsentAt: values.marketingConsent ? privacyAcceptedAt : '',
+        marketingConsentAt: '',
         marketingConsentVersion: QUALIFICATION_FORM_VERSION,
         marketingConsentSource: 'website_qualification',
         analyticsConsent: analyticsGranted,
@@ -411,11 +431,17 @@ export function QualificationForm() {
     });
     attemptRef.current = attempt;
     const payload = qualificationRequestPayload(attempt, turnstileToken);
+    const requestController = new AbortController();
+    const requestTimeout = window.setTimeout(
+      () => requestController.abort(),
+      QUALIFICATION_REQUEST_TIMEOUT_MS
+    );
 
     try {
       const response = await fetch('/api/qualification', {
         method: 'POST',
         credentials: 'same-origin',
+        signal: requestController.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
@@ -437,7 +463,7 @@ export function QualificationForm() {
       });
       requestAnimationFrame(() => sectionRef.current?.focus({ preventScroll: true }));
     } catch {
-      setErrors({ submit: 'We could not send the brief. Check your connection and try again, or email info@aetherisstudio.com.' });
+      setErrors({ submit: t('We could not send the brief. Check your connection and try again, or email info@aetherisstudio.com.') });
       requestAnimationFrame(() => errorSummaryRef.current?.focus());
       trackQualificationEvent('qualification_result', {
         surface: 'homepage',
@@ -449,6 +475,7 @@ export function QualificationForm() {
         setTurnstileResetKey((current) => current + 1);
       }
     } finally {
+      window.clearTimeout(requestTimeout);
       setSubmitting(false);
     }
   };
@@ -471,7 +498,6 @@ export function QualificationForm() {
     ownerReadiness: `${idPrefix}-readiness`,
     constraint: `${idPrefix}-constraint`,
     privacyAccepted: `${idPrefix}-privacy`,
-    marketingConsent: `${idPrefix}-marketing`,
     website: `${idPrefix}-website`
   }), [idPrefix]);
 
@@ -496,15 +522,17 @@ export function QualificationForm() {
         aria-labelledby="qualification-result-title"
       >
         <div className="qualification-result" role="status" aria-live="polite">
-          <p className="section-kicker section-kicker--dark">Brief received</p>
+          <p className="section-kicker section-kicker--dark">{t('Brief received')}</p>
           <span className="qualification-result-index" aria-hidden="true">{qualified ? '01' : '02'}</span>
           <h2 id="qualification-result-title">
-            {qualified ? <>There appears to be a fit.<br /><em>Choose a time.</em></> : <>Your brief is with us.<br /><em>A person reviews it next.</em></>}
+            {qualified
+              ? <>{t('There appears to be a fit.')}<br /><em>{t('Choose a time.')}</em></>
+              : <>{t('Your brief is with us.')}<br /><em>{t('A person reviews it next.')}</em></>}
           </h2>
           <p>
             {qualified
-              ? 'Your context matches the kind of commerce work we are set up to discuss. Book a 30-minute fit call with the team.'
-              : 'The automated screen does not make a rejection decision. We will review the context and reply personally with the most useful next step.'}
+              ? t('Your context matches the kind of commerce work we are set up to discuss. Book a 30-minute fit call with the team.')
+              : t('The automated screen does not make a rejection decision. We will review the context and reply personally with the most useful next step.')}
           </p>
           {qualified ? (
             <a
@@ -518,11 +546,11 @@ export function QualificationForm() {
                 formVersion: QUALIFICATION_FORM_VERSION
               })}
             >
-              Book the Commerce Growth Call <span aria-hidden="true">↗</span>
+              {t('Book the Commerce Growth Call')} <span aria-hidden="true">↗</span>
             </a>
           ) : (
             <p className="qualification-result-note">
-              Expect a reply at your work email. If the matter is time-sensitive, write to{' '}
+              {t('Expect a reply at your work email. If the matter is time-sensitive, write to')}{' '}
               <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a>.
             </p>
           )}
@@ -540,20 +568,20 @@ export function QualificationForm() {
       aria-labelledby="qualification-title"
     >
       <div className="qualification-intro" data-reveal>
-        <p className="section-kicker section-kicker--dark">Start with fit</p>
-        <h2 id="qualification-title">Bring us the constraint.<br /><em>We will tell you if we can move it.</em></h2>
+        <p className="section-kicker section-kicker--dark">{t('Start with fit')}</p>
+        <h2 id="qualification-title">{t('Bring us the constraint.')}<br /><em>{t('We will tell you if we can move it.')}</em></h2>
         <p>
-          A short commercial brief before a call. It gives both sides enough context to make the first conversation useful.
+          {t('A short commercial brief before a call. It gives both sides enough context to make the first conversation useful.')}
         </p>
         <div className="qualification-intro-note">
-          <span>03 steps</span>
-          <span>About 4 minutes</span>
-          <span>Reviewed by a person</span>
+          <span>{t('03 steps')}</span>
+          <span>{t('About 4 minutes')}</span>
+          <span>{t('Reviewed by a person')}</span>
         </div>
       </div>
 
       <div className="qualification-panel" data-reveal>
-        <ol className="qualification-progress" aria-label="Qualification progress">
+        <ol className="qualification-progress" aria-label={t('Qualification progress')}>
           {steps.map((item) => (
             <li
               key={item.number}
@@ -561,7 +589,7 @@ export function QualificationForm() {
               aria-current={item.number === step ? 'step' : undefined}
             >
               <span>{String(item.number).padStart(2, '0')}</span>
-              <strong>{item.shortLabel}</strong>
+              <strong>{t(item.shortLabel)}</strong>
             </li>
           ))}
         </ol>
@@ -581,24 +609,24 @@ export function QualificationForm() {
             tabIndex={-1}
             hidden={!Object.values(errors).some(Boolean)}
           >
-            <strong>There is something to review.</strong>
+            <strong>{t('There is something to review.')}</strong>
             <span>{firstErrorMessage(errors)}</span>
           </div>
 
           <div className="qualification-step-heading">
-            <span>Step {step} of {steps.length}</span>
-            <h3 id={stepTitleId} ref={stepHeadingRef} tabIndex={-1}>{activeStep.label}</h3>
+            <span>{t('Step')} {step} {t('of')} {steps.length}</span>
+            <h3 id={stepTitleId} ref={stepHeadingRef} tabIndex={-1}>{t(activeStep.label)}</h3>
             <p id={stepDescriptionId}>
-              {step === 1 && 'The person and business behind the request.'}
-              {step === 2 && 'A few ranges are enough. No sensitive financial documents are requested.'}
-              {step === 3 && 'What needs to change, why now, and who can move the work.'}
+              {step === 1 && t('The person and business behind the request.')}
+              {step === 2 && t('A few ranges are enough. No sensitive financial documents are requested.')}
+              {step === 3 && t('What needs to change, why now, and who can move the work.')}
             </p>
           </div>
 
           <fieldset className="qualification-fields" hidden={step !== 1} disabled={step !== 1} aria-labelledby={stepTitleId}>
-            <legend className="sr-only">Your contact and company details</legend>
+            <legend className="sr-only">{t('Your contact and company details')}</legend>
             <label className="qualification-field" htmlFor={fieldIds.name}>
-              <span>Your name <i>Required</i></span>
+              <span>{t('Your name')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.name}
                 name="name"
@@ -613,7 +641,7 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.workEmail}>
-              <span>Work email <i>Required</i></span>
+              <span>{t('Work email')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.workEmail}
                 name="workEmail"
@@ -629,7 +657,7 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.role}>
-              <span>Your role <i>Required</i></span>
+              <span>{t('Your role')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.role}
                 name="role"
@@ -644,7 +672,7 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.company}>
-              <span>Company or brand <i>Required</i></span>
+              <span>{t('Company or brand')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.company}
                 name="company"
@@ -659,7 +687,7 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field qualification-field--wide" htmlFor={fieldIds.storeUrl}>
-              <span>Store or company URL <i>Required</i></span>
+              <span>{t('Store or company URL')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.storeUrl}
                 name="storeUrl"
@@ -677,9 +705,9 @@ export function QualificationForm() {
           </fieldset>
 
           <fieldset className="qualification-fields" hidden={step !== 2} disabled={step !== 2} aria-labelledby={stepTitleId}>
-            <legend className="sr-only">Your commerce context</legend>
+            <legend className="sr-only">{t('Your commerce context')}</legend>
             <label className="qualification-field" htmlFor={fieldIds.platform}>
-              <span>Commerce platform <i>Required</i></span>
+              <span>{t('Commerce platform')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.platform}
                 name="platform"
@@ -688,20 +716,20 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.platform)}
                 aria-describedby={errors.platform ? `${fieldIds.platform}-error` : undefined}
               >
-                <option value="">Select one</option>
+                <option value="">{t('Select one')}</option>
                 <option value="shopify">Shopify</option>
                 <option value="shopify-plus">Shopify Plus</option>
-                <option value="headless">Headless commerce</option>
+                <option value="headless">{t('Headless commerce')}</option>
                 <option value="woocommerce">WooCommerce</option>
                 <option value="adobe-commerce">Adobe Commerce</option>
-                <option value="custom">Custom or other</option>
-                <option value="not-sure">Not sure</option>
+                <option value="custom">{t('Custom or other')}</option>
+                <option value="not-sure">{t('Not sure')}</option>
               </select>
               <FieldError id={`${fieldIds.platform}-error`} message={errors.platform} />
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.annualRevenue}>
-              <span>Annual business revenue <i>Required</i></span>
+              <span>{t('Annual business revenue')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.annualRevenue}
                 name="annualRevenue"
@@ -710,20 +738,20 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.annualRevenue)}
                 aria-describedby={errors.annualRevenue ? `${fieldIds.annualRevenue}-error` : `${fieldIds.annualRevenue}-hint`}
               >
-                <option value="">Select a range</option>
-                <option value="under-500k">Under €500k</option>
+                <option value="">{t('Select a range')}</option>
+                <option value="under-500k">{t('Under €500k')}</option>
                 <option value="500k-1m">€500k–€1m</option>
                 <option value="1m-5m">€1m–€5m</option>
                 <option value="5m-20m">€5m–€20m</option>
                 <option value="20m-plus">€20m+</option>
-                <option value="confidential">Prefer not to say</option>
+                <option value="confidential">{t('Prefer not to say')}</option>
               </select>
-              <small id={`${fieldIds.annualRevenue}-hint`}>Online and retail combined.</small>
+              <small id={`${fieldIds.annualRevenue}-hint`}>{t('Online and retail combined.')}</small>
               <FieldError id={`${fieldIds.annualRevenue}-error`} message={errors.annualRevenue} />
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.monthlyAdSpend}>
-              <span>Monthly paid-media spend <i>Required</i></span>
+              <span>{t('Monthly paid-media spend')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.monthlyAdSpend}
                 name="monthlyAdSpend"
@@ -732,9 +760,9 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.monthlyAdSpend)}
                 aria-describedby={errors.monthlyAdSpend ? `${fieldIds.monthlyAdSpend}-error` : undefined}
               >
-                <option value="">Select a range</option>
-                <option value="none">None today</option>
-                <option value="under-1k">Under €1k</option>
+                <option value="">{t('Select a range')}</option>
+                <option value="none">{t('None today')}</option>
+                <option value="under-1k">{t('Under €1k')}</option>
                 <option value="1k-5k">€1k–€5k</option>
                 <option value="5k-20k">€5k–€20k</option>
                 <option value="20k-50k">€20k–€50k</option>
@@ -744,13 +772,13 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.primaryMarket}>
-              <span>Primary market or region <i>Required</i></span>
+              <span>{t('Primary market or region')} <i>{t('Required')}</i></span>
               <input
                 id={fieldIds.primaryMarket}
                 name="primaryMarket"
                 type="text"
                 autoComplete="country-name"
-                placeholder="e.g. Italy, DACH, EU"
+                placeholder={t('e.g. Italy, DACH, EU')}
                 value={values.primaryMarket}
                 onChange={setTextValue('primaryMarket')}
                 aria-invalid={Boolean(errors.primaryMarket)}
@@ -761,13 +789,13 @@ export function QualificationForm() {
           </fieldset>
 
           <fieldset className="qualification-fields qualification-fields--brief" hidden={step !== 3} disabled={step !== 3} aria-labelledby={stepTitleId}>
-            <legend className="sr-only">The work ahead</legend>
+            <legend className="sr-only">{t('The work ahead')}</legend>
             <fieldset
               className="qualification-choice-group qualification-field--wide"
               aria-describedby={errors.workstreams ? `${fieldIds.workstreams}-error` : `${fieldIds.workstreams}-hint`}
             >
-              <legend>Relevant workstreams <i>Choose all that apply</i></legend>
-              <small id={`${fieldIds.workstreams}-hint`}>This does not lock the eventual scope.</small>
+              <legend>{t('Relevant workstreams')} <i>{t('Choose all that apply')}</i></legend>
+              <small id={`${fieldIds.workstreams}-hint`}>{t('This does not lock the eventual scope.')}</small>
               <div className="qualification-check-grid">
                 {workstreamOptions.map(([value, label]) => (
                   <label key={value}>
@@ -778,7 +806,7 @@ export function QualificationForm() {
                       checked={values.workstreams.includes(value)}
                       onChange={toggleWorkstream}
                     />
-                    <span>{label}</span>
+                    <span>{t(label)}</span>
                   </label>
                 ))}
               </div>
@@ -786,13 +814,13 @@ export function QualificationForm() {
             </fieldset>
 
             <label className="qualification-field qualification-field--wide" htmlFor={fieldIds.problem}>
-              <span>The commercial problem <i>Required</i></span>
+              <span>{t('The commercial problem')} <i>{t('Required')}</i></span>
               <textarea
                 id={fieldIds.problem}
                 name="problem"
                 rows={4}
                 maxLength={800}
-                placeholder="What is happening, and what should be happening instead?"
+                placeholder={t('What is happening, and what should be happening instead?')}
                 value={values.problem}
                 onChange={setTextValue('problem')}
                 aria-invalid={Boolean(errors.problem)}
@@ -800,18 +828,18 @@ export function QualificationForm() {
                   ? `${fieldIds.problem}-privacy-hint ${fieldIds.problem}-error`
                   : `${fieldIds.problem}-privacy-hint`}
               />
-              <small id={`${fieldIds.problem}-privacy-hint`}>Do not include payment data, health or criminal-offence data, or confidential personal information about other people.</small>
+              <small id={`${fieldIds.problem}-privacy-hint`}>{t('Do not include payment data, health or criminal-offence data, or confidential personal information about other people.')}</small>
               <FieldError id={`${fieldIds.problem}-error`} message={errors.problem} />
             </label>
 
             <label className="qualification-field qualification-field--wide" htmlFor={fieldIds.trigger}>
-              <span>Why now? <i>Required</i></span>
+              <span>{t('Why now?')} <i>{t('Required')}</i></span>
               <textarea
                 id={fieldIds.trigger}
                 name="trigger"
                 rows={3}
                 maxLength={240}
-                placeholder="A launch, plateau, change of team, missed target, new market…"
+                placeholder={t('A launch, plateau, change of team, missed target, new market…')}
                 value={values.trigger}
                 onChange={setTextValue('trigger')}
                 aria-invalid={Boolean(errors.trigger)}
@@ -821,7 +849,7 @@ export function QualificationForm() {
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.timeline}>
-              <span>Intended start <i>Required</i></span>
+              <span>{t('Intended start')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.timeline}
                 name="timeline"
@@ -830,18 +858,18 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.timeline)}
                 aria-describedby={errors.timeline ? `${fieldIds.timeline}-error` : undefined}
               >
-                <option value="">Select one</option>
-                <option value="now">As soon as possible</option>
-                <option value="this-month">Within 30 days</option>
-                <option value="this-quarter">Within 90 days</option>
-                <option value="six-months">Within six months</option>
-                <option value="research">Researching for later</option>
+                <option value="">{t('Select one')}</option>
+                <option value="now">{t('As soon as possible')}</option>
+                <option value="this-month">{t('Within 30 days')}</option>
+                <option value="this-quarter">{t('Within 90 days')}</option>
+                <option value="six-months">{t('Within six months')}</option>
+                <option value="research">{t('Researching for later')}</option>
               </select>
               <FieldError id={`${fieldIds.timeline}-error`} message={errors.timeline} />
             </label>
 
             <label className="qualification-field" htmlFor={fieldIds.projectBudget}>
-              <span>Available project budget <i>Required</i></span>
+              <span>{t('Available project budget')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.projectBudget}
                 name="projectBudget"
@@ -850,19 +878,19 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.projectBudget)}
                 aria-describedby={errors.projectBudget ? `${fieldIds.projectBudget}-error` : undefined}
               >
-                <option value="">Select a range</option>
-                <option value="under-5k">Under €5k</option>
+                <option value="">{t('Select a range')}</option>
+                <option value="under-5k">{t('Under €5k')}</option>
                 <option value="5k-10k">€5k–€10k</option>
                 <option value="10k-15k">€10k–€15k</option>
                 <option value="15k-30k">€15k–€30k</option>
                 <option value="30k-plus">€30k+</option>
-                <option value="unsure">Not defined yet</option>
+                <option value="unsure">{t('Not defined yet')}</option>
               </select>
               <FieldError id={`${fieldIds.projectBudget}-error`} message={errors.projectBudget} />
             </label>
 
             <label className="qualification-field qualification-field--wide" htmlFor={fieldIds.ownerReadiness}>
-              <span>Ownership & data readiness <i>Required</i></span>
+              <span>{t('Ownership & data readiness')} <i>{t('Required')}</i></span>
               <select
                 id={fieldIds.ownerReadiness}
                 name="ownerReadiness"
@@ -871,23 +899,23 @@ export function QualificationForm() {
                 aria-invalid={Boolean(errors.ownerReadiness)}
                 aria-describedby={errors.ownerReadiness ? `${fieldIds.ownerReadiness}-error` : undefined}
               >
-                <option value="">Select the closest state</option>
-                <option value="decision-maker">I own the decision and can arrange access to the data</option>
-                <option value="budget-owner">I own or control the budget; access can be arranged</option>
-                <option value="sponsor-access">I have an internal sponsor and can involve the owner</option>
-                <option value="exploring">I am exploring before ownership or access is confirmed</option>
+                <option value="">{t('Select the closest state')}</option>
+                <option value="decision-maker">{t('I own the decision and can arrange access to the data')}</option>
+                <option value="budget-owner">{t('I own or control the budget; access can be arranged')}</option>
+                <option value="sponsor-access">{t('I have an internal sponsor and can involve the owner')}</option>
+                <option value="exploring">{t('I am exploring before ownership or access is confirmed')}</option>
               </select>
               <FieldError id={`${fieldIds.ownerReadiness}-error`} message={errors.ownerReadiness} />
             </label>
 
             <label className="qualification-field qualification-field--wide" htmlFor={fieldIds.constraint}>
-              <span>The likely constraint <i>Required</i></span>
+              <span>{t('The likely constraint')} <i>{t('Required')}</i></span>
               <textarea
                 id={fieldIds.constraint}
                 name="constraint"
                 rows={3}
                 maxLength={1200}
-                placeholder="Data quality, internal time, platform debt, stakeholder alignment…"
+                placeholder={t('Data quality, internal time, platform debt, stakeholder alignment…')}
                 value={values.constraint}
                 onChange={setTextValue('constraint')}
                 aria-invalid={Boolean(errors.constraint)}
@@ -908,21 +936,13 @@ export function QualificationForm() {
                   aria-describedby={errors.privacyAccepted ? `${fieldIds.privacyAccepted}-error` : undefined}
                 />
                 <span>
-                  I have read the <a href={PRIVACY_URL} target="_blank" rel="noreferrer">privacy notice</a>. I understand that the information marked “Required” is needed to assess and answer my enquiry; without it, this form cannot be submitted. This acknowledgement is not consent to marketing. <i>Required</i>
+                  {t('I have read the')}{' '}
+                  <a href={localizedPath('/privacy-policy/')} target="_blank" rel="noreferrer">{t('privacy notice')}</a>.
+                  {' '}{t('I understand that the information marked “Required” is needed to assess and answer my enquiry; without it, this form cannot be submitted. This acknowledgement is not consent to marketing.')}{' '}
+                  <i>{t('Required')}</i>
                 </span>
               </label>
               <FieldError id={`${fieldIds.privacyAccepted}-error`} message={errors.privacyAccepted} />
-
-              <label htmlFor={fieldIds.marketingConsent}>
-                <input
-                  id={fieldIds.marketingConsent}
-                  name="marketingConsent"
-                  type="checkbox"
-                  checked={values.marketingConsent}
-                  onChange={setBooleanValue('marketingConsent')}
-                />
-                <span>Yes, I would like to receive occasional Aetheris Studio commerce research, service updates and event invitations by email. This is optional; a separate email confirmation is required before subscription, and I can unsubscribe at any time. <i>Optional</i></span>
-              </label>
             </div>
 
             <div
@@ -930,7 +950,7 @@ export function QualificationForm() {
               aria-hidden="true"
               style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden' }}
             >
-              <label htmlFor={fieldIds.website}>Leave this field empty</label>
+              <label htmlFor={fieldIds.website}>{t('Leave this field empty')}</label>
               <input
                 id={fieldIds.website}
                 name="website"
@@ -958,7 +978,7 @@ export function QualificationForm() {
           <div className="qualification-actions">
             {step > 1 && (
               <button className="qualification-back" type="button" onClick={() => goToStep(step - 1)} disabled={submitting}>
-                <span aria-hidden="true">←</span> Back
+                <span aria-hidden="true">←</span> {t('Back')}
               </button>
             )}
             {step < 3 ? (
@@ -971,7 +991,7 @@ export function QualificationForm() {
                   completeStep();
                 }}
               >
-                Continue <span aria-hidden="true">→</span>
+                {t('Continue')} <span aria-hidden="true">→</span>
               </button>
             ) : (
               <button
@@ -980,14 +1000,14 @@ export function QualificationForm() {
                 type="submit"
                 disabled={submitting}
               >
-                {submitting ? 'Sending…' : 'Send the commercial brief'} <span aria-hidden="true">→</span>
+                {submitting ? t('Sending…') : t('Send the commercial brief')} <span aria-hidden="true">→</span>
               </button>
             )}
           </div>
 
           <FieldError id={`${idPrefix}-submit-error`} message={errors.submit} />
           <p className="qualification-privacy-note">
-            Your details are used to assess this request and coordinate a response. They are never sent to analytics.
+            {t('Your details are used to assess this request and coordinate a response. They are never sent to analytics.')}
           </p>
         </form>
       </div>

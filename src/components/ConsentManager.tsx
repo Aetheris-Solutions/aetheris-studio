@@ -6,6 +6,7 @@ import {
   type ConsentChoices,
   type ConsentSource
 } from '../lib/consent';
+import { localizedPath, translate as t } from '../i18n';
 
 const DENIED_CHOICES: ConsentChoices = { analytics: false, marketing: false };
 const GRANTED_CHOICES: ConsentChoices = { analytics: true, marketing: false };
@@ -53,10 +54,13 @@ export function ConsentManager() {
   }, [openPreferences]);
 
   useEffect(() => {
-    if (!isOpen || !showPreferences) return;
+    if (!isOpen) return;
     const outsideRegions = Array.from(document.querySelectorAll<HTMLElement>('.site-header, main'));
     outsideRegions.forEach((region) => { region.inert = true; });
-    panelRef.current?.querySelector<HTMLElement>('input, button, a')?.focus();
+    const focusTarget = showPreferences
+      ? panelRef.current?.querySelector<HTMLElement>('input, button, a')
+      : panelRef.current?.querySelector<HTMLElement>('.consent-action--decision, button, a');
+    focusTarget?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && readConsent()) {
@@ -97,8 +101,8 @@ export function ConsentManager() {
     setChoices(nextChoices);
     setStatus(
       nextChoices.analytics || nextChoices.marketing
-        ? 'Privacy preferences saved.'
-        : 'Optional technologies rejected.'
+        ? t('Privacy preferences saved.')
+        : t('Optional technologies rejected.')
     );
     setIsOpen(false);
     setShowPreferences(false);
@@ -119,8 +123,8 @@ export function ConsentManager() {
     <aside
       ref={panelRef}
       className={`consent-panel${showPreferences ? ' consent-panel--expanded' : ''}`}
-      role={showPreferences ? 'dialog' : 'region'}
-      aria-modal={showPreferences ? 'true' : undefined}
+      role="dialog"
+      aria-modal="true"
       aria-labelledby={headingId}
       aria-describedby={descriptionId}
     >
@@ -128,36 +132,35 @@ export function ConsentManager() {
         <button
           className="consent-panel__close"
           type="button"
-          aria-label="Close privacy choices and reject optional technologies"
+          aria-label={t('Close privacy choices and reject optional technologies')}
           onClick={() => applyChoices(DENIED_CHOICES, 'banner')}
         >
           <span aria-hidden="true">×</span>
         </button>
       )}
       <div className="consent-panel__intro">
-        <p className="consent-panel__kicker">Privacy controls</p>
-        <h2 id={headingId}>{showPreferences ? 'Choose what may run' : 'Your privacy, by design.'}</h2>
+        <p className="consent-panel__kicker">{t('Privacy controls')}</p>
+        <h2 id={headingId}>{showPreferences ? t('Choose what may run') : t('Your privacy, by design.')}</h2>
         <p id={descriptionId}>
-          Essential site functions are always available. Google Analytics and Microsoft Clarity remain off unless you
-          choose to activate analytics. Advertising technologies are not active.
+          {t('Essential site functions are always available. Google Analytics and Microsoft Clarity remain off unless you choose to activate analytics. Advertising technologies are not active.')}
         </p>
-        <a href="/cookies-policy/">Read the cookies notice</a>
+        <a href={localizedPath('/cookies-policy/')}>{t('Read the cookies notice')}</a>
       </div>
 
       {showPreferences && (
-        <div className="consent-preferences" aria-label="Optional technology preferences">
+        <div className="consent-preferences" aria-label={t('Optional technology preferences')}>
           <div className="consent-preference consent-preference--essential">
             <div>
-              <strong>Essential</strong>
-              <span>Security, navigation and the protected qualification form.</span>
+              <strong>{t('Essential')}</strong>
+              <span>{t('Security, navigation and the protected qualification form.')}</span>
             </div>
-            <span aria-label="Essential technologies always active">Always active</span>
+            <span aria-label={t('Essential technologies always active')}>{t('Always active')}</span>
           </div>
 
           <label className="consent-preference">
             <span>
-              <strong>Analytics</strong>
-              <span>Helps us understand aggregate journeys and improve the site.</span>
+              <strong>{t('Analytics')}</strong>
+              <span>{t('Helps us understand aggregate journeys and improve the site.')}</span>
             </span>
             <input
               type="checkbox"
@@ -169,10 +172,10 @@ export function ConsentManager() {
 
           <div className="consent-preference consent-preference--essential">
             <div>
-              <strong>Marketing</strong>
-              <span>No advertising or personalisation technology is active.</span>
+              <strong>{t('Marketing')}</strong>
+              <span>{t('No advertising or personalisation technology is active.')}</span>
             </div>
-            <span aria-label="Marketing technologies inactive">Inactive</span>
+            <span aria-label={t('Marketing technologies inactive')}>{t('Inactive')}</span>
           </div>
         </div>
       )}
@@ -183,7 +186,7 @@ export function ConsentManager() {
           type="button"
           onClick={() => applyChoices(DENIED_CHOICES, showPreferences ? 'preferences' : 'banner')}
         >
-          Reject non-essential
+          {t('Reject non-essential')}
         </button>
         {showPreferences ? (
           <button
@@ -191,7 +194,7 @@ export function ConsentManager() {
             type="button"
             onClick={() => applyChoices(choices, 'preferences')}
           >
-            Save choices
+            {t('Save choices')}
           </button>
         ) : (
           <button
@@ -199,7 +202,7 @@ export function ConsentManager() {
             type="button"
             onClick={(event) => openPreferences(event.currentTarget)}
           >
-            Preferences
+            {t('Preferences')}
           </button>
         )}
         <button
@@ -207,7 +210,7 @@ export function ConsentManager() {
           type="button"
           onClick={() => applyChoices(GRANTED_CHOICES, 'banner')}
         >
-          Accept analytics
+          {t('Accept analytics')}
         </button>
       </div>
     </aside>

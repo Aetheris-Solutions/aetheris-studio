@@ -25,6 +25,11 @@ const VITE_BIN = path.join(APP_DIR, 'node_modules/vite/bin/vite.js');
 const CORE_GLYPH_DELTA_RATIO = 0.55;
 const MIN_RENDERED_DELTA = 2;
 
+const LOCALES = [
+  { id: 'en', path: '/', label: 'English' },
+  { id: 'it', path: '/it/', label: 'Italian' }
+];
+
 const TARGETS = {
   desktop: [
     { selector: '.brand > span', label: 'Brand wordmark', threshold: 4.5 },
@@ -33,21 +38,23 @@ const TARGETS = {
     { selector: '.primary-nav a:nth-child(3)', label: 'Navigation · Engagement', threshold: 4.5 },
     { selector: '.primary-nav a:nth-child(4)', label: 'Navigation · Studio', threshold: 4.5 },
     { selector: '.header-cta', label: 'Header · Book a call', threshold: 4.5 },
+    { selector: '.locale-switch', label: 'Header · Locale switch', threshold: 4.5 },
     { selector: '.eyebrow', label: 'Hero eyebrow', threshold: 4.5 },
-    { selector: '.hero h1 .headline-safe-box:nth-child(1) > span', label: 'H1 · Commerce,', threshold: 3 },
-    { selector: '.hero h1 .headline-safe-box:nth-child(2) > em', label: 'H1 · seen whole.', threshold: 3 },
+    { selector: '.hero h1 .headline-safe-box:nth-child(1) > span', label: 'H1 · primary line', threshold: 3 },
+    { selector: '.hero h1 .headline-safe-box:nth-child(2) > em', label: 'H1 · secondary line', threshold: 3 },
     { selector: '.hero-intro', label: 'Hero introduction', threshold: 4.5 },
-    { selector: '.button-primary', label: 'Primary action', threshold: 4.5 },
+    { selector: '.button-primary', label: 'Primary action', threshold: 4.5, contrastMode: 'computed-own-background' },
     { selector: '.text-link', label: 'Secondary action', threshold: 4.5 },
+    { selector: '.hero-fit', label: 'Hero fit statement', threshold: 4.5 },
     { selector: '.intro-skip', label: 'Skip intro', threshold: 4.5, stableRequired: false }
   ],
   mobile: [
     { selector: '.brand > span', label: 'Brand wordmark', threshold: 4.5 },
     { selector: '.eyebrow', label: 'Hero eyebrow', threshold: 4.5 },
-    { selector: '.hero h1 .headline-safe-box:nth-child(1) > span', label: 'H1 · Commerce,', threshold: 3 },
-    { selector: '.hero h1 .headline-safe-box:nth-child(2) > em', label: 'H1 · seen whole.', threshold: 3 },
+    { selector: '.hero h1 .headline-safe-box:nth-child(1) > span', label: 'H1 · primary line', threshold: 3 },
+    { selector: '.hero h1 .headline-safe-box:nth-child(2) > em', label: 'H1 · secondary line', threshold: 3 },
     { selector: '.hero-intro', label: 'Hero introduction', threshold: 4.5 },
-    { selector: '.button-primary', label: 'Primary action', threshold: 4.5 },
+    { selector: '.button-primary', label: 'Primary action', threshold: 4.5, contrastMode: 'computed-own-background' },
     { selector: '.text-link', label: 'Secondary action', threshold: 4.5 },
     { selector: '.intro-skip', label: 'Skip intro', threshold: 4.5, stableRequired: false }
   ]
@@ -69,6 +76,12 @@ const PROFILES = [
     targetSet: 'mobile',
     viewport: { width: 1024, height: 1366, mobile: true },
     times: [0, 2.65, 2.85, 3, 3.15, 3.28, 3.4, 3.55, 3.7, 3.88, 4]
+  },
+  {
+    id: 'desktop-landscape',
+    targetSet: 'desktop',
+    viewport: { width: 1366, height: 768, mobile: false },
+    times: [0, 1.58, 1.72, 3.1, 3.5, 3.7, 3.9, 4.8]
   }
 ];
 
@@ -427,6 +440,40 @@ function analyseTarget(target, shown, backdrop, imageDimensions, viewport) {
     return { ...target, present: false, reason: 'authored-opacity-zero', corePixelCount: 0, pass: null };
   }
 
+  if (target.contrastMode === 'computed-own-background') {
+    if (target.effectiveOpacity < 0.999 || !target.authoredColor || !target.authoredBackground) {
+      return {
+        ...target,
+        present: false,
+        reason: target.effectiveOpacity < 0.999
+          ? 'own-background-transition'
+          : 'missing-computed-colour',
+        corePixelCount: 0,
+        pass: null
+      };
+    }
+    const foreground = [
+      target.authoredColor.red,
+      target.authoredColor.green,
+      target.authoredColor.blue
+    ];
+    const background = [
+      target.authoredBackground.red,
+      target.authoredBackground.green,
+      target.authoredBackground.blue
+    ];
+    const ratio = contrastRatio(foreground, background);
+    return {
+      ...target,
+      present: true,
+      reason: null,
+      corePixelCount: null,
+      contrast: { minimum: fixed(ratio), p01: fixed(ratio), p05: fixed(ratio), median: fixed(ratio) },
+      renderedPixelDiagnostic: null,
+      pass: ratio >= target.threshold
+    };
+  }
+
   const scaleX = imageDimensions.width / viewport.width;
   const scaleY = imageDimensions.height / viewport.height;
   const left = Math.max(0, Math.floor(target.rect.left * scaleX));
@@ -533,6 +580,7 @@ async function collectTargetInfo(client, targets) {
         exists: true,
         effectiveOpacity: effectiveOpacity(element),
         authoredColor: parseColor(style.color),
+        authoredBackground: parseColor(style.backgroundColor),
         fontSizePx: Number.parseFloat(style.fontSize),
         fontWeight: style.fontWeight,
         rect: { left: rect.left, top: rect.top, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height }
@@ -543,7 +591,9 @@ async function collectTargetInfo(client, targets) {
 }
 
 async function injectTransparentTextStyle(client, targets) {
-  const selectors = targets.flatMap((target) => [target.selector, `${target.selector} *`]);
+  const selectors = targets
+    .filter((target) => target.contrastMode !== 'computed-own-background')
+    .flatMap((target) => [target.selector, `${target.selector} *`]);
   const css = `${selectors.join(',\n')} {
     color: transparent !important;
     -webkit-text-fill-color: transparent !important;
@@ -555,8 +605,12 @@ async function injectTransparentTextStyle(client, targets) {
     style.id = 'aetheris-contrast-hide-copy';
     style.textContent = ${JSON.stringify(css)};
     document.head.append(style);
-    return new Promise((resolve) => requestAnimationFrame(resolve));
+    return new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
   })()`);
+  // Chrome can retain a cached text layer for one compositor frame even after
+  // computed style has changed. Let the transparent pair reach the screenshot
+  // surface so static button labels are measured, not sub-pixel canvas drift.
+  await sleep(350);
 }
 
 async function auditFrame({ client, baseUrl, profile, time, targets, magick, artifactDir }) {
@@ -662,7 +716,7 @@ function generatedReport(evidence) {
     '## Verdict',
     '',
     `**Stable/final presentation: ${stablePass ? 'PASS' : 'FAIL'}.** ${stablePass
-      ? 'Every required text target passes its WCAG threshold in the frozen final desktop and mobile compositions.'
+      ? 'Every required text target passes its WCAG threshold in every frozen final EN/IT viewport composition.'
       : 'At least one required text target fails or is missing in a frozen final composition.'}`,
     '',
     `**Every sampled motion frame: ${strictPass ? 'PASS' : 'FAIL'}.** ${strictPass
@@ -703,8 +757,8 @@ function generatedReport(evidence) {
     '## Method',
     '',
     '1. Build and launch the production Vite preview in an isolated local process.',
-    '2. Launch headless Chrome and set exact 1440×900 desktop and 390×844 mobile viewports at DPR 1 through CDP.',
-    '3. Navigate to each deterministic `?qa-time=<seconds>` frame and require the production GLB, loaded fonts and live WebGL canvas.',
+    '2. Launch headless Chrome and set exact desktop, mobile, portrait-tablet and landscape viewports at DPR 1 through CDP.',
+    '3. Navigate to both English and Italian routes at each deterministic `?qa-time=<seconds>` frame and require the production GLB, loaded fonts and live WebGL canvas.',
     '4. Capture one shown frame and one paired frame in which only the audited text colour is made transparent. Backgrounds, borders, blur, transforms, opacity and layout remain unchanged.',
     `5. Select core glyph locations at ${Math.round(CORE_GLYPH_DELTA_RATIO * 100)}% or more of each target’s maximum RGB delta, then composite the computed CSS foreground (including colour alpha and effective ancestor opacity) against the exact paired backdrop pixel before applying WCAG relative luminance.`,
     '6. Assess H1 lines at 3:1 and all normal/small copy at 4.5:1.',
@@ -718,8 +772,10 @@ function generatedReport(evidence) {
     '## Evidence caveats',
     '',
     '- This is a rendered Chromium audit on the current development host, not a physical-device measurement.',
+    '- The compact header intentionally hides the desktop locale switch; that control is contrast-gated in the desktop and landscape profiles where it is rendered.',
     '- Frozen timeline frames remove capture drift from the authored camera timeline; the paired screenshots preserve the exact WebGL/material backdrop for each sampled composition.',
-    '- Core-glyph locations intentionally exclude antialias fringes. The JSON also retains actual screenshot-pixel contrast as an antialiasing diagnostic, but the WCAG gate uses the computed CSS foreground because rasterizer smoothing is not part of the authored contrast requirement.',
+    '- Core-glyph locations intentionally exclude antialias fringes. The primary action has its own fully opaque authored background, so its WCAG ratio is computed directly from the browser’s foreground/background colours once the action group reaches full opacity; all text over animated scene pixels uses paired screenshots.',
+    '- The JSON also retains actual screenshot-pixel contrast as an antialiasing diagnostic, but the WCAG gate uses the computed CSS foreground because rasterizer smoothing is not part of the authored contrast requirement.',
     '- Any substantive change to backdrop, lights, camera, materials, copy position or text treatment invalidates this evidence and must rerun the command.',
     ''
   );
@@ -751,43 +807,55 @@ async function main() {
     preview = await launchPreview(previewPort);
     browser = await launchChrome(chrome, cdpPort, chromeProfile);
 
-    const baseUrl = `http://127.0.0.1:${previewPort}/`;
+    const previewOrigin = `http://127.0.0.1:${previewPort}`;
     const profileResults = [];
-    for (const profile of PROFILES) {
-      const samples = [];
-      for (const time of profile.times) {
-        process.stderr.write(`[contrast] ${profile.id} ${time.toFixed(2)}s … `);
-        const frameClient = await createAuditPage(cdpPort, profile);
-        let sample;
-        try {
-          sample = await auditFrame({
-            client: frameClient,
-            baseUrl,
-            profile,
-            time,
-            targets: TARGETS[profile.targetSet ?? profile.id],
-            magick,
-            artifactDir
-          });
-        } finally {
-          await frameClient.send('Page.close').catch(() => {});
-          frameClient.close();
+    for (const locale of LOCALES) {
+      const baseUrl = new URL(locale.path, previewOrigin).toString();
+      for (const profileDefinition of PROFILES) {
+        const profile = {
+          ...profileDefinition,
+          id: `${locale.id}-${profileDefinition.id}`,
+          viewportId: profileDefinition.id,
+          targetSet: profileDefinition.targetSet ?? profileDefinition.id,
+          locale: locale.id,
+          localeLabel: locale.label,
+          route: locale.path
+        };
+        const samples = [];
+        for (const time of profile.times) {
+          process.stderr.write(`[contrast] ${profile.id} ${time.toFixed(2)}s … `);
+          const frameClient = await createAuditPage(cdpPort, profile);
+          let sample;
+          try {
+            sample = await auditFrame({
+              client: frameClient,
+              baseUrl,
+              profile,
+              time,
+              targets: TARGETS[profile.targetSet],
+              magick,
+              artifactDir
+            });
+          } finally {
+            await frameClient.send('Page.close').catch(() => {});
+            frameClient.close();
+          }
+          samples.push(sample);
+          const failures = sample.measurements
+            .filter((measurement) => measurement.present && !measurement.pass)
+            .map((measurement) => `${measurement.label} ${measurement.contrast.minimum.toFixed(3)}:1`);
+          process.stderr.write(`${sample.sampledFramePass ? 'pass' : failures.join('; ')}\n`);
         }
-        samples.push(sample);
-        const failures = sample.measurements
-          .filter((measurement) => measurement.present && !measurement.pass)
-          .map((measurement) => `${measurement.label} ${measurement.contrast.minimum.toFixed(3)}:1`);
-        process.stderr.write(`${sample.sampledFramePass ? 'pass' : failures.join('; ')}\n`);
+        const result = { ...profile, samples };
+        result.summary = summarizeProfile(result);
+        profileResults.push(result);
       }
-      const result = { ...profile, samples };
-      result.summary = summarizeProfile(result);
-      profileResults.push(result);
     }
 
     const stablePass = profileResults.every((profile) => profile.summary.stablePass);
     const allSampledFramesPass = profileResults.every((profile) => profile.summary.sampledTransitionPass);
     const evidence = {
-      schemaVersion: '1.0.0',
+      schemaVersion: '1.1.0',
       capturedAt: new Date().toISOString(),
       browser: 'Headless Chrome controlled over CDP',
       chromeExecutable: chrome,
@@ -801,6 +869,7 @@ async function main() {
         defaultGate: 'stable/final compositions',
         strictGate: 'all sampled rendered frames'
       },
+      locales: LOCALES,
       summary: {
         stablePass,
         allSampledFramesPass,

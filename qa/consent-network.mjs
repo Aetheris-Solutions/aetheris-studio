@@ -24,6 +24,19 @@ const ATTRIBUTION_KEY = 'aetheris_studio_attribution_v1';
 const EXPECTED_GTM_ID = 'GTM-5553RFJZ';
 const PII_SENTINEL = 'consent-qa-private';
 const MOBILE_VIEWPORT = { width: 390, height: 844, mobile: true };
+const LOCALES = [
+  { id: 'en', path: '/', label: 'English' },
+  { id: 'it', path: '/it/', label: 'Italian' }
+];
+const CONSENT_SELECTORS = {
+  panel: '.consent-panel',
+  close: '.consent-panel__close',
+  reject: '.consent-panel__actions .consent-action--decision:first-of-type',
+  secondary: '.consent-panel__actions .consent-action--secondary',
+  accept: '.consent-panel__actions .consent-action--decision:last-of-type',
+  footer: '.footer-consent-button',
+  analytics: '.consent-preference input[type="checkbox"]'
+};
 
 function parseArgs(argv) {
   const result = {
@@ -66,6 +79,8 @@ function usage() {
 Usage:
   CONSENT_QA_URL=https://preview.example node qa/consent-network.mjs
   node qa/consent-network.mjs https://preview.example [options]
+
+The supplied origin is audited independently at `/` and `/it/`.
 
 Options:
   --url <url>                 Target preview URL (overrides CONSENT_QA_URL)
@@ -467,25 +482,105 @@ async function readConsentState(client) {
   })()`);
 }
 
-async function clickButton(client, text) {
+async function clickSelector(client, selector) {
   const clicked = await evaluate(client, `(() => {
-    const wanted = ${JSON.stringify(text)};
-    const button = [...document.querySelectorAll('button')]
-      .find((candidate) => candidate.textContent.trim() === wanted);
-    if (!button) return false;
-    button.click();
+    const control = document.querySelector(${JSON.stringify(selector)});
+    if (!control) return false;
+    control.click();
     return true;
   })()`);
-  if (!clicked) throw new Error(`Button not found: ${text}`);
+  if (!clicked) throw new Error(`Control not found: ${selector}`);
   return clicked;
+}
+
+async function dispatchKey(client, key, { shift = false } = {}) {
+  const keyCode = key === 'Tab' ? 9 : key === 'Escape' ? 27 : 0;
+  const parameters = {
+    key,
+    code: key,
+    modifiers: shift ? 8 : 0,
+    windowsVirtualKeyCode: keyCode,
+    nativeVirtualKeyCode: keyCode
+  };
+  await client.send('Input.dispatchKeyEvent', { type: 'keyDown', ...parameters });
+  await client.send('Input.dispatchKeyEvent', { type: 'keyUp', ...parameters });
+  await sleep(80);
+}
+
+async function inspectDialogIsolation(client) {
+  return evaluate(client, `(() => {
+    const panel = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.panel)});
+    const visible = (element) => {
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0;
+    };
+    const focusables = panel
+      ? [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+          .filter((element) => visible(element) && element.tabIndex >= 0)
+      : [];
+    const outside = [...document.querySelectorAll('.site-header, main')];
+    return {
+      panelVisible: Boolean(panel && visible(panel)),
+      activeInside: Boolean(panel?.contains(document.activeElement)),
+      activeIndex: focusables.indexOf(document.activeElement),
+      focusableCount: focusables.length,
+      outsideInert: outside.length >= 2 && outside.every((element) => element.inert === true),
+      outsideStates: outside.map((element) => ({
+        selector: element.matches('.site-header') ? '.site-header' : 'main',
+        inert: element.inert
+      }))
+    };
+  })()`);
+}
+
+async function verifyFocusTrap(client) {
+  const setupForward = await evaluate(client, `(() => {
+    const panel = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.panel)});
+    if (!panel) return false;
+    const focusables = [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0 && element.tabIndex >= 0;
+      });
+    focusables.at(-1)?.focus();
+    return focusables.length > 1 && document.activeElement === focusables.at(-1);
+  })()`);
+  await dispatchKey(client, 'Tab');
+  const forward = await inspectDialogIsolation(client);
+
+  const setupBackward = await evaluate(client, `(() => {
+    const panel = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.panel)});
+    if (!panel) return false;
+    const focusables = [...panel.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.visibility !== 'hidden' && style.display !== 'none' && rect.width > 0 && rect.height > 0 && element.tabIndex >= 0;
+      });
+    focusables[0]?.focus();
+    return focusables.length > 1 && document.activeElement === focusables[0];
+  })()`);
+  await dispatchKey(client, 'Tab', { shift: true });
+  const backward = await inspectDialogIsolation(client);
+
+  return {
+    setupForward,
+    setupBackward,
+    forwardWrapped: forward.activeInside && forward.activeIndex === 0,
+    backwardWrapped: backward.activeInside && backward.activeIndex === backward.focusableCount - 1,
+    forward,
+    backward
+  };
 }
 
 async function inspectMobileBanner(client) {
   return evaluate(client, `(() => {
-    const panel = document.querySelector('.consent-panel');
-    const buttons = [...document.querySelectorAll('.consent-panel button')];
-    const reject = buttons.find((button) => button.textContent.trim() === 'Reject non-essential');
-    const accept = buttons.find((button) => button.textContent.trim() === 'Accept analytics');
+    const panel = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.panel)});
+    const decisions = [...document.querySelectorAll('.consent-panel__actions .consent-action--decision')];
+    const reject = decisions[0];
+    const accept = decisions.at(-1);
     const styleKeys = [
       'backgroundColor', 'color', 'borderTopColor', 'borderTopStyle', 'borderTopWidth',
       'boxShadow', 'fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'minHeight'
@@ -549,9 +644,16 @@ async function inspectMobileBanner(client) {
 }
 
 function addCheck(evidence, id, label, pass, expected, actual) {
-  const entry = { id, label, pass: Boolean(pass), expected, actual };
+  const entry = {
+    id: evidence.locale ? `${evidence.locale}-${id}` : id,
+    locale: evidence.locale ?? null,
+    label,
+    pass: Boolean(pass),
+    expected,
+    actual
+  };
   evidence.checks.push(entry);
-  process.stderr.write(`[consent] ${entry.pass ? 'PASS' : 'FAIL'} ${label}\n`);
+  process.stderr.write(`[consent${evidence.locale ? `:${evidence.locale}` : ''}] ${entry.pass ? 'PASS' : 'FAIL'} ${label}\n`);
   return entry.pass;
 }
 
@@ -581,7 +683,11 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     await navigate(page.client, auditUrl);
     const freshPanelReady = await waitForExpression(page.client, `document.querySelector('.consent-panel')`, 20_000);
     await sleep(settleMs);
+    const freshIsolation = await inspectDialogIsolation(page.client);
+    const freshFocusTrap = await verifyFocusTrap(page.client);
     evidence.mobile = await inspectMobileBanner(page.client);
+    evidence.states.freshIsolation = freshIsolation;
+    evidence.states.freshFocusTrap = freshFocusTrap;
     evidence.phases.fresh = phaseEvidence(page.telemetry, freshMark);
     addCheck(evidence, 'fresh-banner', 'Fresh visit shows the consent controls', freshPanelReady && evidence.mobile.panelVisible, true, evidence.mobile.panelVisible);
     addCheck(evidence, 'fresh-zero-optional', 'Fresh visit sends no Google or Clarity request', evidence.phases.fresh.optionalRequestCount === 0, 0, evidence.phases.fresh.optionalRequestCount);
@@ -597,18 +703,39 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
       unfocusable: evidence.mobile.unfocusableCount,
       names: evidence.mobile.focusables.map((entry) => entry.name)
     });
+    addCheck(evidence, 'fresh-initial-focus', 'Fresh dialog receives initial focus', freshIsolation.panelVisible && freshIsolation.activeInside, true, {
+      panelVisible: freshIsolation.panelVisible,
+      activeInside: freshIsolation.activeInside,
+      activeIndex: freshIsolation.activeIndex
+    });
+    addCheck(evidence, 'fresh-inert', 'Header and main content are inert while the dialog is open', freshIsolation.outsideInert, true, freshIsolation.outsideStates);
+    addCheck(
+      evidence,
+      'fresh-focus-trap',
+      'Tab and Shift+Tab wrap inside the consent dialog',
+      freshFocusTrap.setupForward && freshFocusTrap.setupBackward
+        && freshFocusTrap.forwardWrapped && freshFocusTrap.backwardWrapped,
+      { forwardWrapped: true, backwardWrapped: true },
+      {
+        setupForward: freshFocusTrap.setupForward,
+        setupBackward: freshFocusTrap.setupBackward,
+        forwardWrapped: freshFocusTrap.forwardWrapped,
+        backwardWrapped: freshFocusTrap.backwardWrapped
+      }
+    );
 
     const closeMark = page.telemetry.mark();
-    const closed = await evaluate(page.client, `(() => {
-      const button = document.querySelector('.consent-panel__close');
-      if (!button) return false;
-      button.click();
-      return true;
-    })()`);
+    const closed = await clickSelector(page.client, CONSENT_SELECTORS.close);
     const closeStored = await waitForExpression(page.client, `JSON.parse(localStorage.getItem(${JSON.stringify(CONSENT_KEY)}) || 'null')?.analytics === false`, 5_000);
+    const closeReleasedInert = await waitForExpression(
+      page.client,
+      `![...document.querySelectorAll('.site-header, main')].some((element) => element.inert)`,
+      5_000
+    );
     await sleep(500);
     evidence.phases.close = phaseEvidence(page.telemetry, closeMark);
     addCheck(evidence, 'close-denies', 'Close control persists rejection', closed && closeStored, true, { clicked: closed, denialStored: closeStored });
+    addCheck(evidence, 'close-releases-inert', 'Closing the dialog restores background interactivity', closeReleasedInert, true, closeReleasedInert);
     addCheck(evidence, 'close-zero-optional', 'Close action sends no Google or Clarity request', evidence.phases.close.optionalRequestCount === 0, 0, evidence.phases.close.optionalRequestCount);
     const closeReloadMark = page.telemetry.mark();
     await navigate(page.client, auditUrl);
@@ -629,7 +756,7 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     await sleep(settleMs);
     evidence.phases.rejectFresh = phaseEvidence(page.telemetry, rejectFreshMark);
     const rejectMark = page.telemetry.mark();
-    await clickButton(page.client, 'Reject non-essential');
+    await clickSelector(page.client, CONSENT_SELECTORS.reject);
     const rejected = await waitForExpression(page.client, `JSON.parse(localStorage.getItem(${JSON.stringify(CONSENT_KEY)}) || 'null')?.analytics === false`, 5_000);
     await sleep(500);
     evidence.phases.reject = phaseEvidence(page.telemetry, rejectMark);
@@ -653,7 +780,7 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     await sleep(settleMs);
     evidence.phases.acceptFresh = phaseEvidence(page.telemetry, acceptFreshMark);
     const acceptMark = page.telemetry.mark();
-    await clickButton(page.client, 'Accept analytics');
+    await clickSelector(page.client, CONSENT_SELECTORS.accept);
     await waitFor(() => {
       const phase = phaseEvidence(page.telemetry, acceptMark);
       return serviceCount(phase, 'gtm') >= 1 && serviceCount(phase, 'ga4') >= 1 && serviceCount(phase, 'clarity') >= 1;
@@ -712,18 +839,46 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     })()`);
     evidence.states.seededBeforeRevoke = seeded;
     addCheck(evidence, 'revoke-fixture', 'Synthetic origin-readable analytics artefacts are established before withdrawal', seeded.attributionPresent && ['_ga', '_clck', '_clsk'].every((name) => seeded.cookieNames.includes(name)), { attributionPresent: true, cookieNames: ['_ga', '_clck', '_clsk'] }, seeded);
-    const footerOpened = await evaluate(page.client, `(() => {
-      const button = document.querySelector('.footer-consent-button');
+    const footerOpenedForRestore = await evaluate(page.client, `(() => {
+      const button = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.footer)});
       if (!button) return false;
+      button.focus();
       button.click();
       return true;
     })()`);
-    const preferencesOpen = await waitForExpression(page.client, `document.querySelector('.consent-panel--expanded')`, 5_000);
-    addCheck(evidence, 'footer-reopen', 'Footer Cookie choices reopens granular preferences', footerOpened && preferencesOpen, true, { footerOpened, preferencesOpen });
+    const preferencesOpenForRestore = await waitForExpression(page.client, `document.querySelector('.consent-panel--expanded')`, 5_000);
+    const preferencesIsolation = await inspectDialogIsolation(page.client);
+    await dispatchKey(page.client, 'Escape');
+    const focusRestored = await waitForExpression(
+      page.client,
+      `!document.querySelector(${JSON.stringify(CONSENT_SELECTORS.panel)})
+        && document.activeElement === document.querySelector(${JSON.stringify(CONSENT_SELECTORS.footer)})
+        && ![...document.querySelectorAll('.site-header, main')].some((element) => element.inert)`,
+      5_000
+    );
+    addCheck(evidence, 'footer-reopen', 'Footer Cookie choices reopens granular preferences', footerOpenedForRestore && preferencesOpenForRestore, true, {
+      footerOpened: footerOpenedForRestore,
+      preferencesOpen: preferencesOpenForRestore
+    });
+    addCheck(evidence, 'preferences-inert', 'Reopened preferences keep header and main inert', preferencesIsolation.outsideInert, true, preferencesIsolation.outsideStates);
+    addCheck(evidence, 'preferences-restore-focus', 'Escape closes saved preferences and restores focus to the invoker', focusRestored, true, focusRestored);
+
+    const footerOpenedForRevoke = await evaluate(page.client, `(() => {
+      const button = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.footer)});
+      if (!button) return false;
+      button.focus();
+      button.click();
+      return true;
+    })()`);
+    const preferencesOpenForRevoke = await waitForExpression(page.client, `document.querySelector('.consent-panel--expanded')`, 5_000);
+    addCheck(evidence, 'footer-reopen-for-revoke', 'Preferences can reopen after focus restoration', footerOpenedForRevoke && preferencesOpenForRevoke, true, {
+      footerOpened: footerOpenedForRevoke,
+      preferencesOpen: preferencesOpenForRevoke
+    });
 
     const revokeMark = page.telemetry.mark();
     const checkboxToggled = await evaluate(page.client, `(() => {
-      const checkbox = document.querySelector('.consent-preference input[type="checkbox"]');
+      const checkbox = document.querySelector(${JSON.stringify(CONSENT_SELECTORS.analytics)});
       if (!checkbox) return false;
       if (checkbox.checked) checkbox.click();
       return !checkbox.checked;
@@ -732,12 +887,12 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     // in a separate task so the handler cannot capture the previous choice.
     const checkboxCommitted = await waitForExpression(
       page.client,
-      `document.querySelector('.consent-preference input[type="checkbox"]')?.checked === false`,
+      `document.querySelector(${JSON.stringify(CONSENT_SELECTORS.analytics)})?.checked === false`,
       2_000
     );
     await sleep(100);
     const revokeStarted = checkboxToggled && checkboxCommitted
-      ? await clickButton(page.client, 'Save choices')
+      ? await clickSelector(page.client, CONSENT_SELECTORS.secondary)
       : false;
     const revoked = await waitFor(async () => {
       const state = await readConsentState(page.client);
@@ -788,41 +943,51 @@ function reportFor(evidence) {
     '',
     `Generated: ${evidence.capturedAt}`,
     '',
-    `Target: \`${evidence.target}\``,
+    `Targets: ${evidence.locales.map((locale) => `\`${locale.id}: ${locale.target}\``).join(' · ')}`,
     '',
     `**Verdict: ${evidence.summary.pass ? 'PASS' : 'FAIL'} — ${evidence.summary.failureCount} failure(s).**`,
     '',
     '## Gate results',
     '',
-    '| Check | Expected | Actual | Result |',
-    '|---|---|---|---|'
+    '| Locale | Check | Expected | Actual | Result |',
+    '|---|---|---|---|---|'
   ];
   for (const check of evidence.checks) {
-    lines.push(`| ${markdownCell(check.label)} | ${markdownCell(check.expected)} | ${markdownCell(check.actual)} | ${check.pass ? 'PASS' : 'FAIL'} |`);
+    lines.push(`| ${check.locale?.toUpperCase() ?? '—'} | ${markdownCell(check.label)} | ${markdownCell(check.expected)} | ${markdownCell(check.actual)} | ${check.pass ? 'PASS' : 'FAIL'} |`);
   }
 
-  lines.push('', '## Network phases', '', '| Phase | Optional | GTM | GA4 | Clarity | PII sentinel leaks | CSP blocks |', '|---|---:|---:|---:|---:|---:|---:|');
-  for (const [name, phase] of Object.entries(evidence.phases)) {
-    lines.push(`| ${name} | ${phase.optionalRequestCount} | ${phase.gtmRequestCount} | ${phase.ga4RequestCount} | ${phase.clarityRequestCount} | ${phase.piiSentinelLeakCount} | ${phase.cspBlockCount} |`);
+  lines.push('', '## Network phases', '', '| Locale | Phase | Optional | GTM | GA4 | Clarity | PII sentinel leaks | CSP blocks |', '|---|---|---:|---:|---:|---:|---:|---:|');
+  for (const locale of evidence.locales) {
+    for (const [name, phase] of Object.entries(locale.phases)) {
+      lines.push(`| ${locale.id.toUpperCase()} | ${name} | ${phase.optionalRequestCount} | ${phase.gtmRequestCount} | ${phase.ga4RequestCount} | ${phase.clarityRequestCount} | ${phase.piiSentinelLeakCount} | ${phase.cspBlockCount} |`);
+    }
   }
 
+  lines.push('', '## Mobile accessibility evidence', '');
+  for (const locale of evidence.locales) {
+    lines.push(
+      `### ${locale.label}`,
+      '',
+      `- Viewport: ${locale.mobile?.viewport?.width ?? '—'}×${locale.mobile?.viewport?.height ?? '—'}.`,
+      `- Horizontal overflow: ${locale.mobile?.horizontalOverflow ? 'yes' : 'no'}.`,
+      `- Accept/reject computed style equal: ${locale.mobile?.acceptRejectStyleEqual ? 'yes' : 'no'}.`,
+      `- Accept/reject dimensions equal: ${locale.mobile?.acceptRejectDimensionsEqual ? 'yes' : 'no'}.`,
+      `- Named focusable controls: ${locale.mobile?.focusables?.length ?? 0}; unnamed: ${locale.mobile?.unnamedFocusableCount ?? '—'}; unable to receive focus: ${locale.mobile?.unfocusableCount ?? '—'}.`,
+      `- Initial focus inside dialog: ${locale.states?.freshIsolation?.activeInside ? 'yes' : 'no'}.`,
+      `- Header/main inert while open: ${locale.states?.freshIsolation?.outsideInert ? 'yes' : 'no'}.`,
+      `- Tab wrap: ${locale.states?.freshFocusTrap?.forwardWrapped ? 'yes' : 'no'}; Shift+Tab wrap: ${locale.states?.freshFocusTrap?.backwardWrapped ? 'yes' : 'no'}.`,
+      ''
+    );
+  }
   lines.push(
-    '',
-    '## Mobile accessibility evidence',
-    '',
-    `- Viewport: ${evidence.mobile?.viewport?.width ?? '—'}×${evidence.mobile?.viewport?.height ?? '—'}.`,
-    `- Horizontal overflow: ${evidence.mobile?.horizontalOverflow ? 'yes' : 'no'}.`,
-    `- Accept/reject computed style equal: ${evidence.mobile?.acceptRejectStyleEqual ? 'yes' : 'no'}.`,
-    `- Accept/reject dimensions equal: ${evidence.mobile?.acceptRejectDimensionsEqual ? 'yes' : 'no'}.`,
-    `- Named focusable controls: ${evidence.mobile?.focusables?.length ?? 0}; unnamed: ${evidence.mobile?.unnamedFocusableCount ?? '—'}; unable to receive focus: ${evidence.mobile?.unfocusableCount ?? '—'}.`,
-    '',
     '## Method',
     '',
     '1. Launch an installed Chrome build in headless mode with a new temporary profile and a 390×844 emulated viewport.',
     '2. Observe CDP Network, Log and Runtime events from before each navigation; classify only GTM, GA4 and Microsoft Clarity endpoints.',
-    '3. Exercise fresh, close, reject, accept, footer-preferences, withdrawal and clean-reload paths against the deployed URL.',
-    '4. Require an affirmative action before the single GTM request, successful GA4 and Clarity responses, and no CSP-blocked resource.',
-    '5. Seed only synthetic, origin-readable analytics artefacts before withdrawal, then prove that the consent manager removes them.',
+    '3. Exercise fresh, close, reject, accept, footer-preferences, withdrawal and clean-reload paths independently on the English and Italian routes.',
+    '4. Drive Tab, Shift+Tab and Escape through CDP to prove focus containment, background inertness and focus restoration without depending on translated button copy.',
+    '5. Require an affirmative action before the single GTM request, successful GA4 and Clarity responses, and no CSP-blocked resource.',
+    '6. Seed only synthetic, origin-readable analytics artefacts before withdrawal, then prove that the consent manager removes them.',
     '',
     'Request URLs in JSON evidence retain only origin/path and parameter names; query values, cookie values and request bodies are never written.',
     ''
@@ -839,8 +1004,10 @@ async function main() {
   if (!args.url) throw new Error('A target URL is required via CONSENT_QA_URL, --url, or a positional argument.');
   const parsedUrl = new URL(args.url);
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Target URL must use HTTP or HTTPS.');
+  parsedUrl.pathname = '/';
+  parsedUrl.search = '';
   parsedUrl.hash = '';
-  const target = parsedUrl.toString();
+  const targetOrigin = parsedUrl.origin;
 
   await Promise.all([
     mkdir(path.dirname(args.output), { recursive: true }),
@@ -849,40 +1016,80 @@ async function main() {
 
   const chrome = await findChrome(args.chrome);
   const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'aetheris-consent-qa-'));
-  const profileDir = path.join(temporaryRoot, 'chrome-profile');
-  const cdpPort = await getFreePort();
   const evidence = {
-    schemaVersion: '1.0.0',
+    schemaVersion: '1.1.0',
     capturedAt: new Date().toISOString(),
-    target: sanitiseUrl(target),
+    targetOrigin,
     browser: 'Installed Chrome controlled through CDP',
     chromeExecutable: chrome,
     viewport: MOBILE_VIEWPORT,
     checks: [],
     phases: {},
     states: {},
-    mobile: null,
-    infrastructureError: null,
+    mobile: {},
+    locales: [],
+    infrastructureErrors: [],
     summary: { pass: false, checkCount: 0, failureCount: 0 }
   };
 
   try {
-    await runAudit({
-      url: target,
-      chrome,
-      cdpPort,
-      profileDir,
-      settleMs: args.settleMs,
-      acceptTimeoutMs: args.acceptTimeoutMs,
-      evidence
-    });
-  } catch (error) {
-    evidence.infrastructureError = error instanceof Error ? error.stack || error.message : String(error);
-    addCheck(evidence, 'infrastructure', 'Audit completed without infrastructure/runtime error', false, null, evidence.infrastructureError);
+    for (const locale of LOCALES) {
+      const target = new URL(locale.path, targetOrigin).toString();
+      const localeEvidence = {
+        id: locale.id,
+        locale: locale.id,
+        label: locale.label,
+        target: sanitiseUrl(target),
+        checks: [],
+        phases: {},
+        states: {},
+        mobile: null,
+        infrastructureError: null,
+        summary: { pass: false, checkCount: 0, failureCount: 0 }
+      };
+      const profileDir = path.join(temporaryRoot, `chrome-profile-${locale.id}`);
+      const cdpPort = await getFreePort();
+
+      try {
+        await runAudit({
+          url: target,
+          chrome,
+          cdpPort,
+          profileDir,
+          settleMs: args.settleMs,
+          acceptTimeoutMs: args.acceptTimeoutMs,
+          evidence: localeEvidence
+        });
+      } catch (error) {
+        localeEvidence.infrastructureError = error instanceof Error ? error.stack || error.message : String(error);
+        addCheck(
+          localeEvidence,
+          'infrastructure',
+          'Audit completed without infrastructure/runtime error',
+          false,
+          null,
+          localeEvidence.infrastructureError
+        );
+        evidence.infrastructureErrors.push({ locale: locale.id, error: localeEvidence.infrastructureError });
+      } finally {
+        localeEvidence.summary.checkCount = localeEvidence.checks.length;
+        localeEvidence.summary.failureCount = localeEvidence.checks.filter((check) => !check.pass).length;
+        localeEvidence.summary.pass = localeEvidence.summary.failureCount === 0 && !localeEvidence.infrastructureError;
+        evidence.locales.push(localeEvidence);
+        evidence.checks.push(...localeEvidence.checks);
+        evidence.mobile[locale.id] = localeEvidence.mobile;
+        evidence.states[locale.id] = localeEvidence.states;
+        for (const [name, phase] of Object.entries(localeEvidence.phases)) {
+          evidence.phases[`${locale.id}:${name}`] = phase;
+        }
+      }
+    }
   } finally {
     evidence.summary.checkCount = evidence.checks.length;
     evidence.summary.failureCount = evidence.checks.filter((check) => !check.pass).length;
-    evidence.summary.pass = evidence.summary.failureCount === 0 && !evidence.infrastructureError;
+    evidence.summary.pass = evidence.summary.failureCount === 0
+      && evidence.infrastructureErrors.length === 0
+      && evidence.locales.length === LOCALES.length;
     await Promise.all([
       writeFile(args.output, `${JSON.stringify(evidence, null, 2)}\n`, 'utf8'),
       writeFile(args.report, reportFor(evidence), 'utf8')

@@ -156,6 +156,9 @@ a:focus-visible {
 }
 
 .legal-home-link {
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.12em;

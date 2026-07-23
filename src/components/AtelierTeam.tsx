@@ -1,4 +1,5 @@
 import { atelierRoles, teamMembers, teamProfilePlaceholders } from '../content/team';
+import { translate as t } from '../i18n';
 import { AetherisMark } from './AetherisMark';
 import { TeamPortrait } from './TeamPortrait';
 
@@ -8,13 +9,12 @@ export function AtelierTeam() {
   return (
     <section className="atelier atelier--ledger" id="studio" aria-labelledby="atelier-title" data-header-tone="light">
       <div className="atelier-copy" data-reveal>
-        <p className="section-kicker section-kicker--dark">The Aetheris atelier</p>
-        <h2 id="atelier-title">One accountable room.<br /><em>The craft the work requires.</em></h2>
+        <p className="section-kicker section-kicker--dark">{t('The Aetheris atelier')}</p>
+        <h2 id="atelier-title">{t('One accountable room.')}<br /><em>{t('The craft the work requires.')}</em></h2>
         <p>
-          Each engagement is assembled around the commercial constraint, with a named lead and explicit ownership
-          for every discipline in scope.
+          {t('Each engagement is assembled around the commercial constraint, with a named lead and explicit ownership for every discipline in scope.')}
         </p>
-        <strong>The craft is human. The system preserves its continuity.</strong>
+        <strong>{t('The craft is human. The system preserves its continuity.')}</strong>
       </div>
 
       <div className="atelier-ledger" data-reveal>
@@ -22,36 +22,35 @@ export function AtelierTeam() {
           <AetherisMark idPrefix="atelier-ledger" />
           <span>Aetheris<br />Studio</span>
         </div>
-        <ol aria-label="Disciplines and ownership inside the Aetheris atelier">
+        <ol aria-label={t('Disciplines and ownership inside the Aetheris atelier')}>
           {atelierRoles.map((role) => (
             <li key={role.index}>
               <span className="atelier-ledger-index">{role.index}</span>
               <div className="atelier-ledger-copy">
-                <h3>{role.role}</h3>
-                <p>{role.responsibility}</p>
+                <h3>{t(role.role)}</h3>
+                <p>{t(role.responsibility)}</p>
               </div>
-              <ul aria-label={`${role.role} outputs`}>
-                {role.outputs.map((output) => <li key={output}>{output}</li>)}
+              <ul aria-label={`${t(role.role)} output`}>
+                {role.outputs.map((output) => <li key={output}>{t(output)}</li>)}
               </ul>
             </li>
           ))}
         </ol>
         <p className="atelier-ledger-note">
-          Every engagement scope names the people involved, their decision rights and the capacity reserved.
+          {t('Every engagement scope names the people involved, their decision rights and the capacity reserved.')}
         </p>
       </div>
 
       <section className="atelier-people-preview" data-reveal aria-labelledby="atelier-people-title">
         <div className="atelier-people-intro">
-          <p className="atelier-people-kicker">The people behind the system</p>
-          <h3 id="atelier-people-title">The hands behind the work.</h3>
+          <p className="atelier-people-kicker">{t('The people behind the system')}</p>
+          <h3 id="atelier-people-title">{t('The hands behind the work.')}</h3>
           <p>
-            Each portrait moves from a Renaissance interpretation to the person behind it. Profiles are released
-            individually, once identity, role and image permissions are complete.
+            {t('Each portrait moves from a Renaissance interpretation to the person behind it. Profiles are released individually, once identity, role and image permissions are complete.')}
           </p>
         </div>
 
-        <ul className="atelier-profile-grid" aria-label="Aetheris Studio people">
+        <ul className="atelier-profile-grid" aria-label={t('Aetheris Studio people')}>
           {teamMembers.map((member) => (
             <li key={member.id} className="atelier-profile-grid-member">
               <TeamPortrait member={member} />
@@ -65,8 +64,8 @@ export function AtelierTeam() {
                 <span className="atelier-profile-slot">{profile.slot}</span>
               </div>
               <div className="atelier-profile-caption">
-                <span>{profile.label}</span>
-                <strong>{profile.note}</strong>
+                <span>{t(profile.label)}</span>
+                <strong>{t(profile.note)}</strong>
               </div>
             </li>
           ))}

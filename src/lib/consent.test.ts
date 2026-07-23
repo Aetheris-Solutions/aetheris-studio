@@ -215,6 +215,32 @@ describe('consent management', () => {
     expect(browser.values.get('aetheris_studio_attribution_v1')).not.toContain('private@example.com');
   });
 
+  it.each([
+    '#system',
+    '#work',
+    '#qualification',
+    '#cookie-choices',
+    '#case-thats-it',
+    '#case-cielo',
+    '#agent-google',
+    '#agent-social',
+    '#agent-lead-gen'
+  ])(
+    'preserves the safe in-page destination %s when analytics starts',
+    (safeHash) => {
+      const browser = installBrowser();
+      browser.browserWindow.location.href = `https://aetherisstudio.com/?utm_source=test${safeHash}`;
+      browser.browserWindow.location.search = '?utm_source=test';
+      browser.browserWindow.location.hash = safeHash;
+
+      initialiseConsentManagement();
+      saveConsent({ analytics: true, marketing: false }, 'banner');
+
+      expect(browser.browserWindow.location.search).toBe('');
+      expect(browser.browserWindow.location.hash).toBe(safeHash);
+    }
+  );
+
   it('expires a saved choice after six months and asks again', () => {
     const browser = installBrowser();
     browser.values.set(

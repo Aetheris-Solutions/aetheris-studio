@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "build:release": "node scripts/validate-build-env.mjs && npm run build",
     "preview": "vite preview",
     "qa:contrast": "npm run build && node qa/dynamic-contrast.mjs",
     "qa:consent": "node qa/consent-network.mjs",

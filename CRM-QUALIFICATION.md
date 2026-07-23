@@ -8,7 +8,7 @@
 - Cloudflare account: `Info@aetheris-solutions.com's Account` (`cd46c98eac675a734eb9a8da628976a5`).
 - Pages project: `aetheris-studio`; canonical hostnames `aetherisstudio.com`, `www.aetherisstudio.com`, plus `aetheris-studio.pages.dev`.
 - Turnstile widget: `Aetheris Studio — Website Qualification`, managed mode, no pre-clearance. Its public site key is recorded in `.env.example`; its private key is stored only as an encrypted Pages secret. Server verification accepts the canonical hosts plus explicit `*.aetheris-studio.pages.dev` preview subdomains.
-- The existing six bindings are present as encrypted values in both Pages `production` and `preview`: `ATTIO_API_KEY`, `ATTIO_WEBSITE_INBOUND_LIST_ID`, `TURNSTILE_SECRET_KEY`, `VITE_TURNSTILE_SITE_KEY`, `ALLOWED_ORIGINS`, `TURNSTILE_EXPECTED_HOSTNAMES`.
+- The runtime bindings are present in both Pages `production` and `preview`. `ATTIO_API_KEY` and `TURNSTILE_SECRET_KEY` remain encrypted; `VITE_TURNSTILE_SITE_KEY` is intentionally a public `plain_text` build variable. List IDs, origin allowlists and expected hostnames are treated as configuration and are not presented as secrets.
 - The fixed internal Attio People record is provisioned. Its UUID is pinned server-side to the verified live Website Inbound list ID and may be overridden with `ATTIO_WEBSITE_INTAKE_RECORD_ID` in hosting. This is intentionally not a submitted lead; unknown list configurations still fail closed while the binding is absent.
 
 No real customer lead was created while provisioning these resources. One explicitly authorised synthetic QA submission was subsequently written and read back through the final Function contract; its identifiers and assertions are recorded in `PROOF-LAYER-QA.md`.
@@ -153,8 +153,8 @@ Frontend-only:
 ## Privacy and measurement
 
 - Update `privacyVersion` whenever the published notice changes.
-- Privacy acknowledgement, analytics consent and optional marketing request are separate. The server binds the current wording/schema versions and its receipt time; client times are supplementary only.
-- A website marketing request remains `emailVerified: false` and `activationPermitted: false` until a separate email confirmation succeeds.
+- Privacy acknowledgement and analytics consent are separate. The server binds the current wording/schema versions and its receipt time; client times are supplementary only.
+- This release exposes no marketing opt-in. The browser always sends `marketingConsent: false`, and the Function rejects a crafted positive value as unsupported. A future marketing workflow requires a separate reviewed contract and double opt-in before activation.
 - Attribution is discarded server-side unless valid analytics-consent evidence accompanies the submission. Landing/referrer values are sanitised again to origin + path.
 - Send only lifecycle events such as `qualification_start`, `qualification_step_complete`, `qualification_submit`, and the returned status to analytics. Do not send names, emails, companies, URLs, free text, click IDs, or Attio IDs to `dataLayer`, Meta, Clarity, or Langfuse.
 - Turnstile is verified server-side and fails closed. Origin checks, JSON/body-size limits, the honeypot, and `Cache-Control: no-store` are enforced before the CRM write.
@@ -167,4 +167,4 @@ Unit tests use a local fetch double and never call Turnstile or Attio:
 npx vitest run tests/qualification-function.test.js src/lib/qualificationAttempt.test.ts
 ```
 
-Before launch, create the five additional Website Inbound identity attributes, provision and bind the fixed internal intake record, verify all eleven attribute slugs, and then submit one explicitly authorised synthetic lead. Assert that its unique entry, parent ID, source-evidence SHA-256 and ledger match, and that no lead Person or Company was queried, created or changed. Do not use a real customer's identity for that smoke test.
+The five additional Website Inbound identity attributes, fixed internal intake record and all eleven attribute slugs were provisioned and verified on 22 July 2026. One explicitly authorised synthetic lead was submitted and read back; its unique entry, parent ID, source-evidence SHA-256 and ledger assertions are recorded in `PROOF-LAYER-QA.md`. That write is historical activation evidence and must not be repeated without a new explicit authorisation for the exact external write. Routine release gates use mocks or rejection paths and never use a real customer's identity.

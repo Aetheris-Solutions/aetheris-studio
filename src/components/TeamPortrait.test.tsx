@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { describe, expect, it } from 'vitest';
 import type { TeamMember } from '../content/team';
 import { TeamPortrait } from './TeamPortrait';
 

@@ -8,6 +8,10 @@ export default defineConfig({
     cssCodeSplit: true,
     sourcemap: false,
     rollupOptions: {
+      input: {
+        main: 'index.html',
+        it: 'it/index.html'
+      },
       output: {
         manualChunks(id) {
           if (id.includes('three') || id.includes('@react-three/fiber')) {
