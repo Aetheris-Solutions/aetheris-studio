@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   canvasDprRange,
+  heroScrollProgress,
   isTabletPortraitPresentation,
   webglPresentationOpacity
 } from './presentationPolicy';
@@ -25,5 +26,13 @@ describe('presentation policy', () => {
     expect(webglPresentationOpacity({ ...base, time: 3.55 }, true)).toBeLessThan(1);
     expect(webglPresentationOpacity({ ...base, time: 3.9 }, true)).toBe(0);
     expect(webglPresentationOpacity({ ...base, time: 4 }, false)).toBe(1);
+  });
+
+  it('normalizes sticky hero geometry across the complete scroll range', () => {
+    expect(heroScrollProgress(0, 2340, 900)).toBe(0);
+    expect(heroScrollProgress(-720, 2340, 900)).toBe(0.5);
+    expect(heroScrollProgress(-1440, 2340, 900)).toBe(1);
+    expect(heroScrollProgress(120, 2340, 900)).toBe(0);
+    expect(heroScrollProgress(-4000, 2340, 900)).toBe(1);
   });
 });

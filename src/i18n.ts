@@ -27,6 +27,10 @@ const italian: Record<string, string> = {
   'Aetheris Studio opening motion in progress. Press Escape or interact to skip.':
     'Animazione introduttiva Aetheris Studio in corso. Premi Esc o interagisci per saltarla.',
   'Aetheris Studio opening motion complete.': 'Animazione introduttiva Aetheris Studio completata.',
+  'Aetheris Studio opening motion follows the page scroll.':
+    'L’animazione introduttiva Aetheris Studio segue lo scorrimento della pagina.',
+  'Aetheris Studio final content is ready.':
+    'Il contenuto finale Aetheris Studio è pronto.',
   'Aetheris Studio opening motion skipped; final content is ready.':
     'Animazione introduttiva Aetheris Studio saltata; il contenuto è pronto.',
 

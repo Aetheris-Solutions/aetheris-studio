@@ -18,13 +18,14 @@ import type { AssetStatus } from './components/OculusCanvas';
 import { SiteHeader } from './components/SiteHeader';
 import {
   getMotionProfile,
-  RafTimelineController,
   sampleTimeline,
+  sampleTimelineProgress,
   settledSnapshot,
   type MotionProfileName,
   type MotionSnapshot
 } from './motion/controller';
 import {
+  heroScrollProgress,
   isTabletPortraitPresentation,
   webglPresentationOpacity
 } from './runtime/presentationPolicy';
@@ -190,11 +191,12 @@ export default function App() {
       : { kind: 'static-poster', source: 'poster', reason: boot.reason }
   );
   const [canvasFailed, setCanvasFailed] = useState(false);
+  const [scrollMotionEnabled, setScrollMotionEnabled] = useState(boot.shouldPlay);
   const [viewportWidth, setViewportWidth] = useState(() => window.innerWidth);
   const heroRef = useRef<HTMLElement>(null);
-  const controllerRef = useRef<RafTimelineController | null>(null);
-  const visibleRef = useRef(true);
   const profileRef = useRef<MotionProfileName>(boot.profile);
+  const scrollProgressRef = useRef(bootSnapshot.normalized);
+  const scrollCompletionRememberedRef = useRef(false);
 
   const releaseBootPoster = useCallback(() => {
     requestAnimationFrame(() => document.getElementById('boot-poster')?.remove());
@@ -209,21 +211,6 @@ export default function App() {
     removeReplayParameter();
   }, []);
 
-  const skip = useCallback(
-    (reason: string) => {
-      if (introState !== 'playing') return;
-      if (controllerRef.current) {
-        controllerRef.current.destroy();
-        controllerRef.current = null;
-      } else {
-        setCanvasFailed(true);
-      }
-      setSnapshot(settledSnapshot(profile));
-      finish(`skipped-${reason}`);
-    },
-    [finish, introState, profile]
-  );
-
   useEffect(() => {
     const syncProfile = () => {
       setViewportWidth(window.innerWidth);
@@ -233,19 +220,13 @@ export default function App() {
 
       profileRef.current = nextProfile;
       setProfile(nextProfile);
-      setSnapshot(settledSnapshot(nextProfile));
-
-      if (introState === 'playing') {
-        controllerRef.current?.destroy();
-        controllerRef.current = null;
-        setCanvasFailed(true);
-        setAssetStatus({
-          kind: 'static-poster',
-          source: 'poster',
-          reason: 'profile-change'
-        });
-        finish('profile-change');
-      }
+      setSnapshot(
+        boot.qaTime === null && scrollMotionEnabled
+          ? sampleTimelineProgress(nextProfile, scrollProgressRef.current)
+          : boot.qaTime === null
+            ? settledSnapshot(nextProfile)
+            : sampleTimeline(nextProfile, boot.qaTime)
+      );
     };
 
     window.addEventListener('resize', syncProfile, { passive: true });
@@ -256,7 +237,7 @@ export default function App() {
       window.removeEventListener('resize', syncProfile);
       window.removeEventListener('orientationchange', syncProfile);
     };
-  }, [finish, introState]);
+  }, [boot.qaTime, scrollMotionEnabled]);
 
   useEffect(() => {
     document.documentElement.dataset.intro = introState;
@@ -267,52 +248,59 @@ export default function App() {
   }, [boot.qaTime, boot.shouldPlay, completionReason, introState, profile]);
 
   useEffect(() => {
-    if (
-      !boot.shouldPlay ||
-      introState !== 'playing' ||
-      (assetStatus.kind !== 'production' && assetStatus.kind !== 'procedural-fallback')
-    ) {
-      return;
-    }
+    if (!scrollMotionEnabled || boot.qaTime !== null) return;
 
-    const controller = new RafTimelineController(
-      profile,
-      setSnapshot,
-      () => finish('timeline')
-    );
-    controllerRef.current = controller;
-    controller.start();
+    let animationFrame = 0;
+    const updateFromScroll = () => {
+      animationFrame = 0;
+      const hero = heroRef.current;
+      if (!hero || document.hidden) return;
 
-    let documentHidden = document.hidden;
-    const syncPause = () => controller.setPaused(documentHidden || !visibleRef.current);
-    const onVisibility = () => {
-      documentHidden = document.hidden;
-      syncPause();
+      const rect = hero.getBoundingClientRect();
+      const stageHeight = hero.querySelector<HTMLElement>('.hero-stage')?.getBoundingClientRect().height;
+      const progress = heroScrollProgress(rect.top, rect.height, stageHeight ?? window.innerHeight);
+      scrollProgressRef.current = progress;
+      setSnapshot(sampleTimelineProgress(profileRef.current, progress));
+
+      const complete = progress >= 0.999;
+      setIntroState(complete ? 'complete' : 'playing');
+      setCompletionReason(complete ? 'scroll-complete' : 'scroll-driven');
+      if (complete && !scrollCompletionRememberedRef.current) {
+        scrollCompletionRememberedRef.current = true;
+        storageRemember();
+        removeReplayParameter();
+      }
     };
+    const scheduleUpdate = () => {
+      if (animationFrame) return;
+      animationFrame = requestAnimationFrame(updateFromScroll);
+    };
+    const onVisibility = () => {
+      if (!document.hidden) scheduleUpdate();
+    };
+
+    updateFromScroll();
+    window.addEventListener('scroll', scheduleUpdate, { passive: true });
+    window.addEventListener('resize', scheduleUpdate, { passive: true });
+    window.addEventListener('orientationchange', scheduleUpdate, { passive: true });
     document.addEventListener('visibilitychange', onVisibility);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        visibleRef.current = entry?.isIntersecting ?? true;
-        syncPause();
-      },
-      { threshold: 0.02 }
-    );
-    if (heroRef.current) observer.observe(heroRef.current);
-
     return () => {
-      controller.destroy();
-      controllerRef.current = null;
-      observer.disconnect();
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      window.removeEventListener('scroll', scheduleUpdate);
+      window.removeEventListener('resize', scheduleUpdate);
+      window.removeEventListener('orientationchange', scheduleUpdate);
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [assetStatus.kind, boot.shouldPlay, finish, introState, profile]);
+  }, [boot.qaTime, scrollMotionEnabled]);
 
   useEffect(() => {
-    if (!boot.shouldRenderMotion || introState !== 'playing' || assetStatus.kind !== 'loading') return;
+    const motionExpected = scrollMotionEnabled || boot.qaTime !== null;
+    if (!boot.shouldRenderMotion || !motionExpected || assetStatus.kind !== 'loading') return;
 
     const timeout = window.setTimeout(() => {
       setCanvasFailed(true);
+      setScrollMotionEnabled(false);
       setAssetStatus({
         kind: 'static-poster',
         source: 'poster',
@@ -323,39 +311,28 @@ export default function App() {
     }, WEBGL_PREWARM_TIMEOUT_MS);
 
     return () => window.clearTimeout(timeout);
-  }, [assetStatus.kind, boot.shouldRenderMotion, finish, introState, profile]);
-
-  useEffect(() => {
-    if (introState !== 'playing') return;
-    const eventSkip = (event: Event) => skip(event.type);
-    const keySkip = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' || event.key === 'Tab') skip(event.key.toLowerCase());
-    };
-    const passive: AddEventListenerOptions = { passive: true, capture: true };
-    const events: Array<keyof WindowEventMap> = ['wheel', 'touchstart', 'pointerdown', 'click', 'scroll'];
-    events.forEach((eventName) => window.addEventListener(eventName, eventSkip, passive));
-    document.addEventListener('keydown', keySkip, { capture: true });
-
-    return () => {
-      events.forEach((eventName) => window.removeEventListener(eventName, eventSkip, passive));
-      document.removeEventListener('keydown', keySkip, { capture: true });
-    };
-  }, [introState, skip]);
+  }, [assetStatus.kind, boot.qaTime, boot.shouldRenderMotion, finish, profile, scrollMotionEnabled]);
 
   const handleCanvasFailure = useCallback(
     (reason: string) => {
       setCanvasFailed(true);
+      setScrollMotionEnabled(false);
       setAssetStatus({ kind: 'static-poster', source: 'poster', reason });
-      if (introState === 'playing') skip(reason);
+      setSnapshot(settledSnapshot(profileRef.current));
+      finish(reason);
     },
-    [introState, skip]
+    [finish]
   );
 
   const renderCanvas = boot.shouldRenderMotion && !canvasFailed;
+  const authoredMotionVisible = scrollMotionEnabled || (boot.qaTime !== null && introState === 'playing');
+  // Content is not an intro reward. Keep the complete live-DOM copy available
+  // at every camera state; the scroll sequence remains a visual enhancement.
+  const visibleCopy = settledSnapshot(profile).copy;
   const tabletPortraitPresentation = isTabletPortraitPresentation(profile, viewportWidth);
   const webglLayerOpacity = webglPresentationOpacity(snapshot, tabletPortraitPresentation);
   const veilOpacity =
-    introState === 'playing'
+    authoredMotionVisible
       ? snapshot.cameraPass <= 0.105
         ? 1
         : Math.max(0, 1 - (snapshot.cameraPass - 0.105) / 0.45)
@@ -372,11 +349,11 @@ export default function App() {
     top: `${50 + (markOrigin.y - 50) * screenOffsetRatio}%`
   };
   const statusCopy =
-    introState === 'playing'
-      ? t('Aetheris Studio opening motion in progress. Press Escape or interact to skip.')
-      : completionReason === 'timeline'
+    scrollMotionEnabled && introState === 'playing'
+      ? t('Aetheris Studio opening motion follows the page scroll.')
+      : introState === 'complete'
         ? t('Aetheris Studio opening motion complete.')
-        : t('Aetheris Studio opening motion skipped; final content is ready.');
+        : t('Aetheris Studio final content is ready.');
 
   return (
     <>
@@ -384,7 +361,7 @@ export default function App() {
         {t('Skip to hero content')}
       </a>
 
-      <SiteHeader style={revealStyle(snapshot.copy.header, -10)} />
+      <SiteHeader style={revealStyle(visibleCopy.header, -10)} />
 
       <main>
         <section
@@ -395,102 +372,99 @@ export default function App() {
           data-profile={profile}
           data-runtime-state={introState}
           data-asset-status={assetStatus.kind}
+          data-scroll-driven={scrollMotionEnabled ? 'enabled' : 'disabled'}
           data-tablet-poster-handoff={tabletPortraitPresentation ? 'enabled' : 'disabled'}
           data-qa-time={boot.qaTime ?? undefined}
         >
-          <picture className="hero-poster" aria-hidden="true">
-            <source
-              media="(max-aspect-ratio: 0.8/1)"
-              srcSet="/posters/aetheris-hero-mobile-456.avif"
-              type="image/avif"
-            />
-            <source
-              media="(max-aspect-ratio: 0.8/1)"
-              srcSet="/posters/aetheris-hero-mobile-456.webp"
-              type="image/webp"
-            />
-            <source srcSet="/posters/aetheris-hero-desktop-1440.avif" type="image/avif" />
-            <img
-              src="/posters/aetheris-hero-desktop-1440.webp"
-              alt=""
-              width="1440"
-              height="810"
-              fetchPriority="high"
-              onLoad={releaseBootPoster}
-              onError={releaseBootPoster}
-            />
-          </picture>
+          <div className="hero-stage">
+            <picture className="hero-poster" aria-hidden="true">
+              <source
+                media="(max-aspect-ratio: 0.8/1)"
+                srcSet="/posters/aetheris-hero-mobile-456.avif"
+                type="image/avif"
+              />
+              <source
+                media="(max-aspect-ratio: 0.8/1)"
+                srcSet="/posters/aetheris-hero-mobile-456.webp"
+                type="image/webp"
+              />
+              <source srcSet="/posters/aetheris-hero-desktop-1440.avif" type="image/avif" />
+              <img
+                src="/posters/aetheris-hero-desktop-1440.webp"
+                alt=""
+                width="1440"
+                height="810"
+                fetchPriority="high"
+                onLoad={releaseBootPoster}
+                onError={releaseBootPoster}
+              />
+            </picture>
 
-          {renderCanvas && (
-            <div className="webgl-layer" style={{ opacity: webglLayerOpacity }}>
-              <CanvasErrorBoundary onError={() => handleCanvasFailure('webgl-runtime')}>
-                <Suspense fallback={null}>
-                  <OculusCanvas
-                    snapshot={snapshot}
-                    profile={profile}
-                    onAssetStatus={setAssetStatus}
-                    onContextLost={() => handleCanvasFailure('webgl-context-loss')}
-                  />
-                </Suspense>
-              </CanvasErrorBoundary>
-            </div>
-          )}
+            {renderCanvas && (
+              <div className="webgl-layer" style={{ opacity: webglLayerOpacity }}>
+                <CanvasErrorBoundary onError={() => handleCanvasFailure('webgl-runtime')}>
+                  <Suspense fallback={null}>
+                    <OculusCanvas
+                      snapshot={snapshot}
+                      profile={profile}
+                      onAssetStatus={setAssetStatus}
+                      onContextLost={() => handleCanvasFailure('webgl-context-loss')}
+                    />
+                  </Suspense>
+                </CanvasErrorBoundary>
+              </div>
+            )}
 
-          <div className="copy-field-shade" aria-hidden="true" />
-          <div className="scene-veil" aria-hidden="true" style={{ opacity: veilOpacity }} />
+            <div className="copy-field-shade" aria-hidden="true" />
+            <div className="scene-veil" aria-hidden="true" style={{ opacity: veilOpacity }} />
 
-          {introState === 'playing' && (
-            <div className="mark-stage" aria-hidden="true" style={markStageStyle}>
-              <div className="grazing-light" style={{ opacity: snapshot.grazingLight }} />
-              <AetherisMark className="canonical-mark" title="Aetheris Studio" style={markStyle} />
-            </div>
-          )}
+            {authoredMotionVisible && (
+              <div className="mark-stage" aria-hidden="true" style={markStageStyle}>
+                <div className="grazing-light" style={{ opacity: snapshot.grazingLight }} />
+                <AetherisMark className="canonical-mark" title="Aetheris Studio" style={markStyle} />
+              </div>
+            )}
 
-          <div className="hero-copy" id="hero-copy">
-            <p className="eyebrow" style={revealStyle(snapshot.copy.eyebrow, 10)}>
-              {t('Integrated commerce growth · Europe')}
-            </p>
-            <h1 id="hero-title">
-              <span className="headline-safe-box">
-                <span className="headline-reveal" style={headlineRevealStyle(snapshot.copy.titlePrimary, 30)}>
-                  {t('Commerce,')}
+            <div className="hero-copy" id="hero-copy">
+              <p className="eyebrow" style={revealStyle(visibleCopy.eyebrow, 10)}>
+                {t('Integrated commerce growth · Europe')}
+              </p>
+              <h1 id="hero-title">
+                <span className="headline-safe-box">
+                  <span className="headline-reveal" style={headlineRevealStyle(visibleCopy.titlePrimary, 30)}>
+                    {t('Commerce,')}
+                  </span>
                 </span>
-              </span>
-              <span className="headline-safe-box">
-                <em className="headline-reveal" style={headlineRevealStyle(snapshot.copy.titleSecondary, 28)}>
-                  {t('seen whole.')}
-                </em>
-              </span>
-            </h1>
-            <p className="hero-intro" style={revealStyle(snapshot.copy.body, 16)}>
-              {t('We connect storefront, measurement, acquisition, conversion and retention into one accountable growth system for ambitious European consumer brands.')}
-            </p>
-            <div className="hero-actions" style={revealStyle(snapshot.copy.actions, 12)}>
-              <a className="button-primary" href={QUALIFICATION_URL}>
-                {t('Qualify your project')} <span aria-hidden="true">↓</span>
-              </a>
-              <a className="text-link" href="#work">
-                {t('See selected work')} <span aria-hidden="true">↓</span>
-              </a>
+                <span className="headline-safe-box">
+                  <em className="headline-reveal" style={headlineRevealStyle(visibleCopy.titleSecondary, 28)}>
+                    {t('seen whole.')}
+                  </em>
+                </span>
+              </h1>
+              <p className="hero-intro" style={revealStyle(visibleCopy.body, 16)}>
+                {t('We connect storefront, measurement, acquisition, conversion and retention into one accountable growth system for ambitious European consumer brands.')}
+              </p>
+              <div className="hero-actions" style={revealStyle(visibleCopy.actions, 12)}>
+                <a className="button-primary" href={QUALIFICATION_URL}>
+                  {t('Qualify your project')} <span aria-hidden="true">↓</span>
+                </a>
+                <a className="text-link" href="#work">
+                  {t('See selected work')} <span aria-hidden="true">↓</span>
+                </a>
+              </div>
+              <p className="hero-fit" style={revealStyle(visibleCopy.actions, 10)}>
+                {t('For established consumer brands with active eCommerce across Europe.')}
+              </p>
             </div>
-            <p className="hero-fit" style={revealStyle(snapshot.copy.actions, 10)}>
-              {t('For established consumer brands with active eCommerce across Europe.')}
+
+            <div className="intro-progress" aria-hidden="true">
+              <span style={{ transform: `scaleX(${snapshot.normalized})` }} />
+            </div>
+
+            <p className="sr-only" role="status" aria-live="polite">
+              {statusCopy}
             </p>
           </div>
-
-          {introState === 'playing' && (
-            <button className="intro-skip" type="button" onClick={() => skip('button')}>
-              {t('Skip intro')}
-            </button>
-          )}
-
-          <div className="intro-progress" aria-hidden="true">
-            <span style={{ transform: `scaleX(${snapshot.normalized})` }} />
-          </div>
-
-          <p className="sr-only" role="status" aria-live="polite">
-            {statusCopy}
-          </p>
         </section>
 
         <HomeSections />

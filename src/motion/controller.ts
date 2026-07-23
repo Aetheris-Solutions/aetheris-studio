@@ -151,8 +151,21 @@ export function sampleTimeline(profileName: MotionProfileName, inputTime: number
   };
 }
 
+/**
+ * Resolve the authored, profile-specific timeline from one shared normalized
+ * driver. Scroll, diagnostics and any future input source can therefore use
+ * the same motion contract without duplicating phase timings.
+ */
+export function sampleTimelineProgress(
+  profileName: MotionProfileName,
+  normalizedProgress: number
+): MotionSnapshot {
+  const duration = motionContract.profiles[profileName].durationSeconds;
+  return sampleTimeline(profileName, clamp01(normalizedProgress) * duration);
+}
+
 export function settledSnapshot(profile: MotionProfileName): MotionSnapshot {
-  return sampleTimeline(profile, motionContract.profiles[profile].durationSeconds);
+  return sampleTimelineProgress(profile, 1);
 }
 
 export type TimelineState = {

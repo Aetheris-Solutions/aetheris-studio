@@ -4,6 +4,7 @@ import {
   getMotionProfile,
   rangeProgress,
   sampleTimeline,
+  sampleTimelineProgress,
   settledSnapshot,
   smootherstep
 } from './controller';
@@ -46,6 +47,18 @@ describe('hero motion controller', () => {
     expect(settledSnapshot('mobile').duration).toBe(4);
     expect(getMotionProfile(0.6)).toBe('mobile');
     expect(getMotionProfile(1)).toBe('desktop');
+  });
+
+  it('maps one normalized driver onto each profile-specific timeline', () => {
+    const desktop = sampleTimelineProgress('desktop', 0.5);
+    const mobile = sampleTimelineProgress('mobile', 0.5);
+
+    expect(desktop.time).toBe(2.4);
+    expect(mobile.time).toBe(2);
+    expect(desktop.normalized).toBeCloseTo(0.5, 8);
+    expect(mobile.normalized).toBeCloseTo(0.5, 8);
+    expect(sampleTimelineProgress('desktop', -1).time).toBe(0);
+    expect(sampleTimelineProgress('desktop', 2)).toEqual(settledSnapshot('desktop'));
   });
 
   it('reveals live copy in the authored order', () => {

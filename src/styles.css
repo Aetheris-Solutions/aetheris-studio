@@ -238,8 +238,27 @@ canvas {
   position: relative;
   isolation: isolate;
   min-height: max(760px, 100svh);
+  background: var(--ink);
+}
+
+.hero[data-scroll-driven="enabled"] {
+  height: 260vh;
+  height: 260svh;
+}
+
+.hero-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: max(760px, 100svh);
   overflow: hidden;
   background: var(--ink);
+}
+
+.hero[data-scroll-driven="enabled"] .hero-stage {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  height: 100svh;
 }
 
 .hero-poster,
@@ -571,6 +590,10 @@ canvas {
   }
 
   .hero {
+    min-height: max(760px, 100svh);
+  }
+
+  .hero-stage {
     min-height: max(760px, 100svh);
   }
 
