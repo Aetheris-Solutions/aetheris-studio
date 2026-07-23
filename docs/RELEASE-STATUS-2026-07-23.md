@@ -6,12 +6,12 @@ consent, analytics and qualification.
 
 ## Deployment status
 
-- **Candidate state:** preview-only; the validated application source is frozen
-  at commit `82c0c752cbb8cca15456d6806e23df4880a68e9c`.
+- **Candidate state:** preview-only; the current validated application source
+  is commit `725ad669e06d61838d7e4dc22777f33f1edb0a27`.
 - **Immutable candidate:**
   `https://88a42fe2.aetheris-studio.pages.dev`.
 - **Latest Git-integrated preview:**
-  `https://814c0d7f.aetheris-studio.pages.dev`.
+  `https://9de54503.aetheris-studio.pages.dev`.
 - **Preview access:** restricted by Cloudflare Access application
   `7fd72986-d480-46f2-8610-f3e8e22600b3`; anonymous requests must authenticate.
 - **Pull request:** `https://github.com/Aetheris-Solutions/aetheris-studio/pull/4`
@@ -24,9 +24,12 @@ consent, analytics and qualification.
 - **Real team population:** intentionally excluded. The public roster remains
   empty and six anonymous placeholders are rendered.
 
-The checked `dist` tree contains 49 files. Its sorted SHA-256 manifest is held
-with the release evidence and has SHA-256
+The prior legal-baseline `dist` tree at `82c0c75` contained 49 files. Its
+sorted SHA-256 manifest is held with the release evidence and has SHA-256
 `396a865f7aed94d71e14fe77cf2065b481088788dda662459fa69d31dcba99d6`.
+The scroll-driven candidate rebuild at `725ad66` also contains 49 files; its
+corresponding manifest hash is
+`24dff8604113968827fd5290057770acac5ccfe5fb6e349c75a7c4ff1aa507f2`.
 
 ## Current automated evidence
 
@@ -34,7 +37,7 @@ The following local non-writing gate was run on 23 July 2026:
 
 | Gate | Result | External write |
 | --- | --- | --- |
-| `npm test` | PASS — 64 Vitest tests and 24 Node tests; 88 total, 0 failures | None; network integrations use local doubles |
+| `npm test` | PASS — 66 Vitest tests and 24 Node tests; 90 total, 0 failures | None; network integrations use local doubles |
 | `npm run build:release` | PASS — public Turnstile key validated, TypeScript and Vite production build complete | None |
 | `npm audit --omit=dev` | PASS — 0 known production dependency vulnerabilities | Registry read only |
 | strict dynamic contrast | PASS — EN/IT across desktop, mobile, portrait tablet and landscape; stable and every sampled frame green | None |

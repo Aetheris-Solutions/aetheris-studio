@@ -2,7 +2,8 @@
 
 **Date:** 23 July 2026
 
-**Status:** production brief / implementation not started
+**Status:** Pass 1 scroll-driven vertical slice implemented; layered media and
+below-hero room production not started
 
 **Owner:** Lorenzo Masiello
 
@@ -16,7 +17,10 @@ The next visual pass must stop behaving like a strong hero followed by a convent
 
 This is not a request to reproduce Shopify Editions Winter 2026. Shopify is a quality and category reference for editorial scale, painterly staging, scroll continuity and the integration of modern proof inside a historical visual world. Aetheris must retain its own mark, palette, people, architecture, copy, proof, camera route and commercial narrative.
 
-The current implementation remains the safe baseline while the new experience is produced. No code, dependency or deployment change is authorised by this document.
+The pre-existing implementation remains the rollback baseline while the new
+experience is produced. The user-authorised Pass 1 vertical slice is recorded
+at commit `725ad66`; this document does not independently authorise later
+dependencies, media publication or Production deployment.
 
 ## 2. Baseline and gap diagnosis
 
@@ -137,7 +141,11 @@ The display treatment must not become a third general-purpose family. It require
 
 ## 5. Six-beat opening storyboard
 
-The opening occupies an initial target range of `520–650vh`, tuned after device tests. The ranges below are normalized scroll progress, not fixed seconds. Native scroll remains interruptible; there is no forced snapping.
+The definitive layered opening and handoff may occupy `520–650vh`, tuned after
+device tests. The current code-only vertical slice intentionally uses `260svh`
+to validate the scroll clock before new media exists. The ranges below are
+normalized scroll progress, not fixed seconds. Native scroll remains
+interruptible; there is no forced snapping.
 
 ### Beat 01 — Mark (`0.00–0.13`)
 
