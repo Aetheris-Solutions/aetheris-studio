@@ -133,7 +133,8 @@ The present safeguards reduce those risks:
 
 Subject to implementation of the review and retention procedure, Aetheris's
 interests are assessed as not overridden by the requester's rights and
-interests. Managing-director and counsel approval remain pending.
+interests. Business-owner approval is recorded below; counsel approval remains
+pending.
 
 ## Article 22 screening
 
@@ -231,9 +232,10 @@ whether the combined monitoring scale requires a full DPIA.
 | Approval | Status | Date | Evidence reference |
 | --- | --- | --- | --- |
 | Technical implementation review | Complete | 23 July 2026 | Repository and automated tests |
-| Managing-director confirmation of the operating procedure | Pending | — | Required before Production |
+| Business-owner confirmation of the operating procedure, 1/3/5-business-day review targets and workflow ownership | Approved — Lorenzo Masiello | 23 July 2026 | `AUTH-BUSINESS-2026-07-23`, project-owner instruction |
 | Italian privacy-professional review | Pending | — | Required before Production |
-| Attio review fields, owners and SLA activated | Pending | — | Account screenshot/export required |
+| Attio review owner | Designated — Lorenzo Masiello | 23 July 2026 | `AUTH-BUSINESS-2026-07-23`; account implementation still required |
+| Attio review fields and SLA activated | Pending | — | Account screenshot/export required |
 | GA4/Clarity live-account and DPIA screen | Pending | — | Volume, masking, access, role and retention evidence required |
 
 ## Primary sources

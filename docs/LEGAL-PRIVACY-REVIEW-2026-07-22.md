@@ -52,12 +52,18 @@ structured data and EN/IT notices.
 - The ruleset records its version and the invariants that it never performs an automated rejection, contract decision or price decision; a low-fit brief is still persisted for human review.
 - An operational LIA, Article 22 and DPIA screening is recorded in `docs/GDPR-LIA-ARTICLE-22-DPIA-SCREENING-2026-07-23.md`.
 - Processor, transfer, retention/log and asset-rights evidence requirements are recorded in `docs/LEGAL-EVIDENCE-AND-RETENTION-REGISTER-2026-07-23.md`.
+- Cloudflare Access now protects every Pages preview deployment. Anonymous
+  requests, including the five residual edge-cache URLs, are redirected to the
+  Access login before asset delivery.
+- Lorenzo Masiello is designated as business owner and human-review owner and
+  approved the documented 1/3/5-business-day operating targets. Attio
+  implementation evidence remains pending.
 
 ## Production blockers
 
-1. Have the managing director confirm the actual human-review procedure and
-   have Italian privacy counsel approve the legal bases, Article 6(1)(f) LIA,
+1. Have Italian privacy counsel approve the legal bases, Article 6(1)(f) LIA,
    Article 22/DPIA screening, retention schedule, transfers and EN/IT notices.
+   Business-owner approval is recorded as `AUTH-BUSINESS-2026-07-23`.
 2. Execute or otherwise evidence acceptance of the service-specific DPA and
    transfer records for Attio, Cloudflare, Google, Microsoft Clarity and
    Cal.com; verify current subprocessors, data regions, adequacy/SCC mechanism
@@ -89,8 +95,8 @@ structured data and EN/IT notices.
    confidentiality and IP chain-of-title evidence identified in
    `docs/PROOF-ASSETS.md`. The unledgered That’s It studio image has been
    removed from `public/` pending those rights. Other gated proof assets remain
-   visible on public noindex preview URLs under the owner's instruction; that
-   exposure is not third-party rights clearance.
+   available only after Cloudflare Access authentication under the owner's
+   instruction; that restricted exposure is not third-party rights clearance.
 10. Publish explicit allowlisted GA4 event tags only if qualification lifecycle
     reporting is wanted; the current container measures page use but does not
     forward the prepared `qualification_*` data-layer events.

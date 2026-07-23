@@ -10,8 +10,10 @@ consent, analytics and qualification.
   at commit `82c0c752cbb8cca15456d6806e23df4880a68e9c`.
 - **Immutable candidate:**
   `https://88a42fe2.aetheris-studio.pages.dev`.
-- **Git-integrated preview:**
-  `https://f0c60b45.aetheris-studio.pages.dev`.
+- **Latest Git-integrated preview:**
+  `https://814c0d7f.aetheris-studio.pages.dev`.
+- **Preview access:** restricted by Cloudflare Access application
+  `7fd72986-d480-46f2-8610-f3e8e22600b3`; anonymous requests must authenticate.
 - **Pull request:** `https://github.com/Aetheris-Solutions/aetheris-studio/pull/4`
   (open; do not merge while this record remains NO-GO).
 - **Production cutover:** not performed.
@@ -58,11 +60,19 @@ Production deployments were excluded. Immediate no-cache verification returned
 `404` for `752d26b3`, `59c04be7` and `c258d0f3`. Cloudflare's Pages edge still
 served the exact old image hash from `780b2508`, `aee66e53`, `a19ba1e0`,
 `9073565d` and `bed265e1`. Deletion is therefore recorded as complete at the
-deployment-control plane but takedown is **not yet closed** at every edge.
-Keep this as a release blocker until every old URL returns `404` or is
-access-protected, or Cloudflare Support confirms platform-cache purge.
-A repeated no-cache check later the same day still returned `200 image/webp`,
-79,230 bytes and the quarantined SHA-256 from all five URLs.
+deployment-control plane. A repeated no-cache check later the same day still
+returned `200 image/webp`, 79,230 bytes and the quarantined SHA-256 from all
+five URLs before access protection was enabled.
+
+At 23 July 2026 19:47 CEST, project-wide Preview Access was enabled from the
+authenticated Cloudflare account. Anonymous checks against the current
+previews and all five residual cache URLs returned `302` to
+`aetheris-studio-pages.cloudflareaccess.com`, with `Cache-Control: private,
+no-store` and `WWW-Authenticate: Cloudflare-Access`. The residual bytes may
+remain in Cloudflare's platform cache until expiry, but they are no longer
+publicly retrievable. The public takedown blocker is therefore **closed by
+access control**; continue periodic checks until the underlying URLs return
+`404`.
 
 The GitHub workflow verifies tests, the strict release build and the production
 dependency audit. The open pull request must remain unmerged until that
@@ -90,8 +100,8 @@ mocked, GET/HEAD-only or other non-writing paths.
 Production remains blocked. At minimum, close and evidence every open item in
 `docs/LEGAL-PRIVACY-REVIEW-2026-07-22.md`, including:
 
-- managing-director confirmation and Italian privacy-counsel approval of the
-  operational legitimate-interest / Article 22 / DPIA screening;
+- Italian privacy-counsel approval of the operational legitimate-interest /
+  Article 22 / DPIA screening; business-owner approval is recorded separately;
 - service-specific processor/controller and international-transfer records;
 - an operational Attio human-review workflow with reviewer, override and
   disposition evidence;
@@ -100,7 +110,8 @@ Production remains blocked. At minimum, close and evidence every open item in
 - Cloudflare log-retention confirmation;
 - preservation and owner approval of the immutable-preview consent/network
   evidence for the final GTM state.
-- retirement of the five residual Pages edge-cache copies identified above.
+- expiry or `404` verification of the five now access-protected residual Pages
+  edge-cache copies identified above.
 
 Corporate identity and disclosure are closed for the new-site candidate by
 evidence `CORP-VISURA-2026-01-17`: CF/VAT/Companies Register number
@@ -115,7 +126,7 @@ Project-owner approval does not replace those rights. Public, noindex Pages
 previews are not a rights clearance. The rights-unproven identifiable-people
 image has been removed from both sanitised successor bundles and the eight
 historical deployments were deleted. Five historical edge-cache copies remain
-fetchable at the time of this record and must be closed as stated above.
+stored at the tested edge but anonymous access is blocked by Cloudflare Access.
 
 ## Cutover decision
 

@@ -16,6 +16,15 @@ release, photographer release, retailer/brand licence, confidentiality waiver
 or legal opinion. Those separate rights remain governed by the status below
 and must be archived outside the public bundle.
 
+On 23 July 2026, Lorenzo Masiello additionally represented that he holds 30%
+of That's It, that Cielo's owner is his father-in-law, and that the displayed
+agents were developed entirely in-house by Aetheris. This is recorded as
+`AUTH-CONTEXT-2026-07-23`. The shareholding and family relationship explain the
+commercial context but do not, by themselves, prove authorised-signatory
+authority, trademark/image rights or a confidentiality waiver. The in-house
+agent statement supports Aetheris ownership, subject to contributor
+assignments and the third-party licence schedule.
+
 Use `docs/templates/THIRD-PARTY-PUBLICATION-APPROVAL-DRAFT.md` as the
 asset-by-asset evidence checklist. It requires counsel review before being used
 as a contractual release; signed copies remain in the private company archive.
@@ -60,9 +69,9 @@ full implementation scope.
 
 | Rights scope | Owner instruction | Separate third-party evidence in repository | Current status |
 | --- | --- | --- | --- |
-| Aetheris-owned agent UI and code | `AUTH-OWNER-001`; Aetheris ownership stated in the project brief | No separate IP schedule is stored in this repository; canonical repository references must remain available internally | Owner-approved; internal provenance still required for handover |
-| That’s It name, mark and storefront reproduction | `AUTH-OWNER-001` | No signed client/mark publication release archived here | External-rights evidence pending |
-| Cielo name and mark | `AUTH-OWNER-001` | No signed client/retailer publication release archived here | External-rights evidence pending |
+| Aetheris-owned agent UI and code | `AUTH-OWNER-001`; `AUTH-CONTEXT-2026-07-23`; Aetheris ownership stated in the project brief | No separate IP schedule is stored in this repository; canonical repository references must remain available internally | Owner-approved; contributor and third-party licence provenance still required for handover |
+| That’s It name, mark and storefront reproduction | `AUTH-OWNER-001`; `AUTH-CONTEXT-2026-07-23` records Lorenzo Masiello's stated 30% holding | No authorised-signatory client/mark publication release archived here | External-rights evidence pending |
+| Cielo name and mark | `AUTH-OWNER-001`; `AUTH-CONTEXT-2026-07-23` records the family relationship with Cielo's owner | No signed client/retailer publication release archived here | External-rights evidence pending |
 | Cielo product/campaign and storefront imagery | `AUTH-OWNER-001` | Photographer, retailer and upstream brand usage terms are not archived here | External-rights evidence pending |
 | Cielo tenant context visible in Social Agent | `AUTH-OWNER-001` | No separate confidentiality/client approval record archived here | External-rights evidence pending |
 

@@ -36,7 +36,7 @@ another.
 | Attio | Website Inbound CRM and qualification ledger | Processor for Customer Data; separate-controller activities may apply to account/usage data | Accepted DPA version and account; current subprocessors; UK adequacy and onward-transfer mechanism; SCC module/TIA where applicable; data region; deletion/export terms; AI/enrichment/recording settings | Public DPA identified; account-specific evidence missing |
 | Cloudflare Pages / Turnstile | Hosting, edge security and bot verification | Processor for site delivery/bot detection; Turnstile improvement activity may be separate-controller processing | Accepted Customer DPA and Turnstile addendum; subprocessors; regions; transfer mechanism; actual Pages/edge/security/Turnstile log products and retention; export/delete controls | Public terms identified; account-specific evidence missing |
 | Google Tag Manager / GA4 | Consent-gated site measurement | Service-specific Google role under accepted data-processing terms | Accepted terms; property/account owner; subprocessors; transfer framework; retention screenshot/export; reset-on-activity off; Signals, ads features, automatic form capture and unnecessary sharing off | Consent/network behaviour verified; account evidence missing |
-| Microsoft Clarity | Consent-gated heatmaps and session reconstruction | Treat as service-specific and unresolved; do not assume the generic Microsoft processor terms apply | Counsel-confirmed role; Clarity terms; transfer basis; project owner/access list; masking and Consent API state; retention settings/evidence | Consent/network behaviour and form mask verified; legal/account evidence missing |
+| Microsoft Clarity | Consent-gated heatmaps and session reconstruction | Independent controller under the published Clarity terms; do not present the generic Microsoft processor terms as a Clarity DPA | Counsel-confirmed acceptability of the controller-to-controller disclosure and transfers; Clarity terms; project owner/access list; masking and Consent API state; fixed-retention evidence | Consent/network behaviour and form mask verified; legal/account evidence missing |
 | Cal.com | Separate booking page opened by user; qualification payload is not sent automatically | To be confirmed for the configured booking service; direct user collection and Aetheris access must be analysed separately | Current DPA or controller terms as applicable; account owner; subprocessors; transfer basis; booking retention/delete/export settings; event-type privacy configuration | Public privacy/security pages identified; account evidence missing |
 
 For each row, archive:
@@ -49,6 +49,27 @@ For each row, archive:
 6. transfer-impact assessment and supplementary measures where needed;
 7. return/deletion, audit and incident-notification terms; and
 8. the internal owner and next annual review date.
+
+### Account-specific evidence requested from Lorenzo Masiello
+
+The public contract and subprocessor documents can be preserved by the project
+team. The following evidence must come from the authenticated vendor accounts.
+Screenshots must never include secret values, raw lead data, full payment
+details or unredacted booking exports.
+
+| Service | Minimum authenticated evidence |
+| --- | --- |
+| Attio | Workspace legal/billing owner; members, admins and security controls; `Website Inbound` list ID and attribute schema; human-review fields, owner and SLA; active enrichment, email, recording, AI and integration settings; export-completion record and redacted manifest; subprocessor-notification subscription |
+| Cloudflare | Account/legal owner; Pages production/preview branches, custom domains, Functions and binding names; Turnstile widget ID, mode and allowed hostnames without the secret; Access application, policy/allowlist and session duration; audit-log export for deployment, takedown and Access; enabled Logpush, Log Explorer and HTTP-retention settings |
+| Google GA4 / GTM | Account, property, stream and container IDs; accepted processing-amendment date and entity; account/property/container users; GA4 retention and reset-on-activity state; Signals, granular location/device, user-provided data and sharing toggles; product links; GTM published version, tags, triggers, variables and Consent Overview |
+| Microsoft Clarity | Project/domain ID; Consent Mode state; masking mode and rules; team/users; integrations; proof that no request occurs before analytics consent and that collection stops after withdrawal; acceptance of the published 30-day replay and up-to-9-month aggregate/favourite retention |
+| Cal.com | Account entity, plan and administrator; Trust Center copies of the DPA, subprocessor list and transfer annex; written confirmation of the tenant region; connected calendars, conferencing and apps; event questions, workflows, recording/transcription state and destination calendar; webhook/API-key names and scopes without values; security/team state; redacted booking/export manifest and deletion procedure |
+
+For Attio and Cal.com, Aetheris must also approve operational deletion periods:
+the public vendor language does not establish a sufficiently specific Aetheris
+retention schedule. Cal.com tenant-region evidence and the protected Trust
+Center documents are external blockers that cannot be inferred from public
+marketing pages.
 
 ## Operational retention matrix
 
@@ -129,7 +150,7 @@ Immediate post-deletion checks found:
 | Result | Historical immutable preview IDs | Status |
 | --- | --- | --- |
 | Root and quarantined path return `404` | `752d26b3`, `59c04be7`, `c258d0f3` | Takedown verified at the tested edge |
-| Exact old image hash still returned from Pages edge | `780b2508`, `aee66e53`, `a19ba1e0`, `9073565d`, `bed265e1` | Residual platform cache; open blocker |
+| Exact old image hash still returned from Pages edge before Access | `780b2508`, `aee66e53`, `a19ba1e0`, `9073565d`, `bed265e1` | Residual platform cache; anonymous retrieval subsequently closed by Access |
 
 The residual response is not treated as rights clearance or completed
 deletion. Preserve the deletion output and HTTP evidence privately, repeat the
@@ -142,6 +163,14 @@ A repeated no-cache check later on 23 July returned `200 image/webp` and
 quarantined SHA-256
 `c1541fc093c048c32319add5e7e5d60c7e2ad2d0d4cca72583c626dd42cb384a`;
 the blocker is therefore confirmed rather than inferred.
+
+Project-wide Preview Access was enabled on 23 July 2026 through Cloudflare
+application `7fd72986-d480-46f2-8610-f3e8e22600b3`. Subsequent anonymous
+requests to both successor previews and each of the five residual cache URLs
+returned `302` to the Cloudflare Access login before any asset response. The
+public takedown is closed by access control. Retain the five IDs in the review
+schedule until anonymous requests return `404`, because Access prevents public
+retrieval but does not prove that every cached byte has expired.
 
 ## Release evidence record format
 
