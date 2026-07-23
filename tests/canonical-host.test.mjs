@@ -103,6 +103,32 @@ test("returns a JSON 404 for unknown API routes without invoking another handler
   assert.deepEqual(await response.json(), { ok: false, error: "not_found" });
 });
 
+test("passes the known qualification API route to its route handler", async () => {
+  let nextCalls = 0;
+  const response = await onRequest({
+    request: new Request("https://aetherisstudio.com/api/qualification"),
+    next() {
+      nextCalls += 1;
+      return new Response(
+        JSON.stringify({ ok: false, error: "method_not_allowed" }),
+        {
+          status: 405,
+          headers: {
+            "Allow": "POST",
+            "Content-Type": "application/json; charset=utf-8",
+          },
+        },
+      );
+    },
+  });
+
+  assert.equal(nextCalls, 1);
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get("allow"), "POST");
+  assert.match(response.headers.get("content-type"), /application\/json/);
+  assert.deepEqual(await response.json(), { ok: false, error: "method_not_allowed" });
+});
+
 test("blocks preview crawling at robots.txt before serving static content", async () => {
   const response = await onRequest({
     request: new Request("https://codex-new-site-preview-20260722.aetheris-studio.pages.dev/robots.txt"),

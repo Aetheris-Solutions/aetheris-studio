@@ -22,6 +22,7 @@ test("consent network uses locale-independent controls and gates focus isolation
   assert.match(source, /reject:\s*'\.consent-panel__actions \.consent-action--decision:first-of-type'/);
   assert.match(source, /accept:\s*'\.consent-panel__actions \.consent-action--decision:last-of-type'/);
   assert.match(source, /async function verifyFocusTrap/);
+  assert.match(source, /document\.activeElement instanceof HTMLElement\) document\.activeElement\.blur\(\)/);
   assert.match(source, /'fresh-inert'/);
   assert.match(source, /'fresh-focus-trap'/);
   assert.match(source, /'preferences-restore-focus'/);

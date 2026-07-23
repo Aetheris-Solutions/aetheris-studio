@@ -581,6 +581,11 @@ async function inspectMobileBanner(client) {
     const decisions = [...document.querySelectorAll('.consent-panel__actions .consent-action--decision')];
     const reject = decisions[0];
     const accept = decisions.at(-1);
+    // Compare the two decisions in their neutral state. The focus-trap audit
+    // intentionally leaves the final control focused; including that control's
+    // focus indicator here would report a false prominence mismatch even when
+    // both decisions share identical resting styles.
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     const styleKeys = [
       'backgroundColor', 'color', 'borderTopColor', 'borderTopStyle', 'borderTopWidth',
       'boxShadow', 'fontFamily', 'fontSize', 'fontWeight', 'letterSpacing', 'minHeight'

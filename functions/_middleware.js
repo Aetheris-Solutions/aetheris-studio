@@ -143,7 +143,11 @@ export async function onRequest(context) {
     return apiNotFoundResponse();
   }
 
-  if (!PAGE_ROUTES.has(legacyPath) && !isStaticOrPlatformPath(url.pathname)) {
+  if (
+    !API_ROUTES.has(legacyPath)
+    && !PAGE_ROUTES.has(legacyPath)
+    && !isStaticOrPlatformPath(url.pathname)
+  ) {
     return notFoundResponse(url.pathname);
   }
 
