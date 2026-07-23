@@ -1,12 +1,15 @@
-import { atelierRoles, teamProfilePlaceholders } from '../content/team';
+import { atelierRoles, teamMembers, teamProfilePlaceholders } from '../content/team';
 import { AetherisMark } from './AetherisMark';
+import { TeamPortrait } from './TeamPortrait';
 
 export function AtelierTeam() {
+  const reservedProfiles = teamProfilePlaceholders.slice(teamMembers.length);
+
   return (
     <section className="atelier atelier--ledger" id="studio" aria-labelledby="atelier-title" data-header-tone="light">
       <div className="atelier-copy" data-reveal>
         <p className="section-kicker section-kicker--dark">The Aetheris atelier</p>
-        <h2 id="atelier-title">One accountable room.<br /><em>Six forms of craft.</em></h2>
+        <h2 id="atelier-title">One accountable room.<br /><em>The craft the work requires.</em></h2>
         <p>
           Each engagement is assembled around the commercial constraint, with a named lead and explicit ownership
           for every discipline in scope.
@@ -38,18 +41,23 @@ export function AtelierTeam() {
         </p>
       </div>
 
-      <div className="atelier-people-preview" data-reveal aria-labelledby="atelier-people-title">
+      <section className="atelier-people-preview" data-reveal aria-labelledby="atelier-people-title">
         <div className="atelier-people-intro">
-          <p className="atelier-people-kicker">People layer · reserved</p>
-          <h3 id="atelier-people-title">The portrait frieze arrives in the final team pass.</h3>
+          <p className="atelier-people-kicker">The people behind the system</p>
+          <h3 id="atelier-people-title">The hands behind the work.</h3>
           <p>
-            These niches reserve the composition only. Portraits, names and engagement roles will appear after
-            individual approval; no slot below represents a published team member or discipline assignment.
+            Each portrait moves from a Renaissance interpretation to the person behind it. Profiles are released
+            individually, once identity, role and image permissions are complete.
           </p>
         </div>
 
-        <ul className="atelier-profile-grid" aria-label="Reserved team profile slots">
-          {teamProfilePlaceholders.map((profile) => (
+        <ul className="atelier-profile-grid" aria-label="Aetheris Studio people">
+          {teamMembers.map((member) => (
+            <li key={member.id} className="atelier-profile-grid-member">
+              <TeamPortrait member={member} />
+            </li>
+          ))}
+          {reservedProfiles.map((profile) => (
             <li key={profile.slot}>
               <div className="atelier-profile-medallion" aria-hidden="true">
                 <span className="atelier-profile-orbit" />
@@ -63,7 +71,7 @@ export function AtelierTeam() {
             </li>
           ))}
         </ul>
-      </div>
+      </section>
     </section>
   );
 }

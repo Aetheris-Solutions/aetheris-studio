@@ -3121,6 +3121,237 @@ p {
   min-width: 0;
 }
 
+.atelier-profile-grid-member {
+  align-self: start;
+}
+
+.team-portrait {
+  min-width: 0;
+}
+
+.team-portrait-trigger {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  display: block;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  text-align: inherit;
+  appearance: none;
+}
+
+.team-portrait-frame {
+  position: relative;
+  isolation: isolate;
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid rgba(8, 11, 15, 0.38);
+  border-radius: 999px 999px 3px 3px;
+  display: block;
+  background:
+    linear-gradient(158deg, rgba(169, 201, 255, 0.26), rgba(241, 238, 230, 0.92) 54%, rgba(8, 11, 15, 0.1)),
+    url("/materials/mineral-grain.svg") repeat;
+  box-shadow:
+    inset 0 0 0 7px rgba(241, 238, 230, 0.68),
+    inset 0 0 0 8px rgba(8, 11, 15, 0.18);
+}
+
+.team-portrait-frame::before,
+.team-portrait-frame::after {
+  content: "";
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.team-portrait-frame::before {
+  inset: 8px;
+  border: 1px solid rgba(23, 59, 120, 0.24);
+  border-radius: inherit;
+}
+
+.team-portrait-frame::after {
+  right: 12px;
+  bottom: 11px;
+  left: 12px;
+  height: 1px;
+  background: rgba(8, 11, 15, 0.28);
+}
+
+.team-portrait-picture {
+  position: absolute;
+  z-index: 1;
+  inset: 9px;
+  overflow: hidden;
+  border-radius: 999px 999px 0 0;
+  display: block;
+}
+
+.team-portrait-picture img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: var(--team-portrait-position, 50% 50%);
+  transform: scale(1.002);
+  transition:
+    opacity 560ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 760ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.team-portrait-picture--painted {
+  --team-portrait-position: var(--team-painted-position, 50% 50%);
+}
+
+.team-portrait-picture--real {
+  z-index: 2;
+  --team-portrait-position: var(--team-real-position, 50% 50%);
+}
+
+.team-portrait-picture--real img {
+  opacity: 0;
+  transform: scale(1.025);
+}
+
+.team-portrait-wash {
+  position: absolute;
+  z-index: 4;
+  inset: 9px;
+  border-radius: 999px 999px 0 0;
+  background:
+    linear-gradient(180deg, transparent 54%, rgba(8, 11, 15, 0.55) 100%),
+    url("/materials/mineral-grain.svg") repeat;
+  opacity: 0.36;
+  pointer-events: none;
+  mix-blend-mode: multiply;
+  transition: opacity 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.team-portrait-hint {
+  position: absolute;
+  z-index: 7;
+  right: 17px;
+  bottom: 18px;
+  left: 17px;
+  min-height: 10px;
+  color: rgba(245, 241, 230, 0.92);
+  font: 650 7px/1.2 var(--sans);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.team-portrait-hint > span {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transition: opacity 240ms ease;
+}
+
+.team-portrait-hint-real {
+  opacity: 0;
+}
+
+.team-portrait-trigger.is-ready.is-real .team-portrait-picture--real img,
+.team-portrait-trigger.is-ready.is-real .team-portrait-hint-real {
+  opacity: 1;
+}
+
+.team-portrait-trigger.is-ready.is-real .team-portrait-picture--painted img {
+  opacity: 0.12;
+  transform: scale(1.018);
+}
+
+.team-portrait-trigger.is-ready.is-real .team-portrait-wash {
+  opacity: 0.14;
+}
+
+.team-portrait-trigger.is-ready.is-real .team-portrait-hint-painted {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .team-portrait-trigger.is-ready:hover .team-portrait-picture--real img,
+  .team-portrait-trigger.is-ready:focus-visible .team-portrait-picture--real img,
+  .team-portrait-trigger.is-ready:hover .team-portrait-hint-real,
+  .team-portrait-trigger.is-ready:focus-visible .team-portrait-hint-real {
+    opacity: 1;
+  }
+
+  .team-portrait-trigger.is-ready:hover .team-portrait-picture--painted img,
+  .team-portrait-trigger.is-ready:focus-visible .team-portrait-picture--painted img {
+    opacity: 0.12;
+    transform: scale(1.018);
+  }
+
+  .team-portrait-trigger.is-ready:hover .team-portrait-wash,
+  .team-portrait-trigger.is-ready:focus-visible .team-portrait-wash {
+    opacity: 0.14;
+  }
+
+  .team-portrait-trigger.is-ready:hover .team-portrait-hint-painted,
+  .team-portrait-trigger.is-ready:focus-visible .team-portrait-hint-painted {
+    opacity: 0;
+  }
+}
+
+.team-portrait-trigger:focus-visible {
+  outline: 3px solid var(--ultramarine);
+  outline-offset: 5px;
+}
+
+.team-portrait-caption {
+  padding: 15px 1px 0;
+  border-top: 1px solid rgba(8, 11, 15, 0.2);
+  display: grid;
+  gap: 10px;
+}
+
+.team-portrait-caption > div {
+  display: grid;
+  gap: 5px;
+}
+
+.team-portrait-caption h4 {
+  margin: 0;
+  font: 470 clamp(17px, 1.45vw, 24px)/0.98 var(--serif);
+  letter-spacing: -0.038em;
+}
+
+.team-portrait-caption p {
+  margin: 0;
+}
+
+.team-portrait-caption > div > p {
+  color: var(--ultramarine);
+  font: 650 8px/1.35 var(--sans);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.team-portrait-caption > p {
+  color: rgba(8, 11, 15, 0.66);
+  font: 470 9px/1.5 var(--sans);
+}
+
+.team-portrait-caption a {
+  width: fit-content;
+  color: rgba(8, 11, 15, 0.72);
+  font: 650 8px/1.2 var(--sans);
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+
+.team-portrait-caption a:hover,
+.team-portrait-caption a:focus-visible {
+  color: var(--ultramarine);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .atelier-profile-medallion {
   position: relative;
   isolation: isolate;
@@ -3240,15 +3471,15 @@ p {
 
 .atelier-profile-caption span {
   color: var(--ultramarine);
-  font: 650 7px/1 var(--sans);
+  font: 650 8px/1 var(--sans);
   letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
 .atelier-profile-caption strong {
-  max-width: 18ch;
+  max-width: 22ch;
   color: rgba(8, 11, 15, 0.64);
-  font: 500 8px/1.45 var(--sans);
+  font: 500 9px/1.45 var(--sans);
   letter-spacing: 0.03em;
 }
 
@@ -3355,13 +3586,25 @@ p {
   }
 
   .atelier-profile-caption strong {
-    font-size: 7px;
+    font-size: 8px;
+  }
+
+  .team-portrait-caption h4 {
+    font-size: clamp(17px, 5.6vw, 23px);
+  }
+
+  .team-portrait-hint {
+    right: 14px;
+    bottom: 16px;
+    left: 14px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .atelier-profile-medallion,
-  .atelier-profile-medallion * {
+  .atelier-profile-medallion *,
+  .team-portrait-trigger *,
+  .team-portrait-picture img {
     animation: none !important;
     transition: none !important;
   }

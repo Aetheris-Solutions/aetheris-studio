@@ -5,6 +5,29 @@ export type AtelierRole = {
   outputs: string[];
 };
 
+export type ResponsiveTeamImage = {
+  avif: string;
+  webp: string;
+  fallback: string;
+  width: number;
+  height: number;
+};
+
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  responsibility: string;
+  disciplines: string[];
+  profileUrl?: string;
+  portrait: {
+    painted: ResponsiveTeamImage;
+    real: ResponsiveTeamImage;
+    paintedPosition?: string;
+    realPosition?: string;
+  };
+};
+
 export type TeamProfilePlaceholder = {
   slot: string;
   label: string;
@@ -51,14 +74,23 @@ export const atelierRoles: AtelierRole[] = [
 ];
 
 /**
+ * Public roster only.
+ *
+ * Add a person here only after the corresponding entry in
+ * docs/TEAM-ASSET-REGISTER.md is marked READY. Consent and rights metadata
+ * deliberately stay out of the client bundle.
+ */
+export const teamMembers: TeamMember[] = [];
+
+/**
  * These entries reserve layout space only. They intentionally contain no names,
- * portraits or role assignments until the final team publication pass is approved.
+ * portraits or role assignments until each individual publication pass is approved.
  */
 export const teamProfilePlaceholders: TeamProfilePlaceholder[] = [
-  { slot: 'I', label: 'Profile reserved', note: 'Portrait and name pending approval' },
-  { slot: 'II', label: 'Profile reserved', note: 'Portrait and name pending approval' },
-  { slot: 'III', label: 'Profile reserved', note: 'Portrait and name pending approval' },
-  { slot: 'IV', label: 'Profile reserved', note: 'Portrait and name pending approval' },
-  { slot: 'V', label: 'Profile reserved', note: 'Portrait and name pending approval' },
-  { slot: 'VI', label: 'Profile reserved', note: 'Portrait and name pending approval' },
+  { slot: 'I', label: 'Portrait reserved', note: 'Identity and image approval pending' },
+  { slot: 'II', label: 'Portrait reserved', note: 'Identity and image approval pending' },
+  { slot: 'III', label: 'Portrait reserved', note: 'Identity and image approval pending' },
+  { slot: 'IV', label: 'Portrait reserved', note: 'Identity and image approval pending' },
+  { slot: 'V', label: 'Portrait reserved', note: 'Identity and image approval pending' },
+  { slot: 'VI', label: 'Portrait reserved', note: 'Identity and image approval pending' },
 ];
