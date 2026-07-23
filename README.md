@@ -73,7 +73,8 @@ npm test
 npm run dev
 npm run build
 npm run qa:contrast -- --strict-transitions
-npm run qa:consent -- https://your-immutable-preview.pages.dev/
+npm run qa:consent -- https://your-public-preview.pages.dev/ --expect-preview-silent
+npm run qa:consent -- https://your-approved-analytics-candidate.example/
 npm run preview
 ```
 
@@ -108,13 +109,20 @@ The previous email contact Function is retained under
 `legacy-pages-functions/` for regression coverage only. It sits outside the
 routable `functions/` directory and is not included in this preview.
 
-Run `qa:consent` only against the immutable Pages URL produced by the current
-deploy. It independently exercises English and Italian fresh, close, reject,
-accept, revoke and clean-reload paths at 390×844; verifies focus trap,
+Run `qa:consent` only against the immutable candidate URL produced by the
+current deploy. It independently exercises English and Italian fresh, close,
+reject, accept, revoke and clean-reload paths at 390×844; verifies focus trap,
 background inertness and focus restoration; requires zero Google/Clarity
-requests before consent and after withdrawal; checks the exact GTM container
-plus GA4/Clarity responses; and proves that a synthetic PII query sentinel
-never reaches those requests.
+requests before consent and after withdrawal; and proves that a synthetic PII
+query sentinel never reaches vendor requests. In its default mode it also
+checks the exact GTM container plus GA4/Clarity responses.
+
+Public `*.aetheris-studio.pages.dev` previews deliberately keep all analytics
+vendors offline. Pass `--expect-preview-silent` for those hosts: the same
+consent and accessibility scenarios run, but the acceptance path must still
+produce zero GTM, GA4 and Clarity requests. Use the default analytics-expecting
+mode only for an explicitly approved environment whose vendor configuration is
+part of the release under test.
 
 Development defaults to `http://127.0.0.1:4182`; preview defaults to port
 `4183`.

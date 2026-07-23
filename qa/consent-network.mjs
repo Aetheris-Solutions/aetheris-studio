@@ -23,6 +23,7 @@ const CONSENT_KEY = 'aetheris_consent_v1';
 const ATTRIBUTION_KEY = 'aetheris_studio_attribution_v1';
 const EXPECTED_GTM_ID = 'GTM-5553RFJZ';
 const PII_SENTINEL = 'consent-qa-private';
+const PUBLIC_PREVIEW_HOST_PATTERN = /^[a-z0-9-]+\.aetheris-studio\.pages\.dev$/;
 const MOBILE_VIEWPORT = { width: 390, height: 844, mobile: true };
 const LOCALES = [
   { id: 'en', path: '/', label: 'English' },
@@ -46,6 +47,7 @@ function parseArgs(argv) {
     report: DEFAULT_REPORT,
     settleMs: Number(process.env.CONSENT_QA_SETTLE_MS || 3_500),
     acceptTimeoutMs: Number(process.env.CONSENT_QA_ACCEPT_TIMEOUT_MS || 30_000),
+    expectAnalytics: process.env.CONSENT_QA_EXPECT_ANALYTICS !== 'false',
     keepProfile: false,
     help: false
   };
@@ -58,6 +60,7 @@ function parseArgs(argv) {
     else if (option === '--report') result.report = path.resolve(argv[++index]);
     else if (option === '--settle-ms') result.settleMs = Number(argv[++index]);
     else if (option === '--accept-timeout-ms') result.acceptTimeoutMs = Number(argv[++index]);
+    else if (option === '--expect-preview-silent') result.expectAnalytics = false;
     else if (option === '--keep-profile') result.keepProfile = true;
     else if (option === '--help' || option === '-h') result.help = true;
     else if (!option.startsWith('-') && !result.url) result.url = option;
@@ -88,7 +91,8 @@ Options:
   --output <path>             JSON evidence destination
   --report <path>             Markdown report destination
   --settle-ms <number>        Quiet observation window (default: 3500)
-  --accept-timeout-ms <n>     Time allowed for GA4 and Clarity (default: 30000)
+  --accept-timeout-ms <n>     Positive/negative post-opt-in window (default: 30000)
+  --expect-preview-silent     Require zero vendors on an Aetheris Pages preview
   --keep-profile              Keep the temporary browser profile for diagnosis
   -h, --help                  Show this help
 `;
@@ -670,7 +674,16 @@ function successfulServiceCount(phase, service) {
   return phase.requests.filter((request) => request.service === service && successfulRequest(request)).length;
 }
 
-async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTimeoutMs, evidence }) {
+async function runAudit({
+  url,
+  chrome,
+  cdpPort,
+  profileDir,
+  settleMs,
+  acceptTimeoutMs,
+  expectAnalytics,
+  evidence
+}) {
   const sensitiveUrl = new URL(url);
   sensitiveUrl.searchParams.set('utm_source', 'consent-qa');
   sensitiveUrl.searchParams.set('email', `${PII_SENTINEL}@example.invalid`);
@@ -786,11 +799,18 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     evidence.phases.acceptFresh = phaseEvidence(page.telemetry, acceptFreshMark);
     const acceptMark = page.telemetry.mark();
     await clickSelector(page.client, CONSENT_SELECTORS.accept);
-    await waitFor(() => {
-      const phase = phaseEvidence(page.telemetry, acceptMark);
-      return serviceCount(phase, 'gtm') >= 1 && serviceCount(phase, 'ga4') >= 1 && serviceCount(phase, 'clarity') >= 1;
-    }, acceptTimeoutMs, 120);
-    await sleep(settleMs);
+    if (expectAnalytics) {
+      await waitFor(() => {
+        const phase = phaseEvidence(page.telemetry, acceptMark);
+        return serviceCount(phase, 'gtm') >= 1
+          && serviceCount(phase, 'ga4') >= 1
+          && serviceCount(phase, 'clarity') >= 1;
+      }, acceptTimeoutMs, 120);
+    }
+    // A negative network assertion needs the same bounded observation window
+    // as the positive vendor-load assertion. A short UI settle alone could
+    // miss a delayed tag and produce a false preview PASS.
+    await sleep(expectAnalytics ? settleMs : acceptTimeoutMs);
     evidence.phases.accept = phaseEvidence(page.telemetry, acceptMark);
     const acceptedState = await readConsentState(page.client);
     const acceptedRuntime = await evaluate(page.client, `(() => {
@@ -811,19 +831,41 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
     evidence.states.acceptedRuntime = acceptedRuntime;
     addCheck(evidence, 'accept-prechoice-zero', 'Accept scenario remains silent until the affirmative action', evidence.phases.acceptFresh.optionalRequestCount === 0, 0, evidence.phases.acceptFresh.optionalRequestCount);
     const gtmRequests = evidence.phases.accept.requests.filter((request) => request.service === 'gtm');
-    addCheck(evidence, 'accept-one-gtm', 'Acceptance requests the expected GTM container exactly once', gtmRequests.length === 1 && successfulServiceCount(evidence.phases.accept, 'gtm') === 1 && gtmRequests[0]?.containerId === EXPECTED_GTM_ID, { requests: 1, successful: 1, container: EXPECTED_GTM_ID }, {
-      requests: serviceCount(evidence.phases.accept, 'gtm'),
-      successful: successfulServiceCount(evidence.phases.accept, 'gtm'),
-      containers: gtmRequests.map((request) => request.containerId),
-      urls: gtmRequests.map((request) => request.url)
-    });
-    addCheck(evidence, 'accept-ga4', 'Acceptance reaches GA4 successfully', successfulServiceCount(evidence.phases.accept, 'ga4') >= 1, '>= 1 successful request', successfulServiceCount(evidence.phases.accept, 'ga4'));
-    addCheck(evidence, 'accept-clarity', 'Acceptance reaches Microsoft Clarity successfully', successfulServiceCount(evidence.phases.accept, 'clarity') >= 1, '>= 1 successful request', successfulServiceCount(evidence.phases.accept, 'clarity'));
+    if (expectAnalytics) {
+      addCheck(evidence, 'accept-one-gtm', 'Acceptance requests the expected GTM container exactly once', gtmRequests.length === 1 && successfulServiceCount(evidence.phases.accept, 'gtm') === 1 && gtmRequests[0]?.containerId === EXPECTED_GTM_ID, { requests: 1, successful: 1, container: EXPECTED_GTM_ID }, {
+        requests: serviceCount(evidence.phases.accept, 'gtm'),
+        successful: successfulServiceCount(evidence.phases.accept, 'gtm'),
+        containers: gtmRequests.map((request) => request.containerId),
+        urls: gtmRequests.map((request) => request.url)
+      });
+      addCheck(evidence, 'accept-ga4', 'Acceptance reaches GA4 successfully', successfulServiceCount(evidence.phases.accept, 'ga4') >= 1, '>= 1 successful request', successfulServiceCount(evidence.phases.accept, 'ga4'));
+      addCheck(evidence, 'accept-clarity', 'Acceptance reaches Microsoft Clarity successfully', successfulServiceCount(evidence.phases.accept, 'clarity') >= 1, '>= 1 successful request', successfulServiceCount(evidence.phases.accept, 'clarity'));
+    } else {
+      addCheck(
+        evidence,
+        'accept-preview-zero-optional',
+        'Preview opt-in remains silent for GTM, GA4 and Clarity',
+        evidence.phases.accept.optionalRequestCount === 0,
+        0,
+        evidence.phases.accept.optionalRequestCount
+      );
+    }
     addCheck(evidence, 'accept-state', 'Acceptance persists analytics consent and keeps marketing denied', acceptedState.consent?.analytics === true && acceptedState.consent?.marketing === false, { analytics: true, marketing: false }, acceptedState.consent ? { analytics: acceptedState.consent.analytics, marketing: acceptedState.consent.marketing } : null);
     const defaultIndex = acceptedRuntime.ordered.find((entry) => entry.kind === 'default')?.index ?? -1;
     const updateIndex = acceptedRuntime.ordered.find((entry) => entry.kind === 'update' && entry.payload?.analytics_storage === 'granted')?.index ?? -1;
     const gtmIndex = acceptedRuntime.ordered.find((entry) => entry.kind === 'gtm.js')?.index ?? -1;
-    addCheck(evidence, 'accept-order', 'Denied default precedes analytics grant, which precedes GTM', defaultIndex >= 0 && updateIndex > defaultIndex && gtmIndex > updateIndex, 'default < granted update < gtm.js', { defaultIndex, updateIndex, gtmIndex });
+    addCheck(
+      evidence,
+      'accept-order',
+      expectAnalytics
+        ? 'Denied default precedes analytics grant, which precedes GTM'
+        : 'Denied default precedes the stored preview choice and GTM remains absent',
+      expectAnalytics
+        ? defaultIndex >= 0 && updateIndex > defaultIndex && gtmIndex > updateIndex
+        : defaultIndex >= 0 && updateIndex > defaultIndex && gtmIndex === -1,
+      expectAnalytics ? 'default < granted update < gtm.js' : 'default < granted update; no gtm.js',
+      { defaultIndex, updateIndex, gtmIndex }
+    );
     addCheck(evidence, 'accept-url-scrub', 'Arbitrary query values and fragments are removed before vendor load', acceptedRuntime.search === '' && acceptedRuntime.hash === '', { search: '', hash: '' }, { search: acceptedRuntime.search, hash: acceptedRuntime.hash });
     addCheck(evidence, 'accept-attribution-preserved', 'Recognised acquisition context is preserved only after analytics consent', acceptedRuntime.attributionPresent, true, acceptedRuntime.attributionPresent);
     addCheck(evidence, 'accept-no-pii-sentinel', 'No GTM, GA4 or Clarity request contains the synthetic PII sentinel', evidence.phases.accept.piiSentinelLeakCount === 0, 0, evidence.phases.accept.piiSentinelLeakCount);
@@ -880,6 +922,18 @@ async function runAudit({ url, chrome, cdpPort, profileDir, settleMs, acceptTime
       footerOpened: footerOpenedForRevoke,
       preferencesOpen: preferencesOpenForRevoke
     });
+
+    evidence.phases.acceptUntilRevoke = phaseEvidence(page.telemetry, acceptMark);
+    if (!expectAnalytics) {
+      addCheck(
+        evidence,
+        'accept-preview-zero-until-revoke',
+        'Preview remains vendor-silent continuously from opt-in until withdrawal',
+        evidence.phases.acceptUntilRevoke.optionalRequestCount === 0,
+        0,
+        evidence.phases.acceptUntilRevoke.optionalRequestCount
+      );
+    }
 
     const revokeMark = page.telemetry.mark();
     const checkboxToggled = await evaluate(page.client, `(() => {
@@ -991,7 +1045,9 @@ function reportFor(evidence) {
     '2. Observe CDP Network, Log and Runtime events from before each navigation; classify only GTM, GA4 and Microsoft Clarity endpoints.',
     '3. Exercise fresh, close, reject, accept, footer-preferences, withdrawal and clean-reload paths independently on the English and Italian routes.',
     '4. Drive Tab, Shift+Tab and Escape through CDP to prove focus containment, background inertness and focus restoration without depending on translated button copy.',
-    '5. Require an affirmative action before the single GTM request, successful GA4 and Clarity responses, and no CSP-blocked resource.',
+    evidence.expectAnalytics
+      ? '5. Require an affirmative action before the single GTM request, successful GA4 and Clarity responses, and no CSP-blocked resource.'
+      : '5. In preview-silent mode, require zero GTM, GA4 and Clarity requests even after analytics opt-in.',
     '6. Seed only synthetic, origin-readable analytics artefacts before withdrawal, then prove that the consent manager removes them.',
     '',
     'Request URLs in JSON evidence retain only origin/path and parameter names; query values, cookie values and request bodies are never written.',
@@ -1009,6 +1065,17 @@ async function main() {
   if (!args.url) throw new Error('A target URL is required via CONSENT_QA_URL, --url, or a positional argument.');
   const parsedUrl = new URL(args.url);
   if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('Target URL must use HTTP or HTTPS.');
+  if (
+    !args.expectAnalytics
+    && (
+      parsedUrl.protocol !== 'https:'
+      || !PUBLIC_PREVIEW_HOST_PATTERN.test(parsedUrl.hostname)
+    )
+  ) {
+    throw new Error(
+      '--expect-preview-silent is restricted to HTTPS *.aetheris-studio.pages.dev preview hosts.'
+    );
+  }
   parsedUrl.pathname = '/';
   parsedUrl.search = '';
   parsedUrl.hash = '';
@@ -1027,6 +1094,7 @@ async function main() {
     targetOrigin,
     browser: 'Installed Chrome controlled through CDP',
     chromeExecutable: chrome,
+    expectAnalytics: args.expectAnalytics,
     viewport: MOBILE_VIEWPORT,
     checks: [],
     phases: {},
@@ -1063,6 +1131,7 @@ async function main() {
           profileDir,
           settleMs: args.settleMs,
           acceptTimeoutMs: args.acceptTimeoutMs,
+          expectAnalytics: args.expectAnalytics,
           evidence: localeEvidence
         });
       } catch (error) {

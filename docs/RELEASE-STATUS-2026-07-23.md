@@ -6,11 +6,12 @@ consent, analytics and qualification.
 
 ## Deployment status
 
-- **Candidate state:** preview-only; the legal-control pass is validated locally
-  and its frozen commit is to be recorded after the clean release commit.
-- **Immutable candidate:** pending the sanitised successor deployment. Historical
-  preview `aee66e53` is not a release candidate because it predates the preview
-  processing block and still contains the quarantined image.
+- **Candidate state:** preview-only; the validated application source is frozen
+  at commit `82c0c752cbb8cca15456d6806e23df4880a68e9c`.
+- **Immutable candidate:**
+  `https://88a42fe2.aetheris-studio.pages.dev`.
+- **Git-integrated preview:**
+  `https://f0c60b45.aetheris-studio.pages.dev`.
 - **Pull request:** `https://github.com/Aetheris-Solutions/aetheris-studio/pull/4`
   (open; do not merge while this record remains NO-GO).
 - **Production cutover:** not performed.
@@ -31,13 +32,37 @@ The following local non-writing gate was run on 23 July 2026:
 
 | Gate | Result | External write |
 | --- | --- | --- |
-| `npm test` | PASS — 64 Vitest tests and 23 Node tests; 87 total, 0 failures | None; network integrations use local doubles |
+| `npm test` | PASS — 64 Vitest tests and 24 Node tests; 88 total, 0 failures | None; network integrations use local doubles |
 | `npm run build:release` | PASS — public Turnstile key validated, TypeScript and Vite production build complete | None |
 | `npm audit --omit=dev` | PASS — 0 known production dependency vulnerabilities | Registry read only |
 | strict dynamic contrast | PASS — EN/IT across desktop, mobile, portrait tablet and landscape; stable and every sampled frame green | None |
-| immutable-preview consent/network QA | PENDING — rerun on the sanitised immutable successor | No CRM or booking write permitted |
-| immutable-preview HTTP matrix | PENDING — rerun on the sanitised immutable successor | GET/HEAD and rejected/malformed non-writing method checks only |
-| immutable-preview visual smoke | PENDING — rerun on the sanitised immutable successor | None |
+| immutable-preview consent/network QA | PASS — EN/IT; 64 checks, 0 failures; fresh, close, reject, accept, reload, preferences and withdrawal; the 30-second post-opt-in window and the full interval through withdrawal both produced 0 GTM/GA4/Clarity requests | Vendor reads remained at zero; no CRM or booking write |
+| immutable-preview HTTP matrix | PASS — EN/IT Home/policies, localized `404`, robots, sitemap, security headers, GET API contract, blocked POST and quarantined asset `404` | GET/HEAD and rejected/malformed non-writing checks only |
+| immutable-preview visual smoke | PASS — final hero at 1440×900 and 390×844; EN/IT copy within viewport, no horizontal overflow, no Turnstile script | None |
+
+## Historical preview retirement
+
+Cloudflare reported successful deletion on 23 July 2026 for the eight Preview
+deployments proven to serve the quarantined image:
+
+- `780b2508-15d3-4faa-931f-3e6fd1743450`;
+- `aee66e53-3aff-4d1b-be99-7e84451dd79d`;
+- `a19ba1e0-05e8-442e-83fb-79ada58c390d`;
+- `9073565d-63b5-438f-bb8d-a9073205fe65`;
+- `752d26b3-9525-48a2-bdf0-5113e6ee19bd`;
+- `59c04be7-ec3e-4a9a-a35f-41b3191f98fb`;
+- `c258d0f3-745e-463f-9598-ad3d7cfabcf5`; and
+- `bed265e1-2653-4d59-b34e-811a311c4031`.
+
+Production deployments were excluded. Immediate no-cache verification returned
+`404` for `752d26b3`, `59c04be7` and `c258d0f3`. Cloudflare's Pages edge still
+served the exact old image hash from `780b2508`, `aee66e53`, `a19ba1e0`,
+`9073565d` and `bed265e1`. Deletion is therefore recorded as complete at the
+deployment-control plane but takedown is **not yet closed** at every edge.
+Keep this as a release blocker until every old URL returns `404` or is
+access-protected, or Cloudflare Support confirms platform-cache purge.
+A repeated no-cache check later the same day still returned `200 image/webp`,
+79,230 bytes and the quarantined SHA-256 from all five URLs.
 
 The GitHub workflow verifies tests, the strict release build and the production
 dependency audit. The open pull request must remain unmerged until that
@@ -75,6 +100,7 @@ Production remains blocked. At minimum, close and evidence every open item in
 - Cloudflare log-retention confirmation;
 - preservation and owner approval of the immutable-preview consent/network
   evidence for the final GTM state.
+- retirement of the five residual Pages edge-cache copies identified above.
 
 Corporate identity and disclosure are closed for the new-site candidate by
 evidence `CORP-VISURA-2026-01-17`: CF/VAT/Companies Register number
@@ -87,9 +113,9 @@ The proof layer remains Production-gated where `docs/PROOF-ASSETS.md` records
 missing client, photographer, retailer or third-party rights evidence.
 Project-owner approval does not replace those rights. Public, noindex Pages
 previews are not a rights clearance. The rights-unproven identifiable-people
-image has been removed from the candidate bundle; historical previews that
-still expose that exact hash must be retired after the sanitised successors are
-confirmed.
+image has been removed from both sanitised successor bundles and the eight
+historical deployments were deleted. Five historical edge-cache copies remain
+fetchable at the time of this record and must be closed as stated above.
 
 ## Cutover decision
 

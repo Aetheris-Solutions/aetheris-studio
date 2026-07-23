@@ -117,6 +117,32 @@ model releases, client approval or location permission. It remains recoverable
 from Git history but must not return to `public/` until every required right is
 archived.
 
+### Preview takedown evidence
+
+On 23 July 2026 Cloudflare accepted deletion of the eight non-Production Pages
+deployment IDs recorded in `docs/RELEASE-STATUS-2026-07-23.md`. The two
+sanitised successors return `404` for the quarantined path and the application
+bundle contains no file at that path.
+
+Immediate post-deletion checks found:
+
+| Result | Historical immutable preview IDs | Status |
+| --- | --- | --- |
+| Root and quarantined path return `404` | `752d26b3`, `59c04be7`, `c258d0f3` | Takedown verified at the tested edge |
+| Exact old image hash still returned from Pages edge | `780b2508`, `aee66e53`, `a19ba1e0`, `9073565d`, `bed265e1` | Residual platform cache; open blocker |
+
+The residual response is not treated as rights clearance or completed
+deletion. Preserve the deletion output and HTTP evidence privately, repeat the
+no-cache checks, and close the row only after every URL returns `404`, preview
+Access blocks retrieval, or Cloudflare Support confirms purge. A browser copy
+already downloaded by a third party cannot be remotely revoked.
+
+A repeated no-cache check later on 23 July returned `200 image/webp` and
+79,230 bytes from each of the five residual URLs. Every response matched the
+quarantined SHA-256
+`c1541fc093c048c32319add5e7e5d60c7e2ad2d0d4cca72583c626dd42cb384a`;
+the blocker is therefore confirmed rather than inferred.
+
 ## Release evidence record format
 
 For each signed approval or licence, record privately:
