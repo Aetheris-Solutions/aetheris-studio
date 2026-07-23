@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import { onRequestPost } from "../functions/api/contact.js";
+import { onRequestPost } from "../legacy-pages-functions/api/contact.js";
 
 const env = {
   RECAPTCHA_SECRET_KEY: "secret",

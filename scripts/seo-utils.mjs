@@ -116,6 +116,12 @@ function organizationSchema(origin) {
     },
     image: absoluteAsset(origin, OG_IMAGE),
     taxID: "14468170965",
+    vatID: "IT14468170965",
+    identifier: {
+      "@type": "PropertyValue",
+      propertyID: "REA",
+      value: "MI-2786509",
+    },
     email: "info@aetherisstudio.com",
     telephone: "+39 345 215 2653",
     description:

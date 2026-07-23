@@ -1,0 +1,237 @@
+<!doctype html>
+<!-- Operationally reviewed preview. External Italian privacy-counsel approval
+     and live vendor/configuration checks remain required before production. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#080b0f" />
+    <meta
+      name="description"
+      content="Cookies, browser storage, security and consent-controlled analytics used by the Aetheris Studio website."
+    />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large" />
+    <link rel="canonical" href="https://aetherisstudio.com/cookies-policy/" />
+    <link rel="alternate" hreflang="en" href="https://aetherisstudio.com/cookies-policy/" />
+    <link rel="alternate" hreflang="it" href="https://aetherisstudio.com/it/cookies-policy/" />
+    <link rel="alternate" hreflang="x-default" href="https://aetherisstudio.com/cookies-policy/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Aetheris Studio" />
+    <meta property="og:title" content="Cookies &amp; browser storage — Aetheris Studio" />
+    <meta
+      property="og:description"
+      content="The browser storage and abuse-protection technologies used by Aetheris Studio."
+    />
+    <meta property="og:url" content="https://aetherisstudio.com/cookies-policy/" />
+    <title>Cookies &amp; browser storage — Aetheris Studio</title>
+    <link rel="icon" href="/aetheris-mark.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/legal.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#policy">Skip to the notice</a>
+    <div class="legal-shell">
+      <header class="legal-header">
+        <a class="legal-brand" href="/" aria-label="Aetheris Studio home">
+          <img src="/aetheris-mark.svg" alt="" width="35" height="35" />
+          <span>Aetheris Studio</span>
+        </a>
+        <a class="legal-home-link" href="/">Return to the studio <span aria-hidden="true">↗</span></a>
+      </header>
+
+      <main id="policy">
+        <section class="legal-hero" aria-labelledby="page-title">
+          <div class="legal-hero-copy">
+            <p class="legal-kicker">Aetheris Studio · Legal folio</p>
+            <h1 class="legal-title" id="page-title">Cookies &amp; <em>storage.</em></h1>
+            <p class="legal-deck">
+              A plain account of the browser storage, security checks and consent-controlled measurement used by Aetheris Studio.
+            </p>
+            <p class="legal-meta">Reviewed preview · Revision 23 July 2026 · English</p>
+          </div>
+        </section>
+
+        <aside class="draft-notice" aria-label="Legal review status">
+          <strong>Operational review complete · external sign-off pending</strong>
+          <p>
+            This inventory describes the current release candidate and has received an operational GDPR/ePrivacy review. Its matching immutable preview and fresh, reject, accept and revoke network evidence must be recorded after the sanitised candidate is deployed. Public Pages previews are designed to keep GTM, GA4 and Clarity offline even after an analytics choice. Before production, the final container, actual GA4/Clarity account settings, service-specific provider roles and terms must still be evidenced, and the notice must be approved by an Italian privacy professional.
+          </p>
+        </aside>
+
+        <div class="legal-layout">
+          <nav class="legal-index" aria-label="Cookies notice sections">
+            <div class="legal-index-inner">
+              <p class="legal-section-label">In this notice</p>
+              <ol>
+                <li><a href="#meaning">Cookies and storage</a></li>
+                <li><a href="#current-use">What this build uses</a></li>
+                <li><a href="#turnstile">Turnstile security</a></li>
+                <li><a href="#measurement">Measurement status</a></li>
+                <li><a href="#controls">Your controls</a></li>
+                <li><a href="#changes">Changes and contact</a></li>
+              </ol>
+            </div>
+          </nav>
+
+          <article class="legal-document">
+            <section class="policy-section" id="meaning">
+              <p class="legal-section-label">Overview</p>
+              <h2>Cookies and browser storage are not the same thing</h2>
+              <p>
+                Cookies are small values a website or service can ask a browser to send with later requests. Local storage can retain information for a site across browser sessions, while session storage normally lasts for the current tab or browsing session. Similar technologies can also use scripts, pixels, device signals or in-memory values.
+              </p>
+              <p>
+                This notice covers those technologies together so that the actual behaviour of the site is easier to understand. The related handling of personal data is described in the <a href="/privacy-policy/">privacy notice</a>.
+              </p>
+            </section>
+
+            <section class="policy-section" id="current-use">
+              <p class="legal-section-label">Current inventory</p>
+              <h2>What the current build stores or may load</h2>
+              <div
+                class="policy-table-wrap"
+                role="region"
+                aria-label="Cookie and browser storage inventory; scroll horizontally to read all columns"
+                tabindex="0"
+              >
+                <table class="policy-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">Technology</th>
+                      <th scope="col">Purpose</th>
+                      <th scope="col">Duration or control</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><code>aetheris-production-hero-intro-v1</code><br />Session storage</td>
+                      <td><strong>Necessary.</strong> Remembers that the opening visual sequence has been seen, so it is not replayed unnecessarily in the same browsing session.</td>
+                      <td>Normally ends with the browser tab or session. It can be removed through browser site-data controls.</td>
+                    </tr>
+                    <tr>
+                      <td><code>aetheris_consent_v1</code><br />Local storage</td>
+                      <td><strong>Necessary preference record.</strong> Stores the version, analytics choice, marketing state, source, saved time and expiry so that the site can apply and demonstrate your choice.</td>
+                      <td>Six months. An expired or incompatible record is removed and the site asks again.</td>
+                    </tr>
+                    <tr>
+                      <td><code>aetheris_consent_session_override_v1</code><br />Session storage</td>
+                      <td><strong>Necessary fallback preference.</strong> Preserves the same consent or withdrawal for the current tab when durable local storage is unavailable, so an older analytics grant is not restored accidentally.</td>
+                      <td>Current tab or browser session only. It is removed when a durable preference can be stored.</td>
+                    </tr>
+                    <tr>
+                      <td><code>aetheris_studio_attribution_v1</code><br />Local storage</td>
+                      <td><strong>Analytics.</strong> With consent, remembers the first campaign/source touch used to contextualise a qualification request. It can include UTM values, recognised click IDs, a sanitised landing path, a sanitised referrer and a timestamp.</td>
+                      <td>No more than 90 days. It is removed when expired, rejected or revoked. The form still works without it.</td>
+                    </tr>
+                    <tr>
+                      <td>Turnstile widget<br />Cloudflare security technology</td>
+                      <td><strong>Necessary security.</strong> Assesses whether a form interaction is abusive and produces the short-lived token the server must verify before writing to the CRM.</td>
+                      <td>Controlled by Cloudflare's security service and browser/site-data settings. See the Turnstile section below.</td>
+                    </tr>
+                    <tr>
+                      <td>Google Tag Manager<br /><code>GTM-5553RFJZ</code></td>
+                      <td><strong>Analytics loader.</strong> Loads the reviewed analytics container only after opt-in. GTM is a script loader, not itself a cookie.</td>
+                      <td>Not requested before analytics consent. Removed from the next page load after withdrawal.</td>
+                    </tr>
+                    <tr>
+                      <td>Google Analytics 4<br /><code>_ga</code>, <code>_ga_&lt;container-id&gt;</code></td>
+                      <td><strong>Analytics.</strong> Distinguishes browsers and sessions and measures consented page use. The current measurement ID is <code>G-WL5GGPH5LS</code>. Allowlisted qualification lifecycle events are prepared in the data layer but are not yet published as separate GA4 event tags.</td>
+                      <td>Only after opt-in. Google defaults these cookies to two years; Aetheris's production target is 13 months or less. User/event-level property retention is to be capped at 14 months.</td>
+                    </tr>
+                    <tr>
+                      <td>Microsoft Clarity<br /><code>_clck</code>, <code>_clsk</code>; Microsoft may also use <code>CLID</code>, <code>ANONCHK</code>, <code>MR</code>, <code>MUID</code> and <code>SM</code> on its domains</td>
+                      <td><strong>Analytics.</strong> Connects consented page interactions into session analytics, recordings and heatmaps for project <code>wlgrvcv2zm</code>.</td>
+                      <td>Only after opt-in. Cookie expiry is controlled by Microsoft and browser policy; first-party cookies are removed where accessible on withdrawal. Separately, Clarity playback data is normally available for 30 days and selected or aggregate click/heatmap material for up to nine months.</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p>
+                Recognised first-touch campaign fields and sanitised URLs are sent to Aetheris only if you consent to analytics and then submit the qualification form while that choice remains valid; the local capture timestamp is not sent. Recognised campaign fields are preserved locally after consent; arbitrary query values and unrecognised fragments are removed before GTM, GA4 or Clarity loads. Stored landing and referrer URLs contain origin and path only.
+              </p>
+            </section>
+
+            <section class="policy-section" id="turnstile">
+              <p class="legal-section-label">Security</p>
+              <h2>Cloudflare Turnstile</h2>
+              <p>
+                The final step of the qualification form loads Cloudflare Turnstile from <strong>challenges.cloudflare.com</strong>. Turnstile uses browser, device, network and interaction signals to distinguish legitimate requests from automated abuse. It may use cookies or similar storage needed to provide that security function.
+              </p>
+              <p>
+                The browser receives a short-lived token. Aetheris's server sends that token and, where available, the connecting IP address to Cloudflare for verification. If verification fails, the server does not write the request to Attio. Turnstile is configured as a security control, not as an advertising tool.
+              </p>
+              <p>
+                Cloudflare says Turnstile processes signals including IP address, TLS fingerprint, user-agent header, site key and origin solely for bot detection and improvement. See Cloudflare's <a href="https://www.cloudflare.com/turnstile-privacy-policy/" target="_blank" rel="noreferrer">Turnstile Privacy Addendum</a>. Blocking this necessary control can prevent the protected form from being sent; email remains available as an alternative.
+              </p>
+            </section>
+
+            <section class="policy-section" id="measurement">
+              <p class="legal-section-label">Measurement</p>
+              <h2>Analytics that runs only after opt-in</h2>
+              <p>
+                The qualification interface creates a small allowlisted set of lifecycle events in the page's in-memory <strong>dataLayer</strong>, such as form view, step completion, submission and result. The event payload deliberately excludes names, email addresses, companies, store URLs, free text, campaign values and CRM identifiers.
+              </p>
+              <p>
+                The site uses Google Consent Mode v2 in its basic form. Google Tag Manager, Google Analytics 4 and Microsoft Clarity are not downloaded and receive no optional measurement request until you actively accept analytics. A rejection or the close control leaves <code>analytics_storage</code>, <code>ad_storage</code>, <code>ad_user_data</code> and <code>ad_personalization</code> denied. Advertising and personalisation technologies are not active.
+              </p>
+              <p>
+                On the canonical Production host, the current GTM container can load GA4 and Clarity after opt-in. Public Cloudflare Pages preview hostnames keep all three services offline even after an analytics choice. GA4 measures page use; Clarity analyses consented rendered-page interactions, clicks and scrolls through session reconstruction and heatmaps. The site prepares a non-PII set of qualification lifecycle events in the data layer, but the current published container does not yet forward them as separate GA4 events. Aetheris must not pass contact details, free-text form content or CRM identifiers into either analytics service.
+              </p>
+              <p class="policy-note">
+                Consent is the legal basis under Article 6(1)(a) GDPR and Article 122 of the Italian Privacy Code. The analytics container must be re-inventoried whenever its tags or destinations change.
+              </p>
+            </section>
+
+            <section class="policy-section" id="controls">
+              <p class="legal-section-label">Controls</p>
+              <h2>How to manage browser data</h2>
+              <p>You can use your browser to inspect, block or remove cookies and site storage. The exact controls depend on the browser and device. Common options include:</p>
+              <ul>
+                <li>clearing cookies and site data for <strong>aetherisstudio.com</strong>;</li>
+                <li>blocking third-party cookies or limiting cross-site tracking;</li>
+                <li>using private browsing for a session that should not retain local storage after it closes; and</li>
+                <li>using browser developer or privacy tools to inspect values stored for the site.</li>
+              </ul>
+              <p>
+                The banner gives equally prominent choices to reject non-essential technologies or accept analytics; “Preferences” opens the category control and the close button persists the denied default. No box is preselected and continuing to scroll is not treated as consent.
+              </p>
+              <p>
+                Use <strong>Cookie choices</strong> in the footer at any time to grant or withdraw analytics. Withdrawal updates consent to denied, removes first-party GA/Clarity cookies that the Aetheris origin can access, clears first-touch attribution and reloads the page so the tag runtime is no longer present. Microsoft-domain third-party cookies cannot be deleted by the Aetheris domain; browser controls can remove them.
+              </p>
+              <p>
+                Removing the hero session value may cause the opening sequence to play again. Blocking Turnstile or its required scripts can prevent the protected qualification form from being sent; you can still contact Aetheris at <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a>.
+              </p>
+            </section>
+
+            <section class="policy-section" id="changes">
+              <p class="legal-section-label">Status</p>
+              <h2>Changes, controller and contact</h2>
+              <p>
+                The controller is <strong>Aetheris Solutions S.r.l.</strong>, operating through Aetheris Studio, VAT, tax and Milan Monza Brianza Lodi Companies Register number <strong>14468170965</strong>, REA <strong>MI-2786509</strong>, with registered office at Via Giovanni Pastorelli 4/D, 20143 Milan, Italy. Share capital is EUR 10,000 fully paid and the company has a sole shareholder. Questions about storage or data protection can be sent to <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> or the corporate certified email address <a href="mailto:aetherissolutions@pec.it">aetherissolutions@pec.it</a>.
+              </p>
+              <p>
+                This inventory must be revisited whenever a storage key, provider, analytics tag, advertising integration or consent flow changes. Official references include the <a href="https://support.google.com/analytics/answer/11397207" target="_blank" rel="noreferrer">GA4 cookie description</a>, <a href="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-cookies" target="_blank" rel="noreferrer">Clarity cookie inventory</a> and the Italian Garante's <a href="https://www.garanteprivacy.it/web/guest/home/docweb/-/docweb-display/docweb/9677876" target="_blank" rel="noreferrer">cookie and tracking guidelines</a>.
+              </p>
+              <p class="policy-note">
+                This 23 July 2026 version describes the current release candidate. Its frozen commit, matching immutable preview and final consent/network evidence must be added to the release record after deployment. The scan must also be repeated after any final container change and against the Production configuration. Production remains gated on confirmation of actual GA4/Clarity cookie and data-retention settings, service-specific vendor/transfer records and final approval by an Italian privacy professional.
+              </p>
+            </section>
+          </article>
+        </div>
+      </main>
+
+      <footer class="legal-footer">
+        <div>
+          <strong>Aetheris Studio</strong>
+          <span>Aetheris Solutions S.r.l. · Milan Monza Brianza Lodi Companies Register / VAT and tax no. 14468170965 · REA MI-2786509 · Share capital EUR 10,000 fully paid · Sole shareholder company</span>
+        </div>
+        <nav aria-label="Legal footer">
+          <a href="/privacy-policy/">Privacy</a>
+          <a href="/#cookie-choices">Cookie choices</a>
+          <a href="/it/cookies-policy/" hreflang="it" lang="it">Italiano</a>
+          <a href="mailto:info@aetherisstudio.com">Contact</a>
+          <a href="#page-title">Back to top ↑</a>
+        </nav>
+      </footer>
+    </div>
+  </body>
+</html>
