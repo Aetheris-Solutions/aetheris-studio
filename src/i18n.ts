@@ -146,6 +146,8 @@ const italian: Record<string, string> = {
   'Footer navigation': 'Navigazione a piè di pagina',
   'A business unit of Aetheris Solutions S.r.l.':
     'Una business unit di Aetheris Solutions S.r.l.',
+  'Aetheris Solutions S.r.l. · Registered office Via Giovanni Pastorelli 4/D, 20143 Milan, Italy · Milan Monza Brianza Lodi Companies Register / VAT and tax no. 14468170965 · REA MI-2786509 · Share capital €10,000 fully paid · Sole shareholder company':
+    'Aetheris Solutions S.r.l. · Sede legale Via Giovanni Pastorelli 4/D, 20143 Milano, Italia · Registro Imprese Milano Monza Brianza Lodi / P. IVA e C.F. 14468170965 · REA MI-2786509 · Capitale sociale €10.000 i.v. · Società a socio unico',
 
   'Privacy controls': 'Controlli della privacy',
   'Choose what may run': 'Scegli cosa può essere attivato',
@@ -413,14 +415,14 @@ const italian: Record<string, string> = {
   'There appears to be a fit.': 'Sembra esserci un buon allineamento.',
   'Choose a time.': 'Scegli un orario.',
   'Your brief is with us.': 'Abbiamo ricevuto il tuo brief.',
-  'A person reviews it next.': 'Ora lo esaminerà una persona.',
+  'It remains in review.': 'Resta in revisione.',
   'Your context matches the kind of commerce work we are set up to discuss. Book a 30-minute fit call with the team.':
     'Il tuo contesto è in linea con il tipo di lavoro commerce di cui siamo attrezzati a discutere. Prenota una call di allineamento di 30 minuti con il team.',
-  'The automated screen does not make a rejection decision. We will review the context and reply personally with the most useful next step.':
-    'La valutazione automatizzata non prende decisioni di esclusione. Esamineremo il contesto e ti risponderemo personalmente indicando il prossimo passo più utile.',
+  'The automated screen does not make a rejection decision. Your brief stays in our review queue, and you can request human reassessment at any time.':
+    'La valutazione automatizzata non prende decisioni di esclusione. Il brief resta nella coda di revisione e puoi chiedere in qualsiasi momento un riesame umano.',
   'Book the Commerce Growth Call': 'Prenota la Commerce Growth Call',
-  'Expect a reply at your work email. If the matter is time-sensitive, write to':
-    'Riceverai una risposta al tuo indirizzo email di lavoro. Se la richiesta è urgente, scrivi a',
+  'For a direct reply, or if the matter is time-sensitive, write to':
+    'Per una risposta diretta, o se la richiesta è urgente, scrivi a',
   'Start with fit': 'Partiamo dall’allineamento',
   'Bring us the constraint.': 'Portaci il vincolo.',
   'We will tell you if we can move it.': 'Ti diremo se possiamo rimuoverlo.',
@@ -428,7 +430,7 @@ const italian: Record<string, string> = {
     'Un breve brief commerciale prima della call. Offre a entrambe le parti il contesto necessario per rendere utile la prima conversazione.',
   '03 steps': '03 passaggi',
   'About 4 minutes': 'Circa 4 minuti',
-  'Reviewed by a person': 'Esaminato da una persona',
+  'Human review available': 'Revisione umana disponibile',
   'Qualification progress': 'Avanzamento della qualificazione',
   'There is something to review.': 'C’è qualcosa da controllare.',
   'Step': 'Passaggio',
@@ -505,6 +507,8 @@ const italian: Record<string, string> = {
   'Send the commercial brief': 'Invia il brief commerciale',
   'Your details are used to assess this request and coordinate a response. They are never sent to analytics.':
     'I tuoi dati vengono utilizzati per valutare la richiesta e coordinare una risposta. Non vengono mai inviati agli analytics.',
+  'Preview mode: CRM submission is disabled. Use email to share test feedback.':
+    'Modalità anteprima: l’invio al CRM è disattivato. Usa l’email per condividere feedback di test.',
 };
 
 export const siteLocale: SiteLocale =

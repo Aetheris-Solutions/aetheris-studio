@@ -86,6 +86,12 @@ function isBrowser(): boolean {
   return typeof window !== 'undefined' && typeof document !== 'undefined';
 }
 
+export function isCloudflarePagesPreviewHostname(hostname: string): boolean {
+  const candidate = hostname.trim().toLowerCase();
+  return candidate === 'aetheris-studio.pages.dev'
+    || candidate.endsWith('.aetheris-studio.pages.dev');
+}
+
 function isConsentRecord(value: unknown): value is ConsentRecord {
   if (!value || typeof value !== 'object') return false;
   const candidate = value as Partial<ConsentRecord>;
@@ -352,7 +358,12 @@ function prepareSafeAnalyticsContext(): void {
 }
 
 function loadTagManager(): void {
-  if (!isBrowser() || window.__aetherisGtmLoaded || document.getElementById(GTM_SCRIPT_ID)) return;
+  if (
+    !isBrowser()
+    || isCloudflarePagesPreviewHostname(window.location.hostname)
+    || window.__aetherisGtmLoaded
+    || document.getElementById(GTM_SCRIPT_ID)
+  ) return;
 
   window.dataLayer = window.dataLayer ?? [];
   window.dataLayer.push({
@@ -379,7 +390,7 @@ function expireCookie(name: string): void {
     if (hostname === 'aetherisstudio.com' || hostname.endsWith('.aetherisstudio.com')) {
       hosts.add('.aetherisstudio.com');
     }
-    if (hostname === 'aetheris-studio.pages.dev' || hostname.endsWith('.aetheris-studio.pages.dev')) {
+    if (isCloudflarePagesPreviewHostname(hostname)) {
       hosts.add('.aetheris-studio.pages.dev');
     }
   }

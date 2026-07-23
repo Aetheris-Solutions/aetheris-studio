@@ -4,6 +4,7 @@ import {
   CONSENT_STORAGE_KEY,
   GOOGLE_TAG_MANAGER_ID,
   initialiseConsentManagement,
+  isCloudflarePagesPreviewHostname,
   readConsent,
   saveConsent,
   type ConsentRecord,
@@ -162,6 +163,13 @@ describe('consent management', () => {
     vi.unstubAllGlobals();
   });
 
+  it('recognises only the project base and genuine Pages preview subdomains', () => {
+    expect(isCloudflarePagesPreviewHostname('aetheris-studio.pages.dev')).toBe(true);
+    expect(isCloudflarePagesPreviewHostname('Legal-Pass.Aetheris-Studio.Pages.Dev')).toBe(true);
+    expect(isCloudflarePagesPreviewHostname('aetheris-studio.pages.dev.evil.example')).toBe(false);
+    expect(isCloudflarePagesPreviewHostname('aetherisstudio.com')).toBe(false);
+  });
+
   it('queues denied defaults without requesting Google or Clarity before a choice', () => {
     const browser = installBrowser();
 
@@ -213,6 +221,21 @@ describe('consent management', () => {
       landingUrl: 'https://aetherisstudio.com/'
     });
     expect(browser.values.get('aetheris_studio_attribution_v1')).not.toContain('private@example.com');
+  });
+
+  it('keeps GTM and Clarity offline on public Cloudflare Pages previews after opt-in', () => {
+    const browser = installBrowser();
+    browser.browserWindow.location.hostname = 'legal-pass.aetheris-studio.pages.dev';
+    browser.browserWindow.location.origin = 'https://legal-pass.aetheris-studio.pages.dev';
+    browser.browserWindow.location.href = 'https://legal-pass.aetheris-studio.pages.dev/';
+
+    initialiseConsentManagement();
+    const { record } = saveConsent({ analytics: true, marketing: false }, 'banner');
+
+    expect(record.analytics).toBe(true);
+    expect(browser.appendChild).not.toHaveBeenCalled();
+    expect(browser.scripts.size).toBe(0);
+    expect(browser.browserWindow.__aetherisGtmLoaded).not.toBe(true);
   });
 
   it.each([

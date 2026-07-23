@@ -46,14 +46,14 @@
             <p class="legal-deck">
               A plain account of the browser storage, security checks and consent-controlled measurement used by Aetheris Studio.
             </p>
-            <p class="legal-meta">Reviewed preview · Revision 22 July 2026 · English</p>
+            <p class="legal-meta">Reviewed preview · Revision 23 July 2026 · English</p>
           </div>
         </section>
 
         <aside class="draft-notice" aria-label="Legal review status">
           <strong>Operational review complete · external sign-off pending</strong>
           <p>
-            This inventory matches the intended preview and has received a GDPR/ePrivacy gap review. Before production, the live container, cookie durations, GA4/Clarity settings and processor terms must be confirmed, and the notice must be approved by an Italian privacy professional.
+            This inventory describes the current release candidate and has received an operational GDPR/ePrivacy review. Its matching immutable preview and fresh, reject, accept and revoke network evidence must be recorded after the sanitised candidate is deployed. Public Pages previews are designed to keep GTM, GA4 and Clarity offline even after an analytics choice. Before production, the final container, actual GA4/Clarity account settings, service-specific provider roles and terms must still be evidenced, and the notice must be approved by an Italian privacy professional.
           </p>
         </aside>
 
@@ -174,7 +174,7 @@
                 The site uses Google Consent Mode v2 in its basic form. Google Tag Manager, Google Analytics 4 and Microsoft Clarity are not downloaded and receive no optional measurement request until you actively accept analytics. A rejection or the close control leaves <code>analytics_storage</code>, <code>ad_storage</code>, <code>ad_user_data</code> and <code>ad_personalization</code> denied. Advertising and personalisation technologies are not active.
               </p>
               <p>
-                After opt-in, the current GTM container loads GA4 and Clarity. GA4 measures page use; Clarity analyses consented rendered-page interactions, clicks and scrolls through session reconstruction and heatmaps. The site prepares a non-PII set of qualification lifecycle events in the data layer, but the current published container does not yet forward them as separate GA4 events. Aetheris must not pass contact details, free-text form content or CRM identifiers into either analytics service.
+                On the canonical Production host, the current GTM container can load GA4 and Clarity after opt-in. Public Cloudflare Pages preview hostnames keep all three services offline even after an analytics choice. GA4 measures page use; Clarity analyses consented rendered-page interactions, clicks and scrolls through session reconstruction and heatmaps. The site prepares a non-PII set of qualification lifecycle events in the data layer, but the current published container does not yet forward them as separate GA4 events. Aetheris must not pass contact details, free-text form content or CRM identifiers into either analytics service.
               </p>
               <p class="policy-note">
                 Consent is the legal basis under Article 6(1)(a) GDPR and Article 122 of the Italian Privacy Code. The analytics container must be re-inventoried whenever its tags or destinations change.
@@ -206,13 +206,13 @@
               <p class="legal-section-label">Status</p>
               <h2>Changes, controller and contact</h2>
               <p>
-                The controller is <strong>Aetheris Solutions S.r.l.</strong>, operating through Aetheris Studio, VAT number <strong>14468170965</strong>, with registered office at Via Giovanni Pastorelli 4/D, 20143 Milan, Italy. Questions about storage or data protection can be sent to <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> or the corporate certified email address <a href="mailto:aetherissolutions@pec.it">aetherissolutions@pec.it</a>.
+                The controller is <strong>Aetheris Solutions S.r.l.</strong>, operating through Aetheris Studio, VAT, tax and Milan Monza Brianza Lodi Companies Register number <strong>14468170965</strong>, REA <strong>MI-2786509</strong>, with registered office at Via Giovanni Pastorelli 4/D, 20143 Milan, Italy. Share capital is EUR 10,000 fully paid and the company has a sole shareholder. Questions about storage or data protection can be sent to <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> or the corporate certified email address <a href="mailto:aetherissolutions@pec.it">aetherissolutions@pec.it</a>.
               </p>
               <p>
                 This inventory must be revisited whenever a storage key, provider, analytics tag, advertising integration or consent flow changes. Official references include the <a href="https://support.google.com/analytics/answer/11397207" target="_blank" rel="noreferrer">GA4 cookie description</a>, <a href="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-cookies" target="_blank" rel="noreferrer">Clarity cookie inventory</a> and the Italian Garante's <a href="https://www.garanteprivacy.it/web/guest/home/docweb/-/docweb-display/docweb/9677876" target="_blank" rel="noreferrer">cookie and tracking guidelines</a>.
               </p>
               <p class="policy-note">
-                This 22 July 2026 version matches the reviewed preview. Production remains gated on a live fresh/reject/accept/revoke network scan, confirmation of actual GA4 cookie and data-retention settings, vendor-contract checks and final approval by an Italian privacy professional.
+                This 23 July 2026 version describes the current release candidate. Its frozen commit, matching immutable preview and final consent/network evidence must be added to the release record after deployment. The scan must also be repeated after any final container change and against the Production configuration. Production remains gated on confirmation of actual GA4/Clarity cookie and data-retention settings, service-specific vendor/transfer records and final approval by an Italian privacy professional.
               </p>
             </section>
           </article>
@@ -222,7 +222,7 @@
       <footer class="legal-footer">
         <div>
           <strong>Aetheris Studio</strong>
-          <span>A business unit of Aetheris Solutions S.r.l. · VAT 14468170965</span>
+          <span>Aetheris Solutions S.r.l. · Milan Monza Brianza Lodi Companies Register / VAT and tax no. 14468170965 · REA MI-2786509 · Share capital EUR 10,000 fully paid · Sole shareholder company</span>
         </div>
         <nav aria-label="Legal footer">
           <a href="/privacy-policy/">Privacy</a>

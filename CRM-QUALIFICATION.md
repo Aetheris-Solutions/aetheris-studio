@@ -63,11 +63,11 @@ Application-required Website Inbound entry attributes (Attio does not permit `is
   "ownerReadiness": "decision-maker",
   "constraint": "The main delivery constraint",
   "privacyAccepted": true,
-  "privacyVersion": "2026-07-22",
+  "privacyVersion": "2026-07-23",
   "privacyAcceptedAt": "2026-07-22T09:00:00.000Z",
   "marketingConsent": false,
   "marketingConsentAt": "",
-  "marketingConsentVersion": "2026-07-22",
+  "marketingConsentVersion": "2026-07-23",
   "marketingConsentSource": "website_qualification",
   "analyticsConsent": true,
   "analyticsConsentAt": "2026-07-22T08:55:00.000Z",
@@ -126,7 +126,25 @@ High fit requires all of the following:
 - project budget of at least EUR 10k;
 - a decision maker, budget owner, or direct sponsor path.
 
-Everything else returns `review`; there is no public rejection response. Internally the list entry records fit and P1/P2/P3 priority. The exact deterministic score is stored in the private per-submission Attio ledger, not sent to analytics or the browser.
+Everything else returns `review`; there is no public rejection response.
+Internally the list entry records fit and P1/P2/P3 priority. The exact
+deterministic score is stored in the private per-submission Attio ledger, not
+sent to analytics or the browser.
+
+Ruleset `2026-07-23.1` also records these safeguards in every ledger:
+
+- `humanReviewRequired: true`;
+- `automatedRejection: false`;
+- `automatedContractDecision: false`;
+- `automatedPricing: false`; and
+- an `automatedEffect` limited to queue priority, plus the optional booking
+  shortcut for high fit.
+
+These are launch invariants, not descriptive labels. A change that automates a
+contract, price, denial, service-access decision or suppresses human review
+requires a new LIA, Article 22/DPIA screening, privacy notice and test suite.
+The intended review owners, SLA, override log and change triggers are recorded
+in `docs/GDPR-LIA-ARTICLE-22-DPIA-SCREENING-2026-07-23.md`.
 
 ## Cloudflare configuration
 
@@ -143,6 +161,17 @@ Required:
 Recommended:
 
 - `TURNSTILE_EXPECTED_HOSTNAMES`: comma-separated hostnames returned by Siteverify, for example `aetherisstudio.com,www.aetherisstudio.com`. Explicit `*.example.com` rules are supported for controlled preview subdomains. When omitted, the request hostname is enforced.
+
+Preview safety:
+
+- Cloudflare Pages hostnames keep the qualification Turnstile widget and
+  GTM/GA4/Clarity offline, then reject qualification submissions before
+  server-side Turnstile verification or Attio by default.
+  `ALLOW_PREVIEW_SUBMISSIONS=true` is an exceptional, temporary preview override
+  and must not be left enabled. It requires explicit approval because a
+  successful preview submission is real CRM processing.
+- Localhost smoke tests remain governed separately by
+  `ALLOW_UNVERIFIED_LOCAL_SUBMISSIONS`.
 
 Frontend-only:
 

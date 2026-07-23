@@ -47,14 +47,14 @@
             <p class="legal-deck">
               Una descrizione chiara della memoria del browser, dei controlli di sicurezza e della misurazione basata sul consenso utilizzati da Aetheris Studio.
             </p>
-            <p class="legal-meta">Anteprima revisionata · Revisione 22 luglio 2026 · Italiano</p>
+            <p class="legal-meta">Anteprima revisionata · Revisione 23 luglio 2026 · Italiano</p>
           </div>
         </section>
 
         <aside class="draft-notice" aria-label="Stato della revisione legale">
           <strong>Revisione operativa completata · approvazione esterna in attesa</strong>
           <p>
-            Questo inventario corrisponde all’anteprima prevista ed è stato sottoposto a una gap analysis GDPR/ePrivacy. Prima della produzione devono essere confermati il container live, la durata effettiva dei cookie, le impostazioni GA4/Clarity e i termini dei responsabili del trattamento; l’informativa deve inoltre essere approvata da un professionista privacy italiano.
+            Questo inventario descrive il candidato di rilascio corrente ed è stato sottoposto a una revisione operativa GDPR/ePrivacy. L’anteprima immutabile corrispondente e le prove di rete per stato iniziale, rifiuto, accettazione e revoca devono essere registrate dopo il deployment del candidato sanificato. Le anteprime Pages pubbliche sono progettate per mantenere GTM, GA4 e Clarity offline anche dopo una scelta analytics. Prima della produzione devono ancora essere documentati il container finale, le impostazioni effettive degli account GA4/Clarity, i ruoli e i termini specifici dei fornitori; l’informativa deve inoltre essere approvata da un professionista privacy italiano.
           </p>
         </aside>
 
@@ -175,7 +175,7 @@
                 Il sito usa Google Consent Mode v2 in modalità di base. Google Tag Manager, Google Analytics 4 e Microsoft Clarity non vengono scaricati e non ricevono richieste di misurazione facoltative finché non accetti attivamente gli analytics. Un rifiuto o l’uso del pulsante di chiusura mantiene negati <code>analytics_storage</code>, <code>ad_storage</code>, <code>ad_user_data</code> e <code>ad_personalization</code>. Le tecnologie pubblicitarie e di personalizzazione non sono attive.
               </p>
               <p>
-                Dopo l’opt-in, il container GTM attuale carica GA4 e Clarity. GA4 misura l’uso delle pagine; Clarity analizza le interazioni consentite con la pagina renderizzata, i clic e gli scorrimenti tramite ricostruzione delle sessioni e mappe di calore. Il sito predispone nel data layer un insieme di eventi del ciclo di qualificazione privi di dati personali, ma il container attualmente pubblicato non li inoltra ancora come eventi GA4 separati. Aetheris non deve trasmettere a nessuno dei due servizi recapiti, contenuti testuali liberi del modulo o identificativi CRM.
+                Sull’host canonico di Produzione, dopo l’opt-in il container GTM attuale può caricare GA4 e Clarity. I domini di anteprima pubblici Cloudflare Pages mantengono offline tutti e tre i servizi anche dopo una scelta analytics. GA4 misura l’uso delle pagine; Clarity analizza le interazioni consentite con la pagina renderizzata, i clic e gli scorrimenti tramite ricostruzione delle sessioni e mappe di calore. Il sito predispone nel data layer un insieme di eventi del ciclo di qualificazione privi di dati personali, ma il container attualmente pubblicato non li inoltra ancora come eventi GA4 separati. Aetheris non deve trasmettere a nessuno dei due servizi recapiti, contenuti testuali liberi del modulo o identificativi CRM.
               </p>
               <p class="policy-note">
                 Il consenso è la base giuridica ai sensi dell’articolo 6(1)(a) GDPR e dell’articolo 122 del Codice Privacy italiano. L’inventario del container analytics deve essere aggiornato ogni volta che cambiano tag o destinazioni.
@@ -207,13 +207,13 @@
               <p class="legal-section-label">Stato</p>
               <h2>Modifiche, titolare e contatti</h2>
               <p>
-                Il titolare è <strong>Aetheris Solutions S.r.l.</strong>, operante tramite Aetheris Studio, partita IVA e codice fiscale <strong>14468170965</strong>, con sede legale in Via Giovanni Pastorelli 4/D, 20143 Milano, Italia. Le domande sulla memoria del browser o sulla protezione dei dati possono essere inviate a <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> o alla PEC societaria <a href="mailto:aetherissolutions@pec.it">aetherissolutions@pec.it</a>.
+                Il titolare è <strong>Aetheris Solutions S.r.l.</strong>, operante tramite Aetheris Studio, partita IVA, codice fiscale e numero Registro Imprese Milano Monza Brianza Lodi <strong>14468170965</strong>, REA <strong>MI-2786509</strong>, con sede legale in Via Giovanni Pastorelli 4/D, 20143 Milano, Italia. Il capitale sociale è pari a EUR 10.000, interamente versato, e la società è a socio unico. Le domande sulla memoria del browser o sulla protezione dei dati possono essere inviate a <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a> o alla PEC societaria <a href="mailto:aetherissolutions@pec.it">aetherissolutions@pec.it</a>.
               </p>
               <p>
                 Questo inventario deve essere riesaminato ogni volta che cambia una chiave di memoria, un fornitore, un tag analytics, un’integrazione pubblicitaria o il flusso del consenso. I riferimenti ufficiali includono la <a href="https://support.google.com/analytics/answer/11397207" target="_blank" rel="noreferrer">descrizione dei cookie GA4</a>, l’<a href="https://learn.microsoft.com/en-us/clarity/setup-and-installation/clarity-cookies" target="_blank" rel="noreferrer">inventario dei cookie Clarity</a> e le <a href="https://www.garanteprivacy.it/web/guest/home/docweb/-/docweb-display/docweb/9677876" target="_blank" rel="noreferrer">Linee guida cookie e altri strumenti di tracciamento</a> del Garante italiano.
               </p>
               <p class="policy-note">
-                Questa versione del 22 luglio 2026 corrisponde all’anteprima revisionata. La produzione resta subordinata a una nuova scansione di rete live nelle condizioni iniziale/rifiuto/accettazione/revoca, alla conferma delle impostazioni effettive di cookie e conservazione GA4, ai controlli contrattuali sui fornitori e all’approvazione finale di un professionista privacy italiano.
+                Questa versione del 23 luglio 2026 descrive il candidato di rilascio corrente. Il commit congelato, l’anteprima immutabile corrispondente e le prove finali consenso/rete devono essere aggiunti al verbale di rilascio dopo il deployment. La scansione deve inoltre essere ripetuta dopo ogni modifica finale del container e sulla configurazione di Produzione. La produzione resta subordinata alla conferma delle impostazioni effettive di cookie e conservazione GA4/Clarity, ai registri specifici dei fornitori e dei trasferimenti e all’approvazione finale di un professionista privacy italiano.
               </p>
             </section>
           </article>
@@ -223,7 +223,7 @@
       <footer class="legal-footer">
         <div>
           <strong>Aetheris Studio</strong>
-          <span>Business unit di Aetheris Solutions S.r.l. · P. IVA/CF 14468170965</span>
+          <span>Aetheris Solutions S.r.l. · Registro Imprese Milano Monza Brianza Lodi / P. IVA e C.F. 14468170965 · REA MI-2786509 · Capitale sociale EUR 10.000 i.v. · Società a socio unico</span>
         </div>
         <nav aria-label="Footer legale">
           <a href="/it/privacy-policy/">Privacy</a>

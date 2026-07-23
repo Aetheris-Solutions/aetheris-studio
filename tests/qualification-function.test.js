@@ -66,11 +66,11 @@ const highFitPayload = {
   ownerReadiness: "decision-maker",
   constraint: "Attribution and ownership are fragmented across vendors.",
   privacyAccepted: true,
-  privacyVersion: "2026-07-22",
+  privacyVersion: "2026-07-23",
   privacyAcceptedAt: "2026-07-22T09:00:00.000Z",
   marketingConsent: false,
   marketingConsentAt: "",
-  marketingConsentVersion: "2026-07-22",
+  marketingConsentVersion: "2026-07-23",
   marketingConsentSource: "website_qualification",
   analyticsConsent: true,
   analyticsConsentAt: "2026-07-22T08:55:00.000Z",
@@ -200,7 +200,18 @@ describe("scoreSubmission", () => {
       ownerReadiness: "exploring",
     });
     expect(validated.valid).toBe(true);
-    expect(scoreSubmission(validated.value)).toEqual(expect.objectContaining({ fit: "low", priority: "P3 (Low)" }));
+    expect(scoreSubmission(validated.value)).toEqual(expect.objectContaining({
+      fit: "low",
+      priority: "P3 (Low)",
+      safeguards: {
+        ruleSetVersion: "2026-07-23.1",
+        automatedEffect: "queue_priority_only",
+        automatedRejection: false,
+        automatedContractDecision: false,
+        automatedPricing: false,
+        humanReviewRequired: true,
+      },
+    }));
   });
 });
 
@@ -211,6 +222,53 @@ describe("onRequestPost", () => {
     const response = await onRequestPost({ request: req, env: {}, fetch: fetchMock });
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({ status: "review", error: { code: "origin_denied" } });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks public Pages preview submissions unless a review owner explicitly enables them", async () => {
+    const fetchMock = vi.fn();
+    const previewOrigin = "https://legal-pass.aetheris-studio.pages.dev";
+    const response = await onRequestPost({
+      request: new Request(`${previewOrigin}/api/qualification`, {
+        method: "POST",
+        headers: {
+          origin: previewOrigin,
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(highFitPayload),
+      }),
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      status: "review",
+      error: { code: "preview_submissions_disabled" },
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("blocks a Pages preview before origin validation or external verification", async () => {
+    const fetchMock = vi.fn();
+    const response = await onRequestPost({
+      request: new Request("https://legal-pass.aetheris-studio.pages.dev/api/qualification", {
+        method: "POST",
+        headers: {
+          origin: "https://malicious.example",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify(highFitPayload),
+      }),
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(403);
+    expect(await response.json()).toEqual({
+      status: "review",
+      error: { code: "preview_submissions_disabled" },
+    });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -329,6 +387,14 @@ describe("onRequestPost", () => {
       identity: expect.objectContaining({ emailVerified: false, identityAssurance: "turnstile-only" }),
       security: { turnstileVerified: true },
     }));
+    expect(ledger.qualification.safeguards).toEqual({
+      ruleSetVersion: "2026-07-23.1",
+      automatedEffect: "queue_priority_and_optional_booking_shortcut",
+      automatedRejection: false,
+      automatedContractDecision: false,
+      automatedPricing: false,
+      humanReviewRequired: true,
+    });
     expect(ledger.consent.marketing.activationPermitted).toBe(false);
     expect(JSON.stringify(ledger)).not.toContain("test-token");
   });
@@ -370,6 +436,45 @@ describe("onRequestPost", () => {
     expect(ledger.consent.analytics.granted).toBe(false);
   });
 
+  it("stores a low-fit brief for human review without an automated rejection", async () => {
+    const calls = [];
+    const fetchMock = vi.fn(async (url, init = {}) => {
+      calls.push({ url: String(url), init });
+      if (String(url).includes("lists/website-inbound-list/entries/query")) {
+        return new Response(JSON.stringify({ data: [] }), { status: 200 });
+      }
+      if (String(url).endsWith("lists/website-inbound-list/entries")) {
+        return new Response(JSON.stringify({ data: { id: { entry_id: "entry-low-fit" } } }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "unexpected test request" }), { status: 500 });
+    });
+    const lowFitPayload = {
+      ...highFitPayload,
+      timeline: "research",
+      projectBudget: "under-5k",
+      ownerReadiness: "exploring",
+    };
+
+    const response = await onRequestPost({
+      request: request(lowFitPayload),
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ status: "review" });
+    const entryBody = JSON.parse(calls[1].init.body);
+    const ledger = JSON.parse(entryBody.data.entry_values.website_ledger_json);
+    expect(ledger.qualification.fit).toBe("low");
+    expect(ledger.qualification.safeguards).toEqual(expect.objectContaining({
+      automatedEffect: "queue_priority_only",
+      automatedRejection: false,
+      automatedContractDecision: false,
+      automatedPricing: false,
+      humanReviewRequired: true,
+    }));
+  });
+
   it("treats a repeated submission ID with the same deterministic hash as an idempotent success", async () => {
     let storedEntry = null;
     const fetchMock = vi.fn(async (url, init = {}) => {
@@ -408,5 +513,36 @@ describe("onRequestPost", () => {
     expect(await conflictingReuse.json()).toEqual({ status: "review", error: { code: "temporarily_unavailable" } });
     expect(fetchMock.mock.calls.filter(([url]) => String(url).endsWith("lists/website-inbound-list/entries"))).toHaveLength(1);
     expect(fetchMock.mock.calls.every(([url]) => !String(url).includes("objects/"))).toBe(true);
+  });
+
+  it("returns the stored route when an idempotent retry resolves an earlier ledger", async () => {
+    const validated = validateSubmission(highFitPayload);
+    expect(validated.valid).toBe(true);
+    const existingHash = createHash("sha256")
+      .update(JSON.stringify(canonicalSubmissionEvidence(validated.value)))
+      .digest("hex");
+    const existingEntry = {
+      id: { entry_id: "entry-prior-ruleset" },
+      entry_values: {
+        website_payload_sha256: [{ value: existingHash }],
+        website_fit: [{ value: "low" }],
+      },
+    };
+    const fetchMock = vi.fn(async (url) => {
+      if (String(url).includes("lists/website-inbound-list/entries/query")) {
+        return new Response(JSON.stringify({ data: [existingEntry] }), { status: 200 });
+      }
+      return new Response(JSON.stringify({ error: "unexpected write" }), { status: 500 });
+    });
+
+    const response = await onRequestPost({
+      request: request(highFitPayload),
+      env: attioEnv,
+      fetch: fetchMock,
+    });
+
+    expect(response.status).toBe(201);
+    expect(await response.json()).toEqual({ status: "review" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 });

@@ -1,4 +1,8 @@
-import { onRequestPost } from '../functions/api/qualification.js';
+import {
+  onRequestPost,
+  QUALIFICATION_NOTICE_VERSION,
+  QUALIFICATION_RULESET_VERSION,
+} from '../functions/api/qualification.js';
 
 const ATTIO_API = 'https://api.attio.com/v2';
 const LIST_ID = process.env.ATTIO_WEBSITE_INBOUND_LIST_ID
@@ -7,6 +11,8 @@ const INTAKE_RECORD_ID = '02ec4555-ba27-4799-a2ce-b0468d3aff0e';
 const token = process.env.ATTIO_API_KEY;
 const verifyArgument = process.argv.find((argument) => argument.startsWith('--verify-existing='));
 const existingSubmissionId = verifyArgument?.slice('--verify-existing='.length) || '';
+const lowFit = process.argv.includes('--low-fit');
+const expectedStatus = lowFit ? 'review' : 'qualified';
 
 if (!existingSubmissionId && !process.argv.includes('--apply')) {
   throw new Error('Refusing a real Attio smoke write without the explicit --apply flag');
@@ -55,16 +61,16 @@ const payload = {
   workstreams: ['conversion', 'measurement'],
   problem: 'Synthetic smoke only: validate the accountable inbound ledger.',
   trigger: 'growth-stalled',
-  timeline: 'this-quarter',
-  projectBudget: '15k-30k',
-  ownerReadiness: 'decision-maker',
+  timeline: lowFit ? 'research' : 'this-quarter',
+  projectBudget: lowFit ? 'under-5k' : '15k-30k',
+  ownerReadiness: lowFit ? 'exploring' : 'decision-maker',
   constraint: 'Synthetic smoke only: no customer or production identity.',
   privacyAccepted: true,
-  privacyVersion: '2026-07-22',
+  privacyVersion: QUALIFICATION_NOTICE_VERSION,
   privacyAcceptedAt: acceptedAt,
   marketingConsent: false,
   marketingConsentAt: '',
-  marketingConsentVersion: '2026-07-22',
+  marketingConsentVersion: QUALIFICATION_NOTICE_VERSION,
   marketingConsentSource: 'website_qualification',
   analyticsConsent: false,
   analyticsConsentAt: '',
@@ -75,7 +81,7 @@ const payload = {
   website: ''
 };
 
-let responseBody = { status: 'qualified' };
+let responseBody = { status: expectedStatus };
 if (!existingSubmissionId) {
   const request = new Request('http://localhost/api/qualification', {
     method: 'POST',
@@ -100,7 +106,7 @@ if (!existingSubmissionId) {
     fetch
   });
   responseBody = await response.json();
-  if (response.status !== 201 || responseBody.status !== 'qualified') {
+  if (response.status !== 201 || responseBody.status !== expectedStatus) {
     throw new Error(`Qualification smoke failed: HTTP ${response.status}`);
   }
 }
@@ -144,6 +150,14 @@ const verification = {
   allEntryAttributesPresent: requiredAttributes.every((attribute) => textValue(values[attribute])),
   payloadSha256Valid: /^[a-f0-9]{64}$/.test(textValue(values.website_payload_sha256)),
   ledgerSubmissionMatches: ledger.submissionId === submissionId,
+  ruleSetVersion: ledger.qualification?.safeguards?.ruleSetVersion,
+  storedFit: ledger.qualification?.fit,
+  automatedEffect: ledger.qualification?.safeguards?.automatedEffect,
+  humanReviewRequired: ledger.qualification?.safeguards?.humanReviewRequired,
+  automatedRejection: ledger.qualification?.safeguards?.automatedRejection,
+  automatedContractDecision: ledger.qualification?.safeguards?.automatedContractDecision,
+  automatedPricing: ledger.qualification?.safeguards?.automatedPricing,
+  safeguardsRequiredForThisRun: !existingSubmissionId,
   turnstileVerified: ledger.security?.turnstileVerified === true,
   turnstileMode: 'Cloudflare official always-pass test credential',
   identityAssurance: ledger.identity?.identityAssurance,
@@ -162,6 +176,20 @@ if (
   || !verification.allEntryAttributesPresent
   || !verification.payloadSha256Valid
   || !verification.ledgerSubmissionMatches
+  || (
+    verification.safeguardsRequiredForThisRun
+    && (
+      verification.ruleSetVersion !== QUALIFICATION_RULESET_VERSION
+      || verification.storedFit !== (lowFit ? 'low' : 'high')
+      || verification.automatedEffect !== (
+        lowFit ? 'queue_priority_only' : 'queue_priority_and_optional_booking_shortcut'
+      )
+      || verification.humanReviewRequired !== true
+      || verification.automatedRejection !== false
+      || verification.automatedContractDecision !== false
+      || verification.automatedPricing !== false
+    )
+  )
   || !verification.turnstileVerified
   || verification.identityAssurance !== 'turnstile-only'
   || verification.emailVerified !== false

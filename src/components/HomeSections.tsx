@@ -217,7 +217,9 @@ export const HomeSections = memo(function HomeSections() {
           </div>
         </nav>
         <div className="footer-base">
-          <span>© 2026 Aetheris Studio</span>
+          <span className="footer-company-details">
+            © 2026 Aetheris Studio · {t('Aetheris Solutions S.r.l. · Registered office Via Giovanni Pastorelli 4/D, 20143 Milan, Italy · Milan Monza Brianza Lodi Companies Register / VAT and tax no. 14468170965 · REA MI-2786509 · Share capital €10,000 fully paid · Sole shareholder company')}
+          </span>
           <a href="#top">{t('Back to the oculus')} <span aria-hidden="true">↑</span></a>
         </div>
       </footer>

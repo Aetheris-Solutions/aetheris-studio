@@ -16,6 +16,10 @@ release, photographer release, retailer/brand licence, confidentiality waiver
 or legal opinion. Those separate rights remain governed by the status below
 and must be archived outside the public bundle.
 
+Use `docs/templates/THIRD-PARTY-PUBLICATION-APPROVAL-DRAFT.md` as the
+asset-by-asset evidence checklist. It requires counsel review before being used
+as a contractual release; signed copies remain in the private company archive.
+
 ## Exact asset manifest
 
 | Asset ID | Public path | SHA-256 | Source / capture mode | Public boundary |
@@ -65,3 +69,17 @@ full implementation scope.
 No performance claim may be inferred from a deployment screenshot. Do not
 describe the proof layer as legally incontestable until the pending
 third-party evidence is archived and linked in the private release record.
+
+## Quarantined asset
+
+The unreferenced file formerly available at
+`public/cases/thatsit-studio.webp` was removed from `public/` on 23 July 2026.
+It was not used by the current source but was copied into every build and was
+therefore directly fetchable. SHA-256:
+`c1541fc093c048c32319add5e7e5d60c7e2ad2d0d4cca72583c626dd42cb384a`.
+
+The image shows two identifiable people. It must not be restored to the public
+bundle until the private archive contains the photographer/licensor rights,
+releases for both depicted people, client/location approval and the exact
+permitted channels, territory, term and derivative rights. The file remains
+recoverable from Git history.

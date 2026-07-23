@@ -15,7 +15,7 @@ import {
   type AttributionSnapshot,
   type AttributionTouch
 } from '../lib/tracking';
-import { readConsent } from '../lib/consent';
+import { isCloudflarePagesPreviewHostname, readConsent } from '../lib/consent';
 import {
   qualificationRequestPayload,
   reuseOrCreateQualificationAttempt,
@@ -291,6 +291,8 @@ export function QualificationForm() {
   const startedRef = useRef(false);
   const viewedRef = useRef(false);
   const attemptRef = useRef<QualificationAttempt | null>(null);
+  const previewSubmissionsDisabled = typeof window !== 'undefined'
+    && isCloudflarePagesPreviewHostname(window.location.hostname);
 
   const activeStep = steps[step - 1];
   const stepTitleId = `${idPrefix}-step-title`;
@@ -527,12 +529,12 @@ export function QualificationForm() {
           <h2 id="qualification-result-title">
             {qualified
               ? <>{t('There appears to be a fit.')}<br /><em>{t('Choose a time.')}</em></>
-              : <>{t('Your brief is with us.')}<br /><em>{t('A person reviews it next.')}</em></>}
+              : <>{t('Your brief is with us.')}<br /><em>{t('It remains in review.')}</em></>}
           </h2>
           <p>
             {qualified
               ? t('Your context matches the kind of commerce work we are set up to discuss. Book a 30-minute fit call with the team.')
-              : t('The automated screen does not make a rejection decision. We will review the context and reply personally with the most useful next step.')}
+              : t('The automated screen does not make a rejection decision. Your brief stays in our review queue, and you can request human reassessment at any time.')}
           </p>
           {qualified ? (
             <a
@@ -550,7 +552,7 @@ export function QualificationForm() {
             </a>
           ) : (
             <p className="qualification-result-note">
-              {t('Expect a reply at your work email. If the matter is time-sensitive, write to')}{' '}
+              {t('For a direct reply, or if the matter is time-sensitive, write to')}{' '}
               <a href="mailto:info@aetherisstudio.com">info@aetherisstudio.com</a>.
             </p>
           )}
@@ -576,7 +578,7 @@ export function QualificationForm() {
         <div className="qualification-intro-note">
           <span>{t('03 steps')}</span>
           <span>{t('About 4 minutes')}</span>
-          <span>{t('Reviewed by a person')}</span>
+          <span>{t('Human review available')}</span>
         </div>
       </div>
 
@@ -962,7 +964,7 @@ export function QualificationForm() {
               />
             </div>
 
-            {TURNSTILE_SITE_KEY && step === 3 && (
+            {TURNSTILE_SITE_KEY && step === 3 && !previewSubmissionsDisabled && (
               <div className="qualification-security qualification-field--wide">
                 <TurnstileField
                   key={turnstileResetKey}
@@ -998,7 +1000,7 @@ export function QualificationForm() {
                 key="qualification-submit"
                 className="button-ink qualification-submit"
                 type="submit"
-                disabled={submitting}
+                disabled={submitting || previewSubmissionsDisabled}
               >
                 {submitting ? t('Sending…') : t('Send the commercial brief')} <span aria-hidden="true">→</span>
               </button>
@@ -1007,7 +1009,9 @@ export function QualificationForm() {
 
           <FieldError id={`${idPrefix}-submit-error`} message={errors.submit} />
           <p className="qualification-privacy-note">
-            {t('Your details are used to assess this request and coordinate a response. They are never sent to analytics.')}
+            {previewSubmissionsDisabled
+              ? t('Preview mode: CRM submission is disabled. Use email to share test feedback.')
+              : t('Your details are used to assess this request and coordinate a response. They are never sent to analytics.')}
           </p>
         </form>
       </div>

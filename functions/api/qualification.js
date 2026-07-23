@@ -1,7 +1,8 @@
 const MAX_BODY_BYTES = 32 * 1024;
 const ATTIO_API_BASE = "https://api.attio.com/v2";
 const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
-const QUALIFICATION_NOTICE_VERSION = "2026-07-22";
+export const QUALIFICATION_NOTICE_VERSION = "2026-07-23";
+export const QUALIFICATION_RULESET_VERSION = "2026-07-23.1";
 const ANALYTICS_CONSENT_SCHEMA_VERSION = "1";
 const WEBSITE_PAYLOAD_CONTRACT_VERSION = 1;
 const TURNSTILE_TIMEOUT_MS = 8_000;
@@ -336,6 +337,16 @@ export function scoreSubmission(submission) {
     fit,
     priority: fit === "high" ? "P1 (High)" : fit === "medium" ? "P2 (Mid)" : "P3 (Low)",
     score,
+    safeguards: {
+      ruleSetVersion: QUALIFICATION_RULESET_VERSION,
+      automatedEffect: fit === "high"
+        ? "queue_priority_and_optional_booking_shortcut"
+        : "queue_priority_only",
+      automatedRejection: false,
+      automatedContractDecision: false,
+      automatedPricing: false,
+      humanReviewRequired: true,
+    },
     signals: {
       commerceReady,
       europeReady,
@@ -387,6 +398,12 @@ function requestOriginAllowed(request, env) {
 function isLocalRequest(request) {
   const hostname = new URL(request.url).hostname;
   return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+}
+
+function isCloudflarePagesPreview(request) {
+  const hostname = new URL(request.url).hostname.toLowerCase();
+  return hostname === "aetheris-studio.pages.dev"
+    || hostname.endsWith(".aetheris-studio.pages.dev");
 }
 
 async function fetchWithTimeout(fetchImpl, input, init, timeoutMs) {
@@ -496,6 +513,7 @@ function qualificationLedger(submission, qualification, receivedAt) {
       fit: qualification.fit,
       priority: qualification.priority,
       score: qualification.score,
+      safeguards: qualification.safeguards,
       signals: qualification.signals,
       inputs: {
         platform: submission.platform,
@@ -665,6 +683,9 @@ export async function onRequestPost(context) {
   const { request, env = {} } = context;
   const fetchImpl = context.fetch || fetch;
 
+  if (isCloudflarePagesPreview(request) && env.ALLOW_PREVIEW_SUBMISSIONS !== "true") {
+    return jsonResponse({ status: "review", error: { code: "preview_submissions_disabled" } }, 403);
+  }
   if (!requestOriginAllowed(request, env)) {
     return jsonResponse({ status: "review", error: { code: "origin_denied" } }, 403);
   }
@@ -713,13 +734,19 @@ export async function onRequestPost(context) {
   }
 
   const qualification = scoreSubmission(submission);
+  let persistedEntry;
   try {
-    await persistToAttio(submission, qualification, env, fetchImpl, new Date().toISOString());
+    persistedEntry = await persistToAttio(submission, qualification, env, fetchImpl, new Date().toISOString());
   } catch {
     return jsonResponse({ status: "review", error: { code: "temporarily_unavailable" } }, 502);
   }
 
-  return jsonResponse({ status: qualification.fit === "high" ? "qualified" : "review" }, 201);
+  // An idempotent retry may resolve to an entry created under an earlier
+  // ruleset. Return the stored fit so the public outcome cannot diverge from
+  // the immutable evidence ledger for that submission ID.
+  const persistedFit = attioTextValue(persistedEntry?.entry_values?.[WEBSITE_ENTRY_ATTRIBUTES.fit]);
+  const effectiveFit = persistedFit || qualification.fit;
+  return jsonResponse({ status: effectiveFit === "high" ? "qualified" : "review" }, 201);
 }
 
 export async function onRequest(context) {

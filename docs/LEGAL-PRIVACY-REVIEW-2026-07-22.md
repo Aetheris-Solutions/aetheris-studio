@@ -1,11 +1,34 @@
 # Aetheris Studio — privacy and tracking launch review
 
-Date: 22 July 2026  
+Date: 22 July 2026; updated 23 July 2026
 Scope: new Aetheris Studio website preview, qualification form, Attio CRM write, Cloudflare Pages/Turnstile, GTM, GA4 and Microsoft Clarity.
 
 ## Status
 
-This is an operational GDPR/ePrivacy gap review, not legal advice or a legal certification. The code and public notices now reflect the intended preview. Production remains blocked until the open items below are evidenced and approved by an Italian privacy professional.
+This is an operational GDPR/ePrivacy review, not legal advice or a legal
+certification. The code and public notices reflect the intended preview.
+Corporate identity has been verified from the official company-register
+extract. Production remains blocked until the remaining open items below are
+evidenced and approved by an Italian privacy professional.
+
+## Corporate verification closed
+
+The ordinary company-register extract issued by the CCIAA Milano Monza
+Brianza Lodi / InfoCamere on 17 January 2026, document
+`L ZG0RXNQ11H8QDS4RWD`, verifies:
+
+- Aetheris Solutions S.r.l.;
+- CF, VAT and Companies Register number `14468170965`;
+- REA `MI-2786509`;
+- registered office and corporate PEC;
+- EUR 10,000 fully paid share capital; and
+- sole-shareholder status.
+
+Internal evidence ID: `CORP-VISURA-2026-01-17`. The private source has SHA-256
+`42daa8e11e732c98839b08852b01095336d1e6a3f40643ee95d707786a5a0629`.
+No personal director/shareholder data from the extract is copied into this
+repository. Corporate disclosures have been added to the public footer,
+structured data and EN/IT notices.
 
 ## Implemented in the preview
 
@@ -19,20 +42,58 @@ This is an operational GDPR/ePrivacy gap review, not legal advice or a legal cer
 - The qualification form is explicitly masked with `data-clarity-mask="true"`.
 - Mandatory form acknowledgement is a notice acknowledgement, not consent to contact. The current browser form exposes no email-marketing opt-in and sends the marketing fields in their denied/empty state.
 - Every accepted request becomes a separate Website Inbound list entry beneath one pre-existing internal intake record, with a unique submission ID, server receipt time, deterministic SHA-256, operator-facing contact fields and a complete normalised ledger. The public form neither queries nor creates a Person from submitted identity claims, does not patch existing Attio people, and makes no company write from the submitted email domain or store URL.
+- Public Cloudflare Pages preview hostnames do not render the qualification
+  Turnstile widget, keep GTM/GA4/Clarity offline and reject submissions before
+  server-side Turnstile verification or Attio by default. A temporary
+  `ALLOW_PREVIEW_SUBMISSIONS=true` override requires explicit approval because
+  it creates real CRM processing.
 - No subscription or marketing request is activated by this build. If email marketing is introduced later, it requires a separately reviewed opt-in and confirmation flow. The public response exposes only `qualified` or `review`.
 - Public privacy and cookies notices now name the active providers, purposes, legal bases, controls, retention targets and deterministic profiling safeguards.
+- The ruleset records its version and the invariants that it never performs an automated rejection, contract decision or price decision; a low-fit brief is still persisted for human review.
+- An operational LIA, Article 22 and DPIA screening is recorded in `docs/GDPR-LIA-ARTICLE-22-DPIA-SCREENING-2026-07-23.md`.
+- Processor, transfer, retention/log and asset-rights evidence requirements are recorded in `docs/LEGAL-EVIDENCE-AND-RETENTION-REGISTER-2026-07-23.md`.
 
 ## Production blockers
 
-1. Obtain an official company-register extract and verify/add the REA number. The registered office and corporate PEC already shown in the notices are supported by current signed company records.
-2. Have Italian privacy counsel approve the legal bases, Article 6(1)(f) legitimate-interests assessment, Article 22/DPIA screening, retention schedule, transfers and English/Italian notices.
-3. Execute and archive the applicable DPAs and transfer records for Attio, Cloudflare, Google, Microsoft Clarity and Cal.com; verify current subprocessors, data regions, adequacy/SCC mechanism and any transfer-impact assessment.
-4. Configure GA4 before production: first-party cookie lifetime 13 months or less; user/event retention no more than 14 months; reset-on-activity off; Google Signals, ads features and product/service data sharing off unless separately reviewed; automatic form-content capture disabled; no PII or click identifiers as custom event parameters.
-5. Confirm Clarity consent mode, masking mode and project access. Keep the qualification form masked and verify no field value is present in captured payloads/recordings.
-6. Implement the internal retention job/review: unconverted leads up to 24 months from last meaningful interaction (low-fit review at 12 months), active opportunities through activity plus 24 months, any future separately activated marketing until withdrawal or 24 months inactivity, and fiscal documents—not the full CRM ledger—where a ten-year statutory period applies.
-7. Confirm Cloudflare Pages, edge and Turnstile log retention in the live account and contract.
-8. Run a fresh/reject/accept/revoke browser network scan on the immutable Pages preview after every GTM container change. Re-inventory the container before production.
-9. Publish explicit allowlisted GA4 event tags if qualification lifecycle reporting is wanted; the current live container measures page use but does not yet forward the prepared `qualification_*` data-layer events.
+1. Have the managing director confirm the actual human-review procedure and
+   have Italian privacy counsel approve the legal bases, Article 6(1)(f) LIA,
+   Article 22/DPIA screening, retention schedule, transfers and EN/IT notices.
+2. Execute or otherwise evidence acceptance of the service-specific DPA and
+   transfer records for Attio, Cloudflare, Google, Microsoft Clarity and
+   Cal.com; verify current subprocessors, data regions, adequacy/SCC mechanism
+   and any transfer-impact assessment. Do not assume one provider role applies
+   to every service.
+3. Activate and evidence the Attio review workflow: original brief and reason
+   visibility, competent reviewer, override authority, review SLA, final
+   disposition and override log. The current `humanReviewRequired` ledger value
+   is a policy flag, not proof that a person completed the review.
+4. Configure GA4 before production: first-party cookie lifetime 13 months or
+   less; user/event retention no more than 14 months; reset-on-activity off;
+   Google Signals, ads features and product/service data sharing off unless
+   separately reviewed; automatic form-content capture disabled; no PII or
+   click identifiers as custom event parameters.
+5. Confirm Clarity consent mode, masking mode, service-specific privacy role
+   and project access. Keep the qualification form masked and verify no field
+   value is present in captured payloads/recordings.
+6. Implement the internal retention job/review and execution log: unconverted
+   leads up to 24 months from last meaningful interaction (low-fit review at
+   12 months), active opportunities through activity plus 24 months, and
+   fiscal documents — not the full CRM ledger — where a ten-year statutory
+   period applies.
+7. Confirm active Cloudflare Pages, edge, security and Turnstile products and
+   their account/contract log retention.
+8. Preserve the completed immutable-preview fresh/reject/accept/revoke browser
+   network evidence. Repeat it after every GTM container change and against the
+   final Production configuration.
+9. Archive the client, trademark, photographer, model, retailer/upstream-brand,
+   confidentiality and IP chain-of-title evidence identified in
+   `docs/PROOF-ASSETS.md`. The unledgered That’s It studio image has been
+   removed from `public/` pending those rights. Other gated proof assets remain
+   visible on public noindex preview URLs under the owner's instruction; that
+   exposure is not third-party rights clearance.
+10. Publish explicit allowlisted GA4 event tags only if qualification lifecycle
+    reporting is wanted; the current container measures page use but does not
+    forward the prepared `qualification_*` data-layer events.
 
 ## Reviewed technical inventory
 

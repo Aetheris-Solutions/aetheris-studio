@@ -95,9 +95,12 @@ npx wrangler pages deploy dist \
 The Turnstile site key is public, documented in `.env.example` and configured
 as a non-secret `plain_text` build variable. The matching Turnstile secret and
 the Attio token remain encrypted Cloudflare bindings. Preview hosts receive
-`X-Robots-Tag: noindex` from the Pages middleware. Do not submit a completed
-qualification form during routine visual QA because a valid token creates a
-real Attio inbound record. One authorised synthetic Attio smoke was completed
+`X-Robots-Tag: noindex` from the Pages middleware. Pages preview hostnames also
+keep GTM/GA4/Clarity and the qualification Turnstile widget offline, reject
+submissions before server-side Turnstile verification or Attio, and disable the
+final submit action. The exceptional
+`ALLOW_PREVIEW_SUBMISSIONS=true` override creates real CRM processing and
+requires explicit approval. One authorised synthetic Attio smoke was completed
 on 22 July 2026; it must not be repeated without a new explicit authorisation.
 No Cal.com booking is part of the routine release gate.
 

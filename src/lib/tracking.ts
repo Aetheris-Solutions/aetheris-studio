@@ -1,6 +1,6 @@
 import { hasAnalyticsConsent } from './consent';
 
-export const QUALIFICATION_FORM_VERSION = '2026-07-22';
+export const QUALIFICATION_FORM_VERSION = '2026-07-23';
 
 export type QualificationEventName =
   | 'qualification_view'

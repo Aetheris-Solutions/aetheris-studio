@@ -1867,12 +1867,19 @@ p {
   padding-top: 24px;
   border-top: 1px solid rgba(237, 231, 218, 0.16);
   display: flex;
+  gap: 32px;
+  align-items: flex-start;
   justify-content: space-between;
-  color: rgba(237, 231, 218, 0.46);
+  color: rgba(237, 231, 218, 0.54);
   font: 500 10px/1.4 var(--sans);
 }
 
+.footer-company-details {
+  max-width: 980px;
+}
+
 .footer-base a {
+  flex: 0 0 auto;
   min-height: 24px;
   display: inline-flex;
   align-items: center;
@@ -4070,8 +4077,8 @@ p {
 .qualification-privacy-note {
   max-width: 62ch;
   margin: 18px 0 0;
-  color: rgba(8, 11, 15, 0.48);
-  font: 450 8px/1.55 var(--sans);
+  color: rgba(8, 11, 15, 0.68);
+  font: 450 10px/1.55 var(--sans);
 }
 
 .qualification--result {
