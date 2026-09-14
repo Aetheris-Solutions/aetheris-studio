@@ -1,0 +1,13 @@
+{
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/webflow-site/ecommerce-growth-audit/index.html"
+    },
+    {
+      "source": "/ecommerce-growth-audit/:path*",
+      "destination": "/webflow-site/ecommerce-growth-audit/:path*"
+    }
+  ]
+}
