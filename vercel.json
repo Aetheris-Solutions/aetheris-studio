@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/webflow-site/ecommerce-growth-audit/index.html"
+      "destination": "/webflow-site/ecommerce-growth-audit/"
     },
     {
       "source": "/ecommerce-growth-audit/:path*",
