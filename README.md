@@ -18,6 +18,7 @@ Cloudflare Pages.
 - `/services`
 - `/portfolio`
 - `/contact`
+- `/ecommerce-growth-audit` (alias della homepage)
 - `/privacy-policy`
 - `/cookies-policy`
 
@@ -73,6 +74,10 @@ Il form usa:
 
 Le variabili richieste sono documentate in `.dev.vars.example`. I valori reali
 devono essere configurati in Cloudflare e non devono essere committati.
+
+La homepage ecommerce, disponibile anche su `/ecommerce-growth-audit`, usa le
+stesse funzioni `/api/contact` e `/api/contact-config`, quindi eredita le
+variabili già configurate nel progetto Cloudflare Pages.
 
 ## Deploy
 

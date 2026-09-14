@@ -670,7 +670,7 @@ ${pages
   .map(
     (page) => `  <url>
     <loc>${canonicalFor(origin, page.route)}</loc>
-    <lastmod>${LASTMOD}</lastmod>
+    <lastmod>${page.route === "/" ? "2026-09-15" : LASTMOD}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`,
@@ -755,6 +755,9 @@ function headers() {
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://api.goaffpro.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.goaffpro.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
 /assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/ecommerce-growth-audit/assets/*
   Cache-Control: public, max-age=31536000, immutable
 `;
 }
