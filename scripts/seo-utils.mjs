@@ -670,18 +670,12 @@ ${pages
   .map(
     (page) => `  <url>
     <loc>${canonicalFor(origin, page.route)}</loc>
-    <lastmod>${LASTMOD}</lastmod>
+    <lastmod>${page.route === "/" ? "2026-09-15" : LASTMOD}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`,
   )
   .join("\n")}
-  <url>
-    <loc>${origin}/ecommerce-growth-audit/</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
 </urlset>
 `;
 }
@@ -743,7 +737,6 @@ Audience: eCommerce founders, operators, and retail brands that need scalable di
 - Services: ${origin}/services/
 - Portfolio: ${origin}/portfolio/
 - Contact: ${origin}/contact/
-- Ecommerce Growth Leak Audit: ${origin}/ecommerce-growth-audit/
 
 # Attribution
 When using our public content, attribute it to "Aetheris Studio" and link ${origin}.
