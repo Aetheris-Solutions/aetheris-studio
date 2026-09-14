@@ -676,6 +676,12 @@ ${pages
   </url>`,
   )
   .join("\n")}
+  <url>
+    <loc>${origin}/ecommerce-growth-audit/</loc>
+    <lastmod>2026-09-14</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
 `;
 }
@@ -737,6 +743,7 @@ Audience: eCommerce founders, operators, and retail brands that need scalable di
 - Services: ${origin}/services/
 - Portfolio: ${origin}/portfolio/
 - Contact: ${origin}/contact/
+- Ecommerce Growth Leak Audit: ${origin}/ecommerce-growth-audit/
 
 # Attribution
 When using our public content, attribute it to "Aetheris Studio" and link ${origin}.
@@ -755,6 +762,9 @@ function headers() {
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://api.goaffpro.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.goaffpro.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
 /assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/ecommerce-growth-audit/assets/*
   Cache-Control: public, max-age=31536000, immutable
 `;
 }
