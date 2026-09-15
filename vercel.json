@@ -2,12 +2,36 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/ecommerce-growth-audit/:path*",
+      "destination": "/webflow-site/ecommerce-growth-audit/:path*"
+    },
+    {
       "source": "/",
-      "destination": "/webflow-site/ecommerce-growth-audit/"
+      "destination": "/webflow-site/"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/webflow-site/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/ecommerce-growth-audit",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     },
     {
       "source": "/ecommerce-growth-audit/:path*",
-      "destination": "/webflow-site/ecommerce-growth-audit/:path*"
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
     }
   ]
 }

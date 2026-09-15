@@ -670,7 +670,7 @@ ${pages
   .map(
     (page) => `  <url>
     <loc>${canonicalFor(origin, page.route)}</loc>
-    <lastmod>${page.route === "/" ? "2026-09-15" : LASTMOD}</lastmod>
+    <lastmod>${LASTMOD}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`,
@@ -756,6 +756,12 @@ function headers() {
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+/ecommerce-growth-audit
+  X-Robots-Tag: noindex, nofollow
+
+/ecommerce-growth-audit/*
+  X-Robots-Tag: noindex, nofollow
 
 /ecommerce-growth-audit/assets/*
   Cache-Control: public, max-age=31536000, immutable
