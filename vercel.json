@@ -13,25 +13,5 @@
       "source": "/:path*",
       "destination": "/webflow-site/:path*"
     }
-  ],
-  "headers": [
-    {
-      "source": "/ecommerce-growth-audit",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/ecommerce-growth-audit/:path*",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    }
   ]
 }

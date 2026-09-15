@@ -18,7 +18,7 @@ Cloudflare Pages.
 - `/services`
 - `/portfolio`
 - `/contact`
-- `/ecommerce-growth-audit` (landing campaign, noindex)
+- `/ecommerce-growth-audit` (landing campaign)
 - `/privacy-policy`
 - `/cookies-policy`
 

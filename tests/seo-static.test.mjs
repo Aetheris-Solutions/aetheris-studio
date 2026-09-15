@@ -112,8 +112,12 @@ test("crawlability files and consent scripts are present", async () => {
   assert.ok(headers.includes("https://*.googletagmanager.com"));
   assert.ok(headers.includes("https://*.google-analytics.com"));
   assert.ok(headers.includes("https://api.goaffpro.com"));
-  assert.ok(headers.includes("/ecommerce-growth-audit"));
-  assert.ok(headers.includes("X-Robots-Tag: noindex, nofollow"));
+  assert.ok(
+    sitemap.includes(
+      "<loc>https://aetherisstudio.com/ecommerce-growth-audit/</loc>",
+    ),
+  );
+  assert.equal(headers.includes("X-Robots-Tag: noindex"), false);
 
   assert.ok(consent.includes('var googleTagManagerId = "GTM-5553RFJZ";'));
   assert.ok(consent.includes('analytics_storage: "denied"'));
