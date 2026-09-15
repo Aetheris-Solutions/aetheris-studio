@@ -676,6 +676,12 @@ ${pages
   </url>`,
   )
   .join("\n")}
+  <url>
+    <loc>${origin}/ecommerce-growth-audit/</loc>
+    <lastmod>2026-09-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+  </url>
 </urlset>
 `;
 }
@@ -756,12 +762,6 @@ function headers() {
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
-
-/ecommerce-growth-audit
-  X-Robots-Tag: noindex, nofollow
-
-/ecommerce-growth-audit/*
-  X-Robots-Tag: noindex, nofollow
 
 /ecommerce-growth-audit/assets/*
   Cache-Control: public, max-age=31536000, immutable
