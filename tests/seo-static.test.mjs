@@ -92,7 +92,6 @@ test("crawlability files and consent scripts are present", async () => {
   const robots = await readFile(path.join(root, "robots.txt"), "utf8");
   const llms = await readFile(path.join(root, "llms.txt"), "utf8");
   const headers = await readFile(path.join(root, "_headers"), "utf8");
-  const redirects = await readFile(path.join(root, "_redirects"), "utf8");
   const consent = await readFile(path.join(root, "assets/js/aetheris-analytics-consent.v3.js"), "utf8");
   const goaffpro = await readFile(
     path.join(
@@ -113,7 +112,8 @@ test("crawlability files and consent scripts are present", async () => {
   assert.ok(headers.includes("https://*.googletagmanager.com"));
   assert.ok(headers.includes("https://*.google-analytics.com"));
   assert.ok(headers.includes("https://api.goaffpro.com"));
-  assert.ok(redirects.includes("/ /ecommerce-growth-audit/index.html 200"));
+  assert.ok(headers.includes("/ecommerce-growth-audit"));
+  assert.ok(headers.includes("X-Robots-Tag: noindex, nofollow"));
 
   assert.ok(consent.includes('var googleTagManagerId = "GTM-5553RFJZ";'));
   assert.ok(consent.includes('analytics_storage: "denied"'));

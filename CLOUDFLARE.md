@@ -36,6 +36,18 @@ The active domain is `aetherisstudio.com`. Add both:
 `www.aetherisstudio.com` to the apex while preserving path and query string.
 The generated pages and sitemap use `https://aetherisstudio.com` canonical URLs.
 
+## Domain transfer safety
+
+When the `aetherisstudio.com` transfer completes, keep the current Cloudflare
+nameservers. Do not switch to Hostinger nameservers unless every record has
+first been recreated and verified there, including website A/CNAME records,
+MX, SPF, DKIM, DMARC, Resend records, verification TXT records, and any
+autodiscover or service records.
+
+Capture the complete Cloudflare zone before any nameserver change and verify
+web traffic, inbound mail, outbound Resend delivery, and domain ownership
+records before completing a cutover.
+
 ## Email
 
 Verify `aetherisstudio.com` in Resend before using
