@@ -134,3 +134,26 @@ test("rejects invalid form data without external requests", async () => {
     globalThis.fetch = originalFetch;
   }
 });
+
+test("CRM failure keeps email delivery working and flags manual follow-up", async () => {
+  const originalFetch = globalThis.fetch;
+  const emails = [];
+  const background = [];
+  globalThis.fetch = async (url, options) => {
+    if (url.includes("siteverify")) return Response.json({ success: true, score: 0.9, action: "contact", hostname: "aetherisstudio.com" });
+    if (url.includes("api.attio.com")) return new Response("denied", { status: 403 });
+    emails.push(JSON.parse(options.body));
+    return Response.json({ id: "email-id" });
+  };
+  try {
+    const response = await onRequestPost({
+      request: contactRequest({ name: "Test User", email: "test@example.com", message: "A project", recaptchaToken: "token" }),
+      env: { ...env, ATTIO_API_KEY: "test", ATTIO_WEBSITE_INBOUND_LIST_ID: "website_inbound" },
+      waitUntil: promise => background.push(promise),
+    });
+    await Promise.all(background);
+    assert.equal(response.status, 200);
+    assert.match(emails[0].text, /Attio sync failed/);
+    assert.equal(emails.length, 2);
+  } finally { globalThis.fetch = originalFetch; }
+});

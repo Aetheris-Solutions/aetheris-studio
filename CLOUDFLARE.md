@@ -4,7 +4,7 @@
 
 - Repository: `Aetheris-Solutions/aetheris-studio`
 - Production branch: `main`
-- Build command: leave empty
+- Build command: `npm test`
 - Build output directory: `webflow-site`
 - Root directory: `/`
 
@@ -22,6 +22,8 @@ Configure these for both Preview and Production:
 - `RESEND_API_KEY`
 - `RESEND_FROM_EMAIL`
 - `CONTACT_TO_EMAIL`
+- `ATTIO_API_KEY` (secret)
+- `ATTIO_WEBSITE_INBOUND_LIST_ID`
 
 Use `.dev.vars.example` as the reference. Never commit real secret values.
 
@@ -68,3 +70,21 @@ records before completing a cutover.
 Verify `aetherisstudio.com` in Resend before using
 `Aetheris Studio <website@aetherisstudio.com>` as the sender. Resend will
 provide the DNS records that must be added to Cloudflare.
+
+## Attio website intake
+
+After reCAPTCHA passes, contact and audit enquiries create or match a real person
+by email. Audit store domains create or match companies. Existing names and
+employer links are retained; the submitted identity and full message remain in
+a separate Website Inbound entry for each enquiry. No marketing consent or
+email ownership is inferred from a form submission.
+
+Use an Attio token with Records and List Entries read-write, Object Configuration
+and List Configuration read-only, and other scopes disabled. The existing
+Website Inbound list (`ea94e071-c5a1-4255-aff3-429b033c7d39`) already has the
+`website_*` attributes used by this integration. The full enquiry is preserved
+in `website_ledger_json`; no placeholder person is used.
+
+Email notifications continue if Attio is unavailable and explicitly flag that
+the enquiry needs manual CRM entry. Review those notifications for sync failures.
+The shared intake helper is also maintained in the campaign source repository.
