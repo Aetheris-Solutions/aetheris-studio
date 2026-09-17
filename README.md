@@ -91,3 +91,13 @@ La configurazione completa è in [CLOUDFLARE.md](./CLOUDFLARE.md).
 - Build output directory: `webflow-site`
 
 Il dominio canonico verificato è `aetherisstudio.com`.
+
+## Colore e movimento
+
+Il colore principale è `#9FC2FF`, con testo scuro per il contrasto.
+`webflow-site/assets/css/studio-motion.css` contiene accenti, hover e focus;
+`webflow-site/assets/js/studio-motion.js` gestisce reveal e stagger progressivi.
+Il contenuto rimane leggibile senza JavaScript e con movimento ridotto.
+Dopo le modifiche, eseguire `npm run seo:apply` per aggiornare gli URL con hash.
+Mantenere lo script sincronizzato con `motion.js` nel sorgente della landing,
+poi ricostruire e copiare la landing come descritto sopra.

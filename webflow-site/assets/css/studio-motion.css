@@ -1,0 +1,77 @@
+/* Studio motion and colour: keep the existing editorial typography and layout. */
+:root {
+  --studio-accent: #9fc2ff;
+  --studio-accent-soft: #eaf1ff;
+  --studio-ink: #101827;
+  --studio-ease: cubic-bezier(.22, 1, .36, 1);
+}
+
+::selection { color: var(--studio-ink); background: var(--studio-accent); }
+:focus-visible { outline: 2px solid var(--studio-ink); outline-offset: 4px; box-shadow: 0 0 0 6px var(--studio-accent); }
+.black-bg :focus-visible { outline-color: var(--studio-accent); box-shadow: none; }
+
+.nav-link { transition: background-color 220ms ease, color 220ms ease; }
+.nav-link.w--current { box-shadow: inset 0 -3px var(--studio-accent); }
+.nav-link:hover, .nav-link:focus-visible { color: var(--studio-ink); background: var(--studio-accent); }
+
+.link-block-5, .submit-button, .button, .button-3 {
+  color: var(--studio-ink);
+  background: var(--studio-accent);
+  transition: background-color 240ms ease, box-shadow 240ms ease, translate 300ms var(--studio-ease);
+}
+.link-block-5 .image-5 { filter: brightness(0); }
+.link-block-5:hover, .submit-button:hover, .button:hover, .button-3:hover {
+  color: var(--studio-ink);
+  background: var(--studio-accent);
+  box-shadow: 0 7px 0 var(--studio-ink);
+}
+.submit-button:disabled { cursor: wait; opacity: .65; box-shadow: none; }
+
+.contact-button, .link-block-4, .link-block-2, .footer-block {
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition: background-color 240ms ease, box-shadow 240ms ease;
+}
+.contact-button, .link-block-4 { box-shadow: inset 0 -2px var(--studio-accent); }
+.contact-button:hover, .link-block-4:hover, .footer-block:hover {
+  background: var(--studio-accent);
+  color: var(--studio-ink);
+}
+.contact-button:hover .discuss-button-text, .link-block-4:hover .text-block-8,
+.footer-block:hover .text-block, .footer-block:focus-visible .text-block { color: var(--studio-ink); }
+.contact-button:hover .contact-arrow { filter: brightness(0); }
+.link-block-2:hover .text-block-4 { background: var(--studio-accent); color: var(--studio-ink); border-color: transparent; }
+.contact-arrow, .image-5, .image-4 { transition: translate 300ms var(--studio-ease); }
+.contact-button:hover .contact-arrow, .link-block-5:hover .image-5, .link-block-4:hover .image-4 { translate: 5px 0; }
+
+.div-line, .div-line-pages-title { background-color: var(--studio-accent); }
+.stage-splitter { background-color: var(--studio-accent); }
+.stage-number, .text-block-5, .text-block-14 { color: var(--studio-ink); }
+.project-type-preview, .black-bg .section-heading { color: var(--studio-accent); }
+.stage-wrapper, .div-block-15, .slide {
+  transition: background-color 300ms ease, box-shadow 300ms ease;
+}
+.stage-wrapper, .div-block-15 { box-shadow: inset 0 2px var(--studio-accent); }
+.stage-wrapper:hover, .div-block-15:hover, .slide:hover { background-color: var(--studio-accent-soft); box-shadow: inset 0 3px var(--studio-accent); }
+.client-grid { transition: box-shadow 300ms ease; }
+.client-grid:hover { box-shadow: 0 3px var(--studio-accent); }
+.client-background { transition: scale 700ms var(--studio-ease), opacity 500ms ease; }
+.social-link { transition: background-color 200ms ease, translate 300ms var(--studio-ease); }
+.social-link:hover { background-color: var(--studio-accent); }
+.w-input:focus { border-color: var(--studio-ink); box-shadow: 0 0 0 3px var(--studio-accent); }
+#analytics-privacy-disclosure a { color: var(--studio-ink); text-decoration-color: var(--studio-accent); text-decoration-thickness: 3px; }
+.aetheris-cookie-banner a { color: var(--studio-accent); }
+.aetheris-cookie-reject:hover, .aetheris-cookie-preferences:hover { color: var(--studio-ink); background: var(--studio-accent); }
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .link-block-5:hover, .submit-button:not(:disabled):hover, .button:hover, .button-3:hover { translate: 0 -2px; }
+  .client-grid:hover .client-background { scale: 1.035; opacity: .72; }
+  .social-link:hover { translate: 0 -2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0s !important; animation: none !important; }
+  .contact-arrow, .image-5, .image-4 { translate: none !important; }
+}
+@media print {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

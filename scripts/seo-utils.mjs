@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
@@ -7,6 +8,13 @@ const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
 const CONSENT_SCRIPT = "aetheris-analytics-consent.v3.js";
+function versionedAppearanceAsset(asset) {
+  const bytes = readFileSync(new URL(`../webflow-site${asset}`, import.meta.url));
+  return `${asset}?v=${createHash("sha256").update(bytes).digest("hex").slice(0, 10)}`;
+}
+function appearanceHead() {
+  return `<link data-studio-appearance rel="stylesheet" href="${versionedAppearanceAsset('/assets/css/studio-motion.css')}"/><script data-studio-appearance src="${versionedAppearanceAsset('/assets/js/studio-motion.js')}" defer></script>`;
+}
 // /assets/* is served immutable and Pages deploys don't purge the edge cache, so the
 // query string is a hash of the script: every content change gets a never-cached URL.
 // Never request a new URL on production before the deploy, or the edge caches the old file under it.
@@ -304,6 +312,8 @@ function stripManagedHead(html) {
     next = next.replace(new RegExp(`<meta\\b(?=[^>]*${selector})[^>]*>`, "gi"), "");
   }
   next = next
+    .replace(/<link data-studio-appearance[^>]*\/>/gi, "")
+    .replace(/<script data-studio-appearance[^>]*><\/script>/gi, "")
     .replace(/<link\b(?=[^>]*rel=["']canonical["'])[^>]*>/gi, "")
     .replace(/<script\b(?=[^>]*type=["']application\/ld\+json["'])[^>]*>[\s\S]*?<\/script>/gi, "")
     .replace(
@@ -329,7 +339,9 @@ function injectHead(html, origin, page) {
   return stripped.replace(
     /(<meta charset="utf-8"\/?>)/i,
     `$1${managedHead(origin, page)}`,
-  );
+  ).replace(/href="\/assets\/css\/site\.css(?:\?v=[^"]+)?"/g,
+    `href="${versionedAppearanceAsset('/assets/css/site.css')}"`)
+    .replace('</head>', `${appearanceHead()}</head>`);
 }
 
 function normalizeInternalLinks(html) {
@@ -609,7 +621,7 @@ h3.stage-heading {
   padding: 16px;
   color: #f7f7f2;
   background: #111;
-  border: 1px solid rgba(244, 201, 93, 0.65);
+  border: 1px solid rgba(159, 194, 255, 0.65);
   box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
 }
 
@@ -628,7 +640,7 @@ h3.stage-heading {
 
 .aetheris-cookie-banner button,
 .aetheris-cookie-preferences {
-  border: 1px solid #f4c95d;
+  border: 1px solid #9fc2ff;
   border-radius: 0;
   cursor: pointer;
   font: inherit;
@@ -642,7 +654,7 @@ h3.stage-heading {
 
 .aetheris-cookie-accept {
   color: #111;
-  background: #f4c95d;
+  background: #9fc2ff;
 }
 
 .aetheris-cookie-reject {
@@ -798,13 +810,17 @@ function notFoundPage() {
 body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 48px 24px; color: #f7f7f2; background: #050505; font-family: Gilroy, "Helvetica Neue", Arial, sans-serif; }
 main { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
 img { width: 180px; height: auto; filter: invert(1); } /* the wordmark SVG is black on a white box */
-.code { margin: 0; color: #f4c95d; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.code { margin: 0; color: #9fc2ff; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
 h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); font-weight: 600; line-height: 1.1; text-wrap: balance; }
 p { margin: 0; color: rgba(247, 247, 242, 0.78); line-height: 1.6; }
 nav { display: flex; flex-wrap: wrap; gap: 12px; }
-a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; color: #f7f7f2; border: 1px solid rgba(244, 201, 93, 0.65); text-decoration: none; }
-a:first-child { color: #111; background: #f4c95d; }
-a:focus-visible { outline: 2px solid #f7f7f2; outline-offset: 3px; }
+a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; color: #f7f7f2; border: 1px solid rgba(159, 194, 255, 0.65); text-decoration: none; }
+a:first-child { color: #111; background: #9fc2ff; }
+a:focus-visible { outline: 2px solid #9fc2ff; outline-offset: 3px; }
+a { transition: background-color 200ms ease, color 200ms ease, translate 250ms ease; }
+a:hover { color: #111; background: #9fc2ff; }
+@media (prefers-reduced-motion: no-preference) { main { animation: arrive 620ms cubic-bezier(.22,1,.36,1); } a:hover { translate: 0 -2px; } }
+@keyframes arrive { from { opacity: .5; translate: 0 16px; } to { opacity: 1; translate: 0 0; } }
 </style>
 </head>
 <body>
@@ -841,6 +857,8 @@ export async function applySeoToSite({
 } = {}) {
   if (!outputRoot) throw new Error("outputRoot is required.");
 
+  // Update CSS before fingerprinting it so browser caches see the same release.
+  await upsertConsentCss(outputRoot);
   for (const page of pages) {
     const file = path.join(outputRoot, page.output);
     const html = await readFile(file, "utf8");
@@ -854,7 +872,6 @@ export async function applySeoToSite({
     "utf8",
   );
   await rm(path.join(outputRoot, "assets/js", RETIRED_GOAFFPRO_SCRIPT), { force: true });
-  await upsertConsentCss(outputRoot);
   await writeFile(path.join(outputRoot, "sitemap.xml"), sitemap(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "robots.txt"), robots(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "llms.txt"), llms(productionOrigin), "utf8");
