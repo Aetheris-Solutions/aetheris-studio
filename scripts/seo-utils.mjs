@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const GOOGLE_TAG_MANAGER_ID = "GTM-5553RFJZ";
@@ -6,9 +7,18 @@ const LASTMOD = "2026-07-05";
 const OG_IMAGE = "/assets/images/244ad641-67122c0e2d36c11d0806b837_Ser-Altar_Background.jpg";
 const LOGO = "/assets/images/9ab8314c-66426e5584a7001b62e145b5_Agency-Logo_Extended-Small_White.svg";
 const CONSENT_SCRIPT = "aetheris-analytics-consent.v3.js";
-const CONSENT_SCRIPT_SRC = `/assets/js/${CONSENT_SCRIPT}?v=gtm-consent-mode`;
-const GOAFFPRO_SCRIPT =
+// /assets/* is served immutable and Pages deploys don't purge the edge cache, so the
+// query string is a hash of the script: every content change gets a never-cached URL.
+// Never request a new URL on production before the deploy, or the edge caches the old file under it.
+function consentScriptSrc() {
+  const version = createHash("sha256").update(analyticsConsentScript()).digest("hex").slice(0, 10);
+  return `/assets/js/${CONSENT_SCRIPT}?v=${version}`;
+}
+// The GoAffPro affiliate program is closed: its Webflow app script is stripped and deleted on every run.
+const RETIRED_GOAFFPRO_SCRIPT =
   "e029bcdc-66412d12cd05d437c465a049-65cb7898cbbe85d801f67382-68fcd1a97ec621129fc82785-goaffpro-1.0.0.js";
+// Standalone lead-generation landing: noindex, not in the sitemap, not linked from the site.
+const CAMPAIGN_LANDING_ROUTE = "/ecommerce-growth-audit";
 
 const pages = [
   {
@@ -284,7 +294,7 @@ function managedHead(origin, page) {
     `<meta name="twitter:description" content="${escapeAttribute(page.description)}"/>`,
     `<meta name="twitter:image" content="${escapeAttribute(image)}"/>`,
     `<script type="application/ld+json">${jsonLd}</script>`,
-    `<script src="${CONSENT_SCRIPT_SRC}" type="text/javascript" defer></script>`,
+    `<script src="${consentScriptSrc()}" type="text/javascript" defer></script>`,
   ].join("");
 }
 
@@ -308,6 +318,7 @@ function stripManagedHead(html) {
       /<script src="\/assets\/js\/(?:analytics-consent|aetheris-analytics-consent\.v[0-9]+)\.js(?:\?v=[^"]+)?" type="text\/javascript" defer><\/script>/gi,
       "",
     )
+    .replace(/<script\b[^>]*\bsrc="[^"]*goaffpro[^"]*"[^>]*><\/script>/gi, "")
     .replace(/<!-- Google Tag Manager -->[\s\S]*?<!-- End Google Tag Manager -->/gi, "")
     .replace(/<!-- Google Tag Manager \(noscript\) -->[\s\S]*?<!-- End Google Tag Manager \(noscript\) -->/gi, "");
   return next;
@@ -492,7 +503,7 @@ function analyticsConsentScript() {
     banner.className = "aetheris-cookie-banner";
     banner.setAttribute("aria-label", "Cookie preferences");
     banner.innerHTML =
-      '<p>We use Google Analytics and affiliate measurement to understand site performance. Choose whether to allow non-essential cookies.</p>' +
+      '<p>We use Google Analytics to understand site performance. Choose whether to allow non-essential cookies.</p>' +
       '<div class="aetheris-cookie-actions">' +
       '<button type="button" class="aetheris-cookie-reject">Reject</button>' +
       '<button type="button" class="aetheris-cookie-accept">Accept</button>' +
@@ -529,38 +540,6 @@ function analyticsConsentScript() {
     }
     loadTagManager();
     renderBanner(false);
-  });
-})();`;
-}
-
-function goaffproConsentScript() {
-  return `(function () {
-  "use strict";
-
-  var loaded = false;
-  var storageKey = "aetheris.analyticsConsent";
-
-  function hasConsent() {
-    try {
-      return window.localStorage.getItem(storageKey) === "granted";
-    } catch (error) {
-      return false;
-    }
-  }
-
-  function loadGoAffPro() {
-    if (loaded) return;
-    loaded = true;
-    var goaffpro = document.createElement("script");
-    goaffpro.async = true;
-    goaffpro.src = "https://api.goaffpro.com/loader.js?shop=66412d12cd05d437c465a049";
-    document.head.appendChild(goaffpro);
-  }
-
-  if (hasConsent()) loadGoAffPro();
-
-  window.addEventListener("aetheris:consent", function (event) {
-    if (event.detail && event.detail.analytics) loadGoAffPro();
   });
 })();`;
 }
@@ -676,12 +655,6 @@ ${pages
   </url>`,
   )
   .join("\n")}
-  <url>
-    <loc>${origin}/ecommerce-growth-audit/</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
 </urlset>
 `;
 }
@@ -696,12 +669,6 @@ Disallow: /api/
 Disallow: /.git/
 Disallow: /node_modules/
 Disallow: /src/
-
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
 
 Sitemap: ${origin}/sitemap.xml
 `;
@@ -758,13 +725,62 @@ function headers() {
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://api.goaffpro.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://*.goaffpro.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
-/ecommerce-growth-audit/assets/*
+${CAMPAIGN_LANDING_ROUTE}
+  X-Robots-Tag: noindex, nofollow
+
+${CAMPAIGN_LANDING_ROUTE}/*
+  X-Robots-Tag: noindex, nofollow
+
+${CAMPAIGN_LANDING_ROUTE}/assets/*
   Cache-Control: public, max-age=31536000, immutable
+`;
+}
+
+function notFoundPage() {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Page not found - Aetheris Studio</title>
+<meta name="robots" content="noindex, nofollow"/>
+<meta name="theme-color" content="#050505"/>
+<link href="/favicon.ico" rel="icon" sizes="any"/>
+<style>
+@font-face { font-family: Gilroy; src: url("/assets/fonts/b95e3345-66427d446aa8c29c0f15b2c8_Gilroy-Regular.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: Gilroy; src: url("/assets/fonts/a03b382d-664368969a019a581ee5745a_Gilroy-Semibold.ttf") format("truetype"); font-weight: 600; font-display: swap; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; gap: 28px; padding: 48px 24px; color: #f7f7f2; background: #050505; font-family: Gilroy, "Helvetica Neue", Arial, sans-serif; }
+main { width: 100%; max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+img { width: 180px; height: auto; filter: invert(1); } /* the wordmark SVG is black on a white box */
+.code { margin: 0; color: #f4c95d; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
+h1 { margin: 0; font-size: clamp(2rem, 6vw, 3rem); font-weight: 600; line-height: 1.1; text-wrap: balance; }
+p { margin: 0; color: rgba(247, 247, 242, 0.78); line-height: 1.6; }
+nav { display: flex; flex-wrap: wrap; gap: 12px; }
+a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; color: #f7f7f2; border: 1px solid rgba(244, 201, 93, 0.65); text-decoration: none; }
+a:first-child { color: #111; background: #f4c95d; }
+a:focus-visible { outline: 2px solid #f7f7f2; outline-offset: 3px; }
+</style>
+</head>
+<body>
+<main>
+<img src="${LOGO}" alt="Aetheris Studio" width="180" height="36"/>
+<p class="code">Error 404</p>
+<h1>This page doesn't exist.</h1>
+<p>The link may be mistyped or the page may have moved. You can continue from one of these pages.</p>
+<nav aria-label="Helpful links">
+<a href="/">Home</a>
+<a href="/services/">Services</a>
+<a href="/contact/">Contact</a>
+</nav>
+</main>
+</body>
+</html>
 `;
 }
 
@@ -797,16 +813,13 @@ export async function applySeoToSite({
     analyticsConsentScript(),
     "utf8",
   );
-  await writeFile(
-    path.join(outputRoot, "assets/js", GOAFFPRO_SCRIPT),
-    goaffproConsentScript(),
-    "utf8",
-  );
+  await rm(path.join(outputRoot, "assets/js", RETIRED_GOAFFPRO_SCRIPT), { force: true });
   await upsertConsentCss(outputRoot);
   await writeFile(path.join(outputRoot, "sitemap.xml"), sitemap(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "robots.txt"), robots(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "llms.txt"), llms(productionOrigin), "utf8");
   await writeFile(path.join(outputRoot, "_headers"), headers(), "utf8");
+  await writeFile(path.join(outputRoot, "404.html"), notFoundPage(), "utf8");
 
   return { pages: pages.length, googleTagManagerId: GOOGLE_TAG_MANAGER_ID };
 }

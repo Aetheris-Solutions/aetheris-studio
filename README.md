@@ -7,8 +7,9 @@ Cloudflare Pages.
 
 - `webflow-site/`: sito statico pubblicato, incluse le sei pagine e gli asset.
 - `functions/api/`: backend Cloudflare per il contact form.
-- `scripts/import-webflow.mjs`: importazione ripetibile dallo staging Webflow.
-- `tests/`: test automatici del contact form.
+- `scripts/seo-utils.mjs`: genera metadati SEO, consenso analytics, `sitemap.xml`,
+  `robots.txt`, `_headers` e `404.html` in `webflow-site/`.
+- `tests/`: test automatici del contact form e dei file statici.
 - `legacy-next-prototype/`: precedente concept Next.js, conservato ma escluso
   dal deploy.
 
@@ -18,7 +19,7 @@ Cloudflare Pages.
 - `/services`
 - `/portfolio`
 - `/contact`
-- `/ecommerce-growth-audit` (landing campaign)
+- `/ecommerce-growth-audit` (landing campaign, noindex e isolata dal sito)
 - `/privacy-policy`
 - `/cookies-policy`
 
@@ -38,8 +39,7 @@ Il sito sarà disponibile su `http://localhost:4173`.
 npm test
 ```
 
-Per riapplicare le correzioni SEO/crawlability ai file statici dopo una
-reimportazione Webflow:
+Dopo ogni modifica a `scripts/seo-utils.mjs`, rigenerare i file statici:
 
 ```bash
 npm run seo:apply
@@ -52,16 +52,10 @@ DevTools sulla porta `9222`:
 npm run test:browser
 ```
 
-## Reimportazione
+## Webflow
 
-Per aggiornare la copia a partire dallo staging pubblico:
-
-```bash
-npm run import:webflow
-```
-
-Lo script scarica HTML, CSS, JavaScript, font e immagini, li salva localmente e
-reinserisce il contact form proprietario. Non modifica chiavi o segreti.
+Lo staging Webflow è dismesso e lo script di reimportazione è stato rimosso:
+`webflow-site/` è l'unica fonte del sito.
 
 ## Contact form
 
@@ -79,6 +73,12 @@ La landing campaign `/ecommerce-growth-audit` usa le stesse funzioni
 `/api/contact` e `/api/contact-config`, quindi eredita le variabili già
 configurate nel progetto Cloudflare Pages. La homepage resta il sito
 istituzionale.
+
+La landing serve solo alla lead generation: resta `noindex, nofollow` (meta tag
+e header `X-Robots-Tag`), fuori dalla sitemap e senza link da o verso il sito,
+a parte le pagine legali. È una build Vite precompilata: il sorgente è nel repo
+privato `Aetheris-Solutions/aetheris-studio-campaign-landing-page`, dove vanno
+riportate anche le modifiche fatte qui.
 
 ## Deploy
 

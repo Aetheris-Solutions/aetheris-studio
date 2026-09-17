@@ -96,7 +96,7 @@
     banner.className = "aetheris-cookie-banner";
     banner.setAttribute("aria-label", "Cookie preferences");
     banner.innerHTML =
-      '<p>We use Google Analytics and affiliate measurement to understand site performance. Choose whether to allow non-essential cookies.</p>' +
+      '<p>We use Google Analytics to understand site performance. Choose whether to allow non-essential cookies.</p>' +
       '<div class="aetheris-cookie-actions">' +
       '<button type="button" class="aetheris-cookie-reject">Reject</button>' +
       '<button type="button" class="aetheris-cookie-accept">Accept</button>' +

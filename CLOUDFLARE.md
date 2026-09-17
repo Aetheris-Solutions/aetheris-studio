@@ -25,6 +25,21 @@ Configure these for both Preview and Production:
 
 Use `.dev.vars.example` as the reference. Never commit real secret values.
 
+## Cache after deploy
+
+`/assets/*` is served with `Cache-Control: immutable`, and a Pages deploy does
+not purge the zone's edge cache. After any deploy that changes, adds or removes
+files under `/assets/` (or adds `404.html`), run **Caching → Configuration →
+Purge Everything** on the `aetherisstudio.com` zone, then check:
+
+- `curl -sI https://aetherisstudio.com/assets/js/does-not-exist.js` returns 404;
+- `curl -sI https://aetherisstudio.com/ecommerce-growth-audit/` shows
+  `x-robots-tag: noindex, nofollow`.
+
+The consent script URL carries a content hash (`?v=…`). Never request a new
+asset URL on production before its deploy is live, or the edge caches the old
+file under the new URL.
+
 ## Domain
 
 The active domain is `aetherisstudio.com`. Add both:
