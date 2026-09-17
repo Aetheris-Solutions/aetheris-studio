@@ -130,7 +130,7 @@
     banner.className = "aetheris-cookie-banner";
     banner.setAttribute("aria-label", "Cookie preferences");
     banner.innerHTML =
-      '<p>With your permission, we use Google Analytics and Microsoft Clarity to measure visits, create heatmaps and replay website interactions. Form contents are masked. <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookies-policy/">Cookie Policy</a>.</p>' +
+      '<p>With your permission, we use Google Analytics and Microsoft Clarity to measure visits, create heatmaps and replay website interactions. Form contents are masked. <a style="color:inherit;text-decoration:underline" href="/privacy-policy/">Privacy Policy</a> and <a style="color:inherit;text-decoration:underline" href="/cookies-policy/">Cookie Policy</a>.</p>' +
       '<div class="aetheris-cookie-actions">' +
       '<button type="button" class="aetheris-cookie-reject">Reject</button>' +
       '<button type="button" class="aetheris-cookie-accept">Accept</button>' +
