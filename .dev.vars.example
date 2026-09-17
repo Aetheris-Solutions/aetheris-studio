@@ -6,3 +6,6 @@ RECAPTCHA_MIN_SCORE=0.5
 RESEND_API_KEY=
 RESEND_FROM_EMAIL=Aetheris Studio <website@aetherisstudio.com>
 CONTACT_TO_EMAIL=info@aetherisstudio.com
+
+ATTIO_API_KEY=
+ATTIO_WEBSITE_INBOUND_LIST_ID=ea94e071-c5a1-4255-aff3-429b033c7d39

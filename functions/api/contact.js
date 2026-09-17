@@ -1,3 +1,5 @@
+import { saveEnquiry } from "../_lib/attio-intake.js";
+
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function json(body, status = 200) {
@@ -141,6 +143,14 @@ export async function onRequestPost({ request, env, waitUntil }) {
   const safeName = escapeHtml(name);
   const safeEmail = escapeHtml(email);
   const safeMessage = escapeHtml(message).replace(/\n/g, "<br>");
+  let crmStatus;
+  try {
+    await saveEnquiry(env, { name, email, message });
+    crmStatus = "Saved to Attio Website Inbound.";
+  } catch (error) {
+    console.error("Attio intake failed", error.message);
+    crmStatus = "Attio sync failed. Please add this enquiry to Website Inbound manually.";
+  }
 
   try {
     await sendEmail(env, {
@@ -148,8 +158,8 @@ export async function onRequestPost({ request, env, waitUntil }) {
       to: [destination],
       reply_to: email,
       subject: `New website enquiry from ${name}`,
-      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}`,
-      html: `<h1>New website enquiry</h1><p><strong>Name:</strong> ${safeName}</p><p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p><p><strong>Message:</strong></p><p>${safeMessage}</p>`,
+      text: `Name: ${name}\nEmail: ${email}\n\nMessage:\n${message}\n\nCRM: ${crmStatus}`,
+      html: `<h1>New website enquiry</h1><p><strong>Name:</strong> ${safeName}</p><p><strong>Email:</strong> <a href="mailto:${safeEmail}">${safeEmail}</a></p><p><strong>Message:</strong></p><p>${safeMessage}</p><p><strong>CRM:</strong> ${crmStatus}</p>`,
     });
   } catch (error) {
     console.error("Contact notification failed", error);
