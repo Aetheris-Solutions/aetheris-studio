@@ -2,7 +2,8 @@
   "use strict";
 
   var googleTagManagerId = "GTM-5553RFJZ";
-  var storageKey = "aetheris.analyticsConsent";
+  var storageKey = "aetheris.analyticsConsent.v2";
+  var sessionChoice = null;
   var loaded = false;
 
   window.dataLayer = window.dataLayer || [];
@@ -18,13 +19,15 @@
   });
   function currentChoice() {
     try {
-      return window.localStorage.getItem(storageKey);
+      var value = sessionChoice || window.localStorage.getItem(storageKey);
+      return value === "granted" || value === "denied" ? value : null;
     } catch (error) {
       return null;
     }
   }
 
   function remember(choice) {
+    sessionChoice = choice;
     try {
       window.localStorage.setItem(storageKey, choice);
     } catch (error) {
@@ -53,6 +56,16 @@
       ad_personalization: "denied",
       analytics_storage: granted ? "granted" : "denied"
     });
+    if (granted || window.clarity) {
+      window.clarity = window.clarity || function () {
+        (window.clarity.q = window.clarity.q || []).push(arguments);
+      };
+      window.clarity("consentv2", {
+        analytics_Storage: granted ? "granted" : "denied",
+        ad_Storage: "denied"
+      });
+      if (!granted) window.clarity("stop");
+    }
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
       detail: { analytics: granted }
     }));
@@ -81,11 +94,32 @@
     document.body.appendChild(button);
   }
 
+  function clearAnalyticsCookies() {
+    document.cookie.split(";").forEach(function (part) {
+      var name = part.split("=")[0].trim();
+      if (!/^(_ga($|_)|_gid$|_gat|_clck$|_clsk$)/.test(name)) return;
+      var suffix = "; Max-Age=0; path=/; SameSite=Lax";
+      document.cookie = name + "=" + suffix;
+      var labels = window.location.hostname.split(".");
+      while (labels.length > 1) {
+        document.cookie = name + "=" + suffix + "; domain=" + labels.join(".");
+        labels.shift();
+      }
+    });
+  }
+
   function applyChoice(choice) {
     remember(choice);
     setConsent(choice === "granted");
     removeBanner();
     renderPreferencesButton();
+    if (choice === "granted") {
+      loadTagManager();
+    } else {
+      clearAnalyticsCookies();
+      // Unload already-running analytics, including requests still being initialized.
+      if (loaded) window.location.reload();
+    }
   }
 
   function renderBanner(force) {
@@ -96,7 +130,7 @@
     banner.className = "aetheris-cookie-banner";
     banner.setAttribute("aria-label", "Cookie preferences");
     banner.innerHTML =
-      '<p>We use Google Analytics to understand site performance. Choose whether to allow non-essential cookies.</p>' +
+      '<p>With your permission, we use Google Analytics and Microsoft Clarity to measure visits, create heatmaps and replay website interactions. Form contents are masked. <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookies-policy/">Cookie Policy</a>.</p>' +
       '<div class="aetheris-cookie-actions">' +
       '<button type="button" class="aetheris-cookie-reject">Reject</button>' +
       '<button type="button" class="aetheris-cookie-accept">Accept</button>' +
@@ -128,10 +162,11 @@
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
-      loadTagManager();
+      if (choice === "granted") loadTagManager();
+      else clearAnalyticsCookies();
       return;
     }
-    loadTagManager();
+    clearAnalyticsCookies();
     renderBanner(false);
   });
 })();

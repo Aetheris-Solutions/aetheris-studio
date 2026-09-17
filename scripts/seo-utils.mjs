@@ -372,6 +372,10 @@ function normalizeHeadings(html, route) {
 }
 
 function updateCookiePolicy(html, route) {
+  if (!["/cookies-policy", "/privacy-policy"].includes(route)) return html;
+  const disclosure = '<section id="analytics-privacy-disclosure"><h2>Optional website analytics</h2><p>Only after you select Accept, we load Google Analytics and Microsoft Clarity to understand visits and interactions, produce heatmaps and session replays, and improve this website. Form contents are masked. Advertising consent remains disabled. Analytics cookies, including Google Analytics _ga cookies and Clarity _clck and _clsk cookies, may be used after acceptance.</p><p>You can reject analytics or withdraw consent using Cookie preferences (Cookie settings on the audit page). Withdrawing stops collection, clears first-party analytics cookies and reloads the page. Your choice is stored on this device. See <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://privacy.microsoft.com/privacystatement">Microsoft Privacy Statement</a> for provider data practices.</p></section>';
+  html = html.replace(/<section id="analytics-privacy-disclosure">[\s\S]*?<\/section>/g, "");
+  html = html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/, "$1" + disclosure);
   if (route !== "/cookies-policy") return html;
   const replacement =
     "$1<br/>- <strong>Cookie Preferences:</strong> You can use the Cookie preferences control on this website to accept or reject Google Analytics and similar non-essential measurement scripts.<br/><br/>Please note";
@@ -396,6 +400,7 @@ function improveAltText(html) {
 }
 
 function applyPageSeo(html, origin, page) {
+  html = html.replace(/<form(?![^>]*data-clarity-mask)(?=[\s>])/g, '<form data-clarity-mask="true"');
   return updateCookiePolicy(
     normalizeInternalLinks(
       improveAltText(normalizeHeadings(injectHead(html, origin, page), page.route)),
@@ -409,7 +414,8 @@ function analyticsConsentScript() {
   "use strict";
 
   var googleTagManagerId = "${GOOGLE_TAG_MANAGER_ID}";
-  var storageKey = "aetheris.analyticsConsent";
+  var storageKey = "aetheris.analyticsConsent.v2";
+  var sessionChoice = null;
   var loaded = false;
 
   window.dataLayer = window.dataLayer || [];
@@ -425,13 +431,15 @@ function analyticsConsentScript() {
   });
   function currentChoice() {
     try {
-      return window.localStorage.getItem(storageKey);
+      var value = sessionChoice || window.localStorage.getItem(storageKey);
+      return value === "granted" || value === "denied" ? value : null;
     } catch (error) {
       return null;
     }
   }
 
   function remember(choice) {
+    sessionChoice = choice;
     try {
       window.localStorage.setItem(storageKey, choice);
     } catch (error) {
@@ -460,6 +468,16 @@ function analyticsConsentScript() {
       ad_personalization: "denied",
       analytics_storage: granted ? "granted" : "denied"
     });
+    if (granted || window.clarity) {
+      window.clarity = window.clarity || function () {
+        (window.clarity.q = window.clarity.q || []).push(arguments);
+      };
+      window.clarity("consentv2", {
+        analytics_Storage: granted ? "granted" : "denied",
+        ad_Storage: "denied"
+      });
+      if (!granted) window.clarity("stop");
+    }
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
       detail: { analytics: granted }
     }));
@@ -488,11 +506,32 @@ function analyticsConsentScript() {
     document.body.appendChild(button);
   }
 
+  function clearAnalyticsCookies() {
+    document.cookie.split(";").forEach(function (part) {
+      var name = part.split("=")[0].trim();
+      if (!/^(_ga($|_)|_gid$|_gat|_clck$|_clsk$)/.test(name)) return;
+      var suffix = "; Max-Age=0; path=/; SameSite=Lax";
+      document.cookie = name + "=" + suffix;
+      var labels = window.location.hostname.split(".");
+      while (labels.length > 1) {
+        document.cookie = name + "=" + suffix + "; domain=" + labels.join(".");
+        labels.shift();
+      }
+    });
+  }
+
   function applyChoice(choice) {
     remember(choice);
     setConsent(choice === "granted");
     removeBanner();
     renderPreferencesButton();
+    if (choice === "granted") {
+      loadTagManager();
+    } else {
+      clearAnalyticsCookies();
+      // Unload already-running analytics, including requests still being initialized.
+      if (loaded) window.location.reload();
+    }
   }
 
   function renderBanner(force) {
@@ -503,7 +542,7 @@ function analyticsConsentScript() {
     banner.className = "aetheris-cookie-banner";
     banner.setAttribute("aria-label", "Cookie preferences");
     banner.innerHTML =
-      '<p>We use Google Analytics to understand site performance. Choose whether to allow non-essential cookies.</p>' +
+      '<p>With your permission, we use Google Analytics and Microsoft Clarity to measure visits, create heatmaps and replay website interactions. Form contents are masked. <a href="/privacy-policy/">Privacy Policy</a> and <a href="/cookies-policy/">Cookie Policy</a>.</p>' +
       '<div class="aetheris-cookie-actions">' +
       '<button type="button" class="aetheris-cookie-reject">Reject</button>' +
       '<button type="button" class="aetheris-cookie-accept">Accept</button>' +
@@ -535,10 +574,11 @@ function analyticsConsentScript() {
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
-      loadTagManager();
+      if (choice === "granted") loadTagManager();
+      else clearAnalyticsCookies();
       return;
     }
-    loadTagManager();
+    clearAnalyticsCookies();
     renderBanner(false);
   });
 })();`;
@@ -725,7 +765,7 @@ function headers() {
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.clarity.ms https://*.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.clarity.ms https://c.bing.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
