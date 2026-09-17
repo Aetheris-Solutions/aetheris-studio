@@ -78,14 +78,16 @@ La landing serve solo alla lead generation: resta `noindex, nofollow` (meta tag
 e header `X-Robots-Tag`), fuori dalla sitemap e senza link da o verso il sito,
 a parte le pagine legali. È una build Vite precompilata: il sorgente è nel repo
 privato `Aetheris-Solutions/aetheris-studio-campaign-landing-page`, dove vanno
-riportate anche le modifiche fatte qui.
+riportate anche le modifiche fatte qui. Per aggiornare la copia pubblicata, eseguire
+`npm run build:studio` nel repo sorgente e copiare `dist/` in
+`webflow-site/ecommerce-growth-audit/`.
 
 ## Deploy
 
 La configurazione completa è in [CLOUDFLARE.md](./CLOUDFLARE.md).
 
 - Production branch: `main`
-- Build command: vuoto
+- Build command: `npm test`
 - Build output directory: `webflow-site`
 
 Il dominio canonico verificato è `aetherisstudio.com`.
