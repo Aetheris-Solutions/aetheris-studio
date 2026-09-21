@@ -1,0 +1,98 @@
+{
+  "zone": "aetheris.consulting",
+  "zone_id": "767fac59e30d889e1dc677ebbec48f07",
+  "captured_at": "2026-09-21T22:55:00Z",
+  "status": "active since 2026-09-21T22:51:12Z",
+  "name_servers": [
+    "matias.ns.cloudflare.com",
+    "thea.ns.cloudflare.com"
+  ],
+  "note": "DNS-only mirror of the Hostinger zone; MX/SPF remain Hostinger Mail by decision of 2026-09-22",
+  "records": [
+    {
+      "type": "A",
+      "name": "aetheris.consulting",
+      "content": "76.76.21.21",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "www.aetheris.consulting",
+      "content": "cname.vercel-dns-0.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "aetheris.consulting",
+      "content": "mx1.hostinger.com",
+      "priority": 5
+    },
+    {
+      "type": "MX",
+      "name": "aetheris.consulting",
+      "content": "mx2.hostinger.com",
+      "priority": 10
+    },
+    {
+      "type": "TXT",
+      "name": "aetheris.consulting",
+      "content": "v=spf1 include:_spf.mail.hostinger.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "aetheris.consulting",
+      "content": "google-site-verification=4y6xWR7g1uHii4ve2darU2mmHyhJpisZrGlGxRku0uY"
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc.aetheris.consulting",
+      "content": "v=DMARC1; p=none"
+    },
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.aetheris.consulting",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1AmcAZeo0R9Ftt6KTZP/jSiZ0TGfRZIn7S6x2BJY+9ErvoMog+Uq+0QGA3+USjn2WrGk2TsbZI6MkVxqakjo9sEJ446ham/avkPENWBW8WiEpSvYSTE6bT4mqMdUaZTRD39mwdjNb6hpwbSaKX1dZI9DO4RAecguRJVLKPTKNsQIDAQAB"
+    },
+    {
+      "type": "MX",
+      "name": "send.aetheris.consulting",
+      "content": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10
+    },
+    {
+      "type": "TXT",
+      "name": "send.aetheris.consulting",
+      "content": "v=spf1 include:amazonses.com ~all"
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-a._domainkey.aetheris.consulting",
+      "content": "hostingermail-a.dkim.mail.hostinger.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-b._domainkey.aetheris.consulting",
+      "content": "hostingermail-b.dkim.mail.hostinger.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-c._domainkey.aetheris.consulting",
+      "content": "hostingermail-c.dkim.mail.hostinger.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "autoconfig.aetheris.consulting",
+      "content": "autoconfig.mail.hostinger.com",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover.aetheris.consulting",
+      "content": "autodiscover.mail.hostinger.com",
+      "proxied": false
+    }
+  ]
+}
