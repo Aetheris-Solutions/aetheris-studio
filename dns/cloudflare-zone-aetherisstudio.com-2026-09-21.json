@@ -1,0 +1,102 @@
+{
+  "zone": "aetherisstudio.com",
+  "zone_id": "163bb6e61c9f464f30a69021f447dfbd",
+  "captured_at": "2026-09-21T14:04:00Z",
+  "zone_status": "active",
+  "name_servers": [
+    "matias.ns.cloudflare.com",
+    "thea.ns.cloudflare.com"
+  ],
+  "records": [
+    {
+      "type": "CNAME",
+      "name": "aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "CNAME",
+      "name": "www.aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true,
+      "ttl": 1
+    },
+    {
+      "type": "CNAME",
+      "name": "gm0._domainkey.aetherisstudio.com",
+      "content": "gm0._domainkey.gomailify.com",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "type": "CNAME",
+      "name": "gm1._domainkey.aetherisstudio.com",
+      "content": "gm1._domainkey.gomailify.com",
+      "proxied": false,
+      "ttl": 1
+    },
+    {
+      "type": "MX",
+      "name": "aetherisstudio.com",
+      "content": "mx.gomailify.com",
+      "priority": 10,
+      "ttl": 1
+    },
+    {
+      "type": "MX",
+      "name": "send.aetherisstudio.com",
+      "content": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10,
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=jS7kvYyI5Ed1bLMzWZkcnhavo6okTVYNOoIjnUkFvQ4",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=Ap2IOKnMjqf-iehVcA071jHzVw6X-SBnc8ufzTBCx3A",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "v=spf1 include:spf.gomailify.com -all",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "gomailify=JLSez-rjYNOcpkWk",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc.aetherisstudio.com",
+      "content": "v=DMARC1;p=quarantine;rua=mailto:0b2b960bbe@rua.easydmarc.eu;ruf=mailto:0b2b960bbe@ruf.easydmarc.eu;fo=1;",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.aetherisstudio.com",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVWyo6XjpSqUH7kRxzK/iGaGiNiORXwF22jLQU7iQvxWczWYa8rxzgXHb8VXWR9ihItsTcfkTm/Ls/f7Euzp2/Km/a0CWywHUID6dCB+qJ+agBvJyfN4hjeBgoZDNM63R7KTSdP5h2imh0o5CFBPCQABYMV2aXpq4nTItI36LOlwIDAQAB",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "send.aetherisstudio.com",
+      "content": "v=spf1 include:amazonses.com ~all",
+      "ttl": 1
+    },
+    {
+      "type": "TXT",
+      "name": "_webflow.aetherisstudio.com",
+      "content": "one-time-verification=249aba27-a9f5-4ad5-aa11-5709aa8bab65",
+      "ttl": 1
+    }
+  ]
+}
