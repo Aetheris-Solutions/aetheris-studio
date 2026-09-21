@@ -1,0 +1,108 @@
+{
+  "zone": "aetherisstudio.com",
+  "zone_id": "163bb6e61c9f464f30a69021f447dfbd",
+  "captured_at": "2026-09-21T17:31:00Z",
+  "note": "after Hostinger Mail cutover (MX/SPF/DKIM/autodiscovery); GoMailify DKIM + ownership TXT kept until decommission",
+  "records": [
+    {
+      "type": "CNAME",
+      "name": "aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "www.aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "autoconfig.aetherisstudio.com",
+      "content": "autoconfig.mail.hostinger.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "autodiscover.aetherisstudio.com",
+      "content": "autodiscover.mail.hostinger.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "gm0._domainkey.aetherisstudio.com",
+      "content": "gm0._domainkey.gomailify.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "gm1._domainkey.aetherisstudio.com",
+      "content": "gm1._domainkey.gomailify.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-a._domainkey.aetherisstudio.com",
+      "content": "hostingermail-a.dkim.mail.hostinger.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-b._domainkey.aetherisstudio.com",
+      "content": "hostingermail-b.dkim.mail.hostinger.com"
+    },
+    {
+      "type": "CNAME",
+      "name": "hostingermail-c._domainkey.aetherisstudio.com",
+      "content": "hostingermail-c.dkim.mail.hostinger.com"
+    },
+    {
+      "type": "MX",
+      "name": "aetherisstudio.com",
+      "content": "mx1.hostinger.com",
+      "priority": 5
+    },
+    {
+      "type": "MX",
+      "name": "aetherisstudio.com",
+      "content": "mx2.hostinger.com",
+      "priority": 10
+    },
+    {
+      "type": "MX",
+      "name": "send.aetherisstudio.com",
+      "content": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "v=spf1 include:_spf.mail.hostinger.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=jS7kvYyI5Ed1bLMzWZkcnhavo6okTVYNOoIjnUkFvQ4"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=Ap2IOKnMjqf-iehVcA071jHzVw6X-SBnc8ufzTBCx3A"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "gomailify=JLSez-rjYNOcpkWk"
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc.aetherisstudio.com",
+      "content": "v=DMARC1;p=quarantine;rua=mailto:0b2b960bbe@rua.easydmarc.eu;ruf=mailto:0b2b960bbe@ruf.easydmarc.eu;fo=1;"
+    },
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.aetherisstudio.com",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVWyo6XjpSqUH7kRxzK/iGaGiNiORXwF22jLQU7iQvxWczWYa8rxzgXHb8VXWR9ihItsTcfkTm/Ls/f7Euzp2/Km/a0CWywHUID6dCB+qJ+agBvJyfN4hjeBgoZDNM63R7KTSdP5h2imh0o5CFBPCQABYMV2aXpq4nTItI36LOlwIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "send.aetherisstudio.com",
+      "content": "v=spf1 include:amazonses.com ~all"
+    }
+  ]
+}

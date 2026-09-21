@@ -154,34 +154,46 @@ router's resolver (answers carry `ra`/`ad` flags and `SERVFAIL` on
   team (Aetheris Solutions) holds no `aetherisstudio.com` domain, so no
   second sender exists.
 
-### Moving inbound mail to Hostinger Mail (planned for info@)
+### Inbound mail: Hostinger Mail (done 2026-09-21)
 
-Buying a Hostinger Mail plan does not change the authoritative (Cloudflare)
-zone. The switch is a deliberate GoMailify → Hostinger migration done in one
-change on Cloudflare, mirrored to the Hostinger zone afterwards:
+Order `ORf9fcad197a9b4148d4406f60851b` (Starter Business Email, 1 seat,
+5 GB) is attached to the domain; mailbox `info@aetherisstudio.com`
+(id `AC73e8059e03c3e1ce61c70be81c0e`, IMAP/POP3/SMTP enabled) forwards to
+`info.aetherisstudio@gmail.com` with *keep a copy* on (forwarder
+`FO5c7ad55db25c7dccd828cc8561b9`). Client settings: IMAP
+`imap.hostinger.com:993` (SSL), SMTP `smtp.hostinger.com:465` (SSL), POP3
+`pop.hostinger.com:995`, webmail `https://mail.hostinger.com`;
+`autoconfig`/`autodiscover` CNAMEs let mail clients find these.
 
-- create the mailbox `info@aetherisstudio.com` in Hostinger first;
-- replace `@ MX 10 mx.gomailify.com` with `5 mx1.hostinger.com` and
-  `10 mx2.hostinger.com`;
-- replace the SPF TXT with `v=spf1 include:_spf.mail.hostinger.com ~all`;
-- add `hostingermail-a/b/c._domainkey` CNAMEs to
-  `hostingermail-a/b/c.dkim.mail.hostinger.com` and the `autoconfig` /
-  `autodiscover` CNAMEs to `*.mail.hostinger.com`;
-- keep the Resend `send` / `resend._domainkey` records and the DMARC record;
-  remove the `gm0`/`gm1` DKIM CNAMEs and the `gomailify=` TXT only once
-  GoMailify is decommissioned;
-- gate: today `mx1.hostinger.com` answers `Relay access denied` for
-  `@aetherisstudio.com` recipients (no mail order exists yet), which is the
-  exact failure that blocked aetheris.consulting inbound mail for ~17 days.
-  Before touching the MX, an SMTP probe (EHLO, STARTTLS, `MAIL FROM` a real
-  external address, `RCPT TO:<info@aetherisstudio.com>`) against **both**
-  `mx1.hostinger.com` and `mx2.hostinger.com` must return 250, and a real
-  test message must land in the mailbox. Keep the GoMailify MX until the
-  probe passes and watch the DMARC reports for a week afterwards.
-- attaching the mail order also auto-writes Hostinger MX/SPF/DKIM into the
-  Hostinger DNS zone. That is harmless while Cloudflare is authoritative, but
-  it means the mirror no longer matches Cloudflare: re-diff the Hostinger
-  zone against `dns/` before any nameserver switch.
+Cutover sequence that was executed, in this order:
+
+1. Mailbox created first, then an SMTP probe (EHLO, STARTTLS, `MAIL FROM`,
+   `RCPT TO:<info@aetherisstudio.com>`) returned 250 on **both**
+   `mx1.hostinger.com` and `mx2.hostinger.com` (an hour earlier, before the
+   order was attached, they answered `Relay access denied`).
+2. Cloudflare: added `hostingermail-a/b/c._domainkey`, `autoconfig` and
+   `autodiscover` CNAMEs; replaced the apex SPF with
+   `v=spf1 include:_spf.mail.hostinger.com ~all`; replaced the apex MX with
+   `5 mx1.hostinger.com` + `10 mx2.hostinger.com`. Resend records, DMARC
+   (quarantine, EasyDMARC), Google verifications and the GoMailify DKIM +
+   `gomailify=` TXT were left in place.
+3. Verified from an external host against the Cloudflare nameservers, then
+   two test messages (Resend Studio + Resend Consulting) landed in the
+   Hostinger INBOX with `dkim=pass` / `dmarc=pass`.
+
+**Hostinger Mail activation rewrites the Hostinger DNS zone.** Attaching
+the order replaced `@ MX`, `@ TXT` (dropping the Google verifications and
+`gomailify=`), set `_dmarc` to `p=none`, and deleted `resend._domainkey`,
+`gm0`/`gm1._domainkey` (snapshot `182308194`, reason "Hostinger mail
+activated"). That is the aetheris.consulting outage mechanism. It was
+harmless here because Cloudflare is authoritative; the mirror was
+re-applied from `dns/hostinger-zone-aetherisstudio.com.json` and now
+matches Cloudflare record for record (19 records). Re-diff after any
+Hostinger mail/plan change.
+
+GoMailify decommission (later): once a week of DMARC reports shows only
+Hostinger and Resend sources, delete the `gm0`/`gm1._domainkey` CNAMEs and
+the `gomailify=` TXT from both zones and close the GoMailify account.
 
 ## Email
 
