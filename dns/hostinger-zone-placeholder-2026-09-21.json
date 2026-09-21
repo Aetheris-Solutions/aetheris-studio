@@ -1,0 +1,27 @@
+{
+  "domain": "aetherisstudio.com",
+  "captured_at": "2026-09-21T13:55:00Z",
+  "note": "Hostinger default zone as found after the transfer completed; restore path = DNS_resetDNSRecordsV1 or re-apply these two records",
+  "records": [
+    {
+      "name": "www",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "aetherisstudio.com."
+        }
+      ]
+    },
+    {
+      "name": "@",
+      "type": "A",
+      "ttl": 50,
+      "records": [
+        {
+          "content": "2.57.91.91"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "domain": "aetherisstudio.com",
+  "applied_at": "2026-09-21T17:26:00Z",
+  "source": "mirror of dns/cloudflare-zone-aetherisstudio.com-2026-09-21-after-mail-cutover.json; stored form as returned by the Hostinger API. Hostinger Mail activation (snapshot 182308194) had rewritten @ MX/TXT, _dmarc and deleted resend/gm0/gm1 DKIM; those were re-applied by hand.",
+  "hostinger_snapshots": {
+    "pre_change_placeholder": 182263432,
+    "first_mirror": 182266985,
+    "hostinger_mail_activated": 182308194
+  },
+  "reapply": "Hostinger API PUT /api/dns/v1/zones/aetherisstudio.com with overwrite=true and the zone entries below",
+  "zone": [
+    {
+      "name": "resend._domainkey",
+      "type": "TXT",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "\"p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVWyo6XjpSqUH7kRxzK/iGaGiNiORXwF22jLQU7iQvxWczWYa8rxzgXHb8VXWR9ihItsTcfkTm/Ls/f7Euzp2/Km/a0CWywHUID6dCB+qJ+agBvJyfN4hjeBgoZDNM63R7KTSdP5h2imh0o5CFBPCQABYMV2aXpq4nTItI36LOlwIDAQAB\""
+        }
+      ]
+    },
+    {
+      "name": "hostingermail-c._domainkey",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "hostingermail-c.dkim.mail.hostinger.com."
+        }
+      ]
+    },
+    {
+      "name": "hostingermail-b._domainkey",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "hostingermail-b.dkim.mail.hostinger.com."
+        }
+      ]
+    },
+    {
+      "name": "hostingermail-a._domainkey",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "hostingermail-a.dkim.mail.hostinger.com."
+        }
+      ]
+    },
+    {
+      "name": "gm1._domainkey",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "gm1._domainkey.gomailify.com."
+        }
+      ]
+    },
+    {
+      "name": "gm0._domainkey",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "gm0._domainkey.gomailify.com."
+        }
+      ]
+    },
+    {
+      "name": "www",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "aetheris-studio.pages.dev."
+        }
+      ]
+    },
+    {
+      "name": "autodiscover",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "autodiscover.mail.hostinger.com."
+        }
+      ]
+    },
+    {
+      "name": "autoconfig",
+      "type": "CNAME",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "autoconfig.mail.hostinger.com."
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "type": "TXT",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "\"v=spf1 include:amazonses.com ~all\""
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "type": "MX",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "10 feedback-smtp.eu-west-1.amazonses.com."
+        }
+      ]
+    },
+    {
+      "name": "_dmarc",
+      "type": "TXT",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "\"v=DMARC1;p=quarantine;rua=mailto:0b2b960bbe@rua.easydmarc.eu;ruf=mailto:0b2b960bbe@ruf.easydmarc.eu;fo=1;\""
+        }
+      ]
+    },
+    {
+      "name": "@",
+      "type": "ALIAS",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "aetheris-studio.pages.dev."
+        }
+      ]
+    },
+    {
+      "name": "@",
+      "type": "TXT",
+      "ttl": 300,
+      "records": [
+        {
+          "content": "\"v=spf1 include:_spf.mail.hostinger.com ~all\""
+        },
+        {
+          "content": "\"google-site-verification=jS7kvYyI5Ed1bLMzWZkcnhavo6okTVYNOoIjnUkFvQ4\""
+        },
+        {
+          "content": "\"google-site-verification=Ap2IOKnMjqf-iehVcA071jHzVw6X-SBnc8ufzTBCx3A\""
+        },
+        {
+          "content": "\"gomailify=JLSez-rjYNOcpkWk\""
+        }
+      ]
+    },
+    {
+      "name": "@",
+      "type": "MX",
+      "ttl": 14400,
+      "records": [
+        {
+          "content": "10 mx2.hostinger.com."
+        },
+        {
+          "content": "5 mx1.hostinger.com."
+        }
+      ]
+    }
+  ]
+}
