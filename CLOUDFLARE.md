@@ -53,6 +53,36 @@ The active domain is `aetherisstudio.com`. Add both:
 `www.aetherisstudio.com` to the apex while preserving path and query string.
 The generated pages and sitemap use `https://aetherisstudio.com` canonical URLs.
 
+## Mail and DNS layout across the Aetheris domains (decided 2026-09-22)
+
+| Domain | Registrar | Authoritative DNS | Web | Inbound mail | Sending identities |
+| --- | --- | --- | --- | --- | --- |
+| aetheris-solutions.com | (unchanged) | (unchanged) | – | Google Workspace, one seat (info@) | Workspace |
+| aetherisstudio.com | Hostinger | Cloudflare zone `163bb6e61c9f464f30a69021f447dfbd` | Cloudflare Pages | Hostinger Starter, 2 seats: info@ (+ catch-all, forwards to info.aetherisstudio@gmail.com) and lorenzo@ (added 2026-09-22, forwards with keep-copy to masiello.lorenzo@gmail.com) | Resend `website@` (site), Hostinger mailboxes |
+| aetheris.consulting | Hostinger | Cloudflare zone `767fac59e30d889e1dc677ebbec48f07` (moved from Hostinger DNS on 2026-09-22) | Vercel | Hostinger Starter, 5 seats: info@ (+abuse@, postmaster@), lorenzo@, achintya.gupta@, bhoumik@, krishanu.kumar@, each forwarding with keep-copy to a personal Gmail | Resend `info@` (site), Hostinger mailboxes |
+
+Decision record (Lorenzo, 2026-09-22): collaborators only need to receive and
+be CC'd at brand addresses and read in their own Gmail; nobody except Lorenzo
+sends as a brand address; SkyLead follow-ups to LinkedIn leads (under 50 a
+day, Lorenzo only) send from `lorenzo@aetheris.consulting` and
+`lorenzo@aetherisstudio.com`, which therefore stay real Hostinger mailboxes
+(IMAP `imap.hostinger.com:993` SSL, SMTP `smtp.hostinger.com:465` SSL,
+username = full address). Cloudflare Email Routing and Resend send-as were
+evaluated and rejected because they give SkyLead a Gmail identity instead of
+a brand one. Hostinger email is therefore kept on both brands (Consulting
+paid until 2027-08, Studio until 2027-09) and no refund is requested.
+Workspace stays at one seat. GoMailify is no longer in any MX path and its
+DKIM/ownership records are removed after a week of DMARC reports.
+
+The aetheris.consulting move to Cloudflare DNS was done as an exact
+DNS-only mirror (15 records, captured in
+`dns/hostinger-zone-aetheris.consulting-2026-09-21.json` and
+`dns/cloudflare-zone-aetheris.consulting-2026-09-22.json`), verified from an
+external host against `matias`/`thea.ns.cloudflare.com` with zero
+mismatches, then delegated at the Hostinger registrar; Vercel kept both
+hostnames verified and Hostinger mail kept its MX. Records stay DNS-only
+(grey cloud) so Vercel serves TLS and caching as before.
+
 ## Registrar, nameservers and the Hostinger DNS mirror (2026-09-21)
 
 The Squarespace → Hostinger transfer of `aetherisstudio.com` completed on
