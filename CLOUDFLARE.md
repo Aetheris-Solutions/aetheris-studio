@@ -145,6 +145,15 @@ Queries to `*.dns-parking.com` from the office LAN are intercepted by the
 router's resolver (answers carry `ra`/`ad` flags and `SERVFAIL` on
 `+norecurse`), so run authoritative checks from an external host.
 
+### Senders (confirmed by Lorenzo, 2026-09-21)
+
+- GoMailify is the only service sending with an `@aetherisstudio.com`
+  envelope on the apex, so the strict apex SPF `-all` is safe to keep.
+- Resend sends only as `Aetheris Studio <website@aetherisstudio.com>` from the
+  Studio Resend team (API key "Aetheris Studio Website"). The other Resend
+  team (Aetheris Solutions) holds no `aetherisstudio.com` domain, so no
+  second sender exists.
+
 ### Moving inbound mail to Hostinger Mail (planned for info@)
 
 Buying a Hostinger Mail plan does not change the authoritative (Cloudflare)
