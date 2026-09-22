@@ -53,35 +53,61 @@ The active domain is `aetherisstudio.com`. Add both:
 `www.aetherisstudio.com` to the apex while preserving path and query string.
 The generated pages and sitemap use `https://aetherisstudio.com` canonical URLs.
 
-## Mail and DNS layout across the Aetheris domains (decided 2026-09-22)
+## Mail layout: everything on Google Workspace (final, 2026-09-22)
 
-| Domain | Registrar | Authoritative DNS | Web | Inbound mail | Sending identities |
-| --- | --- | --- | --- | --- | --- |
-| aetheris-solutions.com | (unchanged) | (unchanged) | – | Google Workspace, one seat (info@) | Workspace |
-| aetherisstudio.com | Hostinger | Cloudflare zone `163bb6e61c9f464f30a69021f447dfbd` | Cloudflare Pages | Hostinger Starter, 2 seats: info@ (+ catch-all, forwards to info.aetherisstudio@gmail.com) and lorenzo@ (added 2026-09-22, forwards with keep-copy to masiello.lorenzo@gmail.com) | Resend `website@` (site), Hostinger mailboxes |
-| aetheris.consulting | Hostinger | Cloudflare zone `767fac59e30d889e1dc677ebbec48f07` (moved from Hostinger DNS on 2026-09-22) | Vercel | Hostinger Starter, 5 seats: info@ (+abuse@, postmaster@), lorenzo@, achintya.gupta@, bhoumik@, krishanu.kumar@, each forwarding with keep-copy to a personal Gmail | Resend `info@` (site), Hostinger mailboxes |
+All three domains are handled by one Google Workspace organization whose
+primary domain is **aetheris-solutions.com**; aetherisstudio.com and
+aetheris.consulting are **user alias domains**, so every user and every group
+automatically has the same local part on all three domains.
 
-Decision record (Lorenzo, 2026-09-22): collaborators only need to receive and
-be CC'd at brand addresses and read in their own Gmail; nobody except Lorenzo
-sends as a brand address; SkyLead follow-ups to LinkedIn leads (under 50 a
-day, Lorenzo only) send from `lorenzo@aetheris.consulting` and
-`lorenzo@aetherisstudio.com`, which therefore stay real Hostinger mailboxes
-(IMAP `imap.hostinger.com:993` SSL, SMTP `smtp.hostinger.com:465` SSL,
-username = full address). Cloudflare Email Routing and Resend send-as were
-evaluated and rejected because they give SkyLead a Gmail identity instead of
-a brand one. Hostinger email is therefore kept on both brands (Consulting
-paid until 2027-08, Studio until 2027-09) and no refund is requested.
-Workspace stays at one seat. GoMailify is no longer in any MX path and its
-DKIM/ownership records are removed after a week of DMARC reports.
+| Domain | Registrar | Authoritative DNS | Web | Mail |
+| --- | --- | --- | --- | --- |
+| aetheris-solutions.com | Hostinger | Hostinger DNS (`lunar`/`solar.dns-parking.com`) | Vercel | Google Workspace (primary) |
+| aetherisstudio.com | Hostinger | Cloudflare zone `163bb6e61c9f464f30a69021f447dfbd` | Cloudflare Pages | Google Workspace (alias domain), MX `1 smtp.google.com` since 2026-09-22 21:47 UTC |
+| aetheris.consulting | Hostinger | Cloudflare zone `767fac59e30d889e1dc677ebbec48f07` | Vercel | Google Workspace (alias domain), MX `1 smtp.google.com` since 2026-09-22 21:06 UTC |
 
-The aetheris.consulting move to Cloudflare DNS was done as an exact
-DNS-only mirror (15 records, captured in
-`dns/hostinger-zone-aetheris.consulting-2026-09-21.json` and
-`dns/cloudflare-zone-aetheris.consulting-2026-09-22.json`), verified from an
-external host against `matias`/`thea.ns.cloudflare.com` with zero
-mismatches, then delegated at the Hostinger registrar; Vercel kept both
-hostnames verified and Hostinger mail kept its MX. Records stay DNS-only
-(grey cloud) so Vercel serves TLS and caching as before.
+Who receives what (Google configuration, verified by delivery tests on both
+brand domains: user alias, group, short group alias `bhoumik@`, catch-all):
+
+- Paid users (2): `info@aetheris-solutions.com` (aliases `admin`, `alerts`,
+  `website`) and `lorenzo@aetheris-solutions.com` (Super Admin). Both receive
+  their brand addresses automatically: `info@` and `lorenzo@` on all three
+  domains converge in those two mailboxes. There is deliberately **no**
+  forwarding to the free Gmail `info.aetherisstudio@gmail.com`; automations
+  that read that Gmail must be re-pointed to the Workspace `info@`.
+- Collaborators (free Google Groups, external personal Gmail as the only
+  member, Lorenzo as owner, history on, anyone on the web can post, no
+  moderation, suspicious mail posted rather than held): `achintya.gupta`,
+  `bhoumik.mishra` (+ alias `bhoumik`), `krishanu.kumar`, `margherita.cielo`,
+  `marouane.moustaid`, `maverick.tenace`, `daniele.colombo`, `matteo`.
+- Reserved groups `abuse@` and `postmaster@` deliver to `info@`.
+- Unknown addresses on any of the three domains: Workspace default routing
+  (catch-all) to `info@aetheris-solutions.com`.
+- Claude Team accounts registered under `@aetherisstudio.com` were not
+  renamed: those addresses keep receiving via the alias domain and groups.
+
+Authentication per domain: Google DKIM (`google._domainkey`, 2048-bit)
+active; SPF `v=spf1 include:_spf.google.com ~all` on the two brand domains
+(aetheris-solutions.com keeps its Google + Brevo + infomail.it SPF); Resend
+records (`send` MX/TXT, `resend._domainkey`) unchanged for the website
+senders `website@aetherisstudio.com` and `info@aetheris.consulting`; DMARC
+`p=quarantine` on both brand domains (Consulting raised from `p=none` on
+2026-09-23, without a reporting address; add an EasyDMARC `rua` like Studio
+if reports are wanted).
+
+Retired: Hostinger Mail on both brand domains (Studio order refundable until
+2026-10-21; Consulting order prepaid to 2027-07, left to lapse), GoMailify,
+the Hostinger DNS mirror of the Studio zone (stale, non-authoritative), the
+old Studio Google Workspace organization (deleted 2026-09-22, it had been
+holding aetherisstudio.com). Final captures:
+`dns/cloudflare-zone-aetherisstudio.com-2026-09-22-final.json` and
+`dns/cloudflare-zone-aetheris.consulting-2026-09-22-final.json`. The
+Workspace Admin steps were executed by a Codex agent from prompt files kept
+outside the repo; its report lists group IDs and settings.
+
+The sections below record the intermediate states of 2026-09-21/22
+(Hostinger transfer, Hostinger Mail cutover, Consulting DNS move) and are kept
+for history; where they conflict with this section, this section wins.
 
 ## Registrar, nameservers and the Hostinger DNS mirror (2026-09-21)
 

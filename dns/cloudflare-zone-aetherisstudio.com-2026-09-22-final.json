@@ -1,0 +1,72 @@
+{
+  "zone": "aetherisstudio.com",
+  "zone_id": "163bb6e61c9f464f30a69021f447dfbd",
+  "captured_at": "2026-09-22T21:55:00Z",
+  "state": "final after Google Workspace consolidation: MX 1 smtp.google.com, Google DKIM active, SPF google-only, Resend + DMARC kept, no Hostinger/GoMailify records",
+  "records": [
+    {
+      "type": "CNAME",
+      "name": "aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true
+    },
+    {
+      "type": "CNAME",
+      "name": "www.aetherisstudio.com",
+      "content": "aetheris-studio.pages.dev",
+      "proxied": true
+    },
+    {
+      "type": "MX",
+      "name": "aetherisstudio.com",
+      "content": "smtp.google.com",
+      "priority": 1
+    },
+    {
+      "type": "MX",
+      "name": "send.aetherisstudio.com",
+      "content": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "v=spf1 include:_spf.google.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=kLHY0FYCyd1FhxKz4NKGxRXZjZECFQjdz0c98oLRh2o"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=jS7kvYyI5Ed1bLMzWZkcnhavo6okTVYNOoIjnUkFvQ4"
+    },
+    {
+      "type": "TXT",
+      "name": "aetherisstudio.com",
+      "content": "google-site-verification=Ap2IOKnMjqf-iehVcA071jHzVw6X-SBnc8ufzTBCx3A"
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc.aetherisstudio.com",
+      "content": "v=DMARC1;p=quarantine;rua=mailto:0b2b960bbe@rua.easydmarc.eu;ruf=mailto:0b2b960bbe@ruf.easydmarc.eu;fo=1;"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey.aetherisstudio.com",
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAkAitMO7c4YlEZNtdjxJnjEAn32pTL4KXdmtSNYdiFClcRZ5L+PJkC3SMdX0qeiGB3vqKnt9Qdt6s2PYW8gGIFJjV4XAGQGF05BMNCWAPADNRG0wL+3xgvdIgtUe4fr64dX9AFe4HajZL6ScAKpKras7JsNrIcy9SuvzjNUetEGqd9tKpfqJrpxPnCvSugWl0yDkLre/mdSyHpwXCaCNzFJbIvI3OI1KgyKBBkZVIA2nExMmXUyh7LJeyZaCJFBwQMq6hzTFezVJCwqI5QgayUBunchMcgMnqq+mzJHA1QP+IpkECYrB0dhA1nYotbgE16mjbOk/Pf70P//msh6y7sQIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.aetherisstudio.com",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDVWyo6XjpSqUH7kRxzK/iGaGiNiORXwF22jLQU7iQvxWczWYa8rxzgXHb8VXWR9ihItsTcfkTm/Ls/f7Euzp2/Km/a0CWywHUID6dCB+qJ+agBvJyfN4hjeBgoZDNM63R7KTSdP5h2imh0o5CFBPCQABYMV2aXpq4nTItI36LOlwIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "send.aetherisstudio.com",
+      "content": "v=spf1 include:amazonses.com ~all"
+    }
+  ]
+}

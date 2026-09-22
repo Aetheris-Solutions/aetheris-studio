@@ -1,0 +1,62 @@
+{
+  "zone": "aetheris.consulting",
+  "zone_id": "767fac59e30d889e1dc677ebbec48f07",
+  "captured_at": "2026-09-23T00:30:00Z",
+  "state": "final after Google Workspace consolidation: MX 1 smtp.google.com, Google DKIM active, SPF google-only, Resend + DMARC kept, no Hostinger/GoMailify records; DMARC raised to quarantine on 2026-09-23",
+  "records": [
+    {
+      "type": "A",
+      "name": "aetheris.consulting",
+      "content": "76.76.21.21",
+      "proxied": false
+    },
+    {
+      "type": "CNAME",
+      "name": "www.aetheris.consulting",
+      "content": "cname.vercel-dns-0.com",
+      "proxied": false
+    },
+    {
+      "type": "MX",
+      "name": "aetheris.consulting",
+      "content": "smtp.google.com",
+      "priority": 1
+    },
+    {
+      "type": "MX",
+      "name": "send.aetheris.consulting",
+      "content": "feedback-smtp.eu-west-1.amazonses.com",
+      "priority": 10
+    },
+    {
+      "type": "TXT",
+      "name": "aetheris.consulting",
+      "content": "v=spf1 include:_spf.google.com ~all"
+    },
+    {
+      "type": "TXT",
+      "name": "aetheris.consulting",
+      "content": "google-site-verification=4y6xWR7g1uHii4ve2darU2mmHyhJpisZrGlGxRku0uY"
+    },
+    {
+      "type": "TXT",
+      "name": "_dmarc.aetheris.consulting",
+      "content": "v=DMARC1; p=quarantine"
+    },
+    {
+      "type": "TXT",
+      "name": "google._domainkey.aetheris.consulting",
+      "content": "v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA130O9FJ1IhniTZe6wMROF4TRBwrNEkbmhigP7mH9WhXG1iWl4OlgiVS43VtUMn4AN4YEgU7g5OJ9b8nOxi+oNEA0cucTNueXIlIHaNbUCOleiKc8WZvHoEAMgk2B5nYMciwSFAn84IVd7lTEuuqFWAVZs9lZFu/qEX2w7xSyMIg8K1Msx6EUOc7K3h7Wxn0MLc2hNoje6o/Uk8ghAywopt3vKm8s6z3Q896U6TngRcaU+CtuPRo6RVlkt4bmJL0Y9JorpTCFsNX3P9BVoH63IgcbsnZ+ZuhZMPrF88OtZQTo1mkEA2MlRBRMHT/d887yVei2vsswkc8rjNzA7dlQFwIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "resend._domainkey.aetheris.consulting",
+      "content": "p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC1AmcAZeo0R9Ftt6KTZP/jSiZ0TGfRZIn7S6x2BJY+9ErvoMog+Uq+0QGA3+USjn2WrGk2TsbZI6MkVxqakjo9sEJ446ham/avkPENWBW8WiEpSvYSTE6bT4mqMdUaZTRD39mwdjNb6hpwbSaKX1dZI9DO4RAecguRJVLKPTKNsQIDAQAB"
+    },
+    {
+      "type": "TXT",
+      "name": "send.aetheris.consulting",
+      "content": "v=spf1 include:amazonses.com ~all"
+    }
+  ]
+}
