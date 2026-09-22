@@ -91,8 +91,9 @@ active; SPF `v=spf1 include:_spf.google.com ~all` on the two brand domains
 (aetheris-solutions.com keeps its Google + Brevo + infomail.it SPF); Resend
 records (`send` MX/TXT, `resend._domainkey`) unchanged for the website
 senders `website@aetherisstudio.com` and `info@aetheris.consulting`; DMARC
-quarantine on Studio, `p=none` on Consulting (raise to quarantine about a
-week after 2026-09-22).
+`p=quarantine` on both brand domains (Consulting raised from `p=none` on
+2026-09-23, without a reporting address; add an EasyDMARC `rua` like Studio
+if reports are wanted).
 
 Retired: Hostinger Mail on both brand domains (Studio order refundable until
 2026-10-21; Consulting order prepaid to 2027-07, left to lapse), GoMailify,
