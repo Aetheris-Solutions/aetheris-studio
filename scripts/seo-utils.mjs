@@ -383,18 +383,35 @@ function normalizeHeadings(html, route) {
   return next;
 }
 
+// Advertising measurement exists only on the campaign pages; the copy never names them by URL.
 function updateCookiePolicy(html, route) {
   if (!["/cookies-policy", "/privacy-policy"].includes(route)) return html;
-  const disclosure = '<section id="analytics-privacy-disclosure" style="margin:24px 0;padding:20px 0;border-bottom:1px solid #ccc"><h2 style="font-size:22px;line-height:1.3;margin:0 0 12px">Optional website analytics</h2><p style="font-size:16px;line-height:1.6;margin:0 0 12px">Only after you select Accept, we load Google Analytics and Microsoft Clarity to understand visits and interactions, produce heatmaps and session replays, and improve this website. Form contents are masked. Advertising consent remains disabled. Analytics cookies, including Google Analytics _ga cookies and Clarity _clck and _clsk cookies, may be used after acceptance.</p><p style="font-size:16px;line-height:1.6;margin:0">You can reject analytics or withdraw consent using Cookie preferences (Cookie settings on the audit page). Withdrawing stops collection, clears first-party analytics cookies and reloads the page. Your choice is stored on this device. See <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://privacy.microsoft.com/privacystatement">Microsoft Privacy Statement</a> for provider data practices.</p></section>';
+  const paragraph = (margin, text) => `<p style="font-size:16px;line-height:1.6;margin:${margin}">${text}</p>`;
+  const disclosure =
+    '<section id="analytics-privacy-disclosure" style="margin:24px 0;padding:20px 0;border-bottom:1px solid #ccc">' +
+    '<h2 style="font-size:22px;line-height:1.3;margin:0 0 12px">Optional analytics and advertising measurement</h2>' +
+    paragraph(
+      "0 0 12px",
+      "<strong>Analytics.</strong> We load Google Analytics and Microsoft Clarity only after you allow analytics (Accept, or Accept all or the Analytics setting on our campaign pages), to understand visits and interactions, produce heatmaps and session replays, and improve this website. Form contents are masked. Analytics cookies, including Google Analytics _ga cookies and Clarity _clck and _clsk cookies, may be used after you allow analytics. When you send an enquiry from a campaign page, Google Analytics also records it as a lead, with the annual revenue range you selected.",
+    ) +
+    paragraph(
+      "0 0 12px",
+      "<strong>Advertising measurement (campaign pages only).</strong> Our campaign pages offer a separate Advertising measurement choice, which stays off unless you turn it on or select Accept all. It lets Google Ads measure whether our ads lead to audit requests. Google Ads may set cookies such as _gcl_au and _gcl_aw and keep the ad click in this browser’s local storage; when you submit an enquiry, the ad click identifier and a conversion event (a random reference and, possibly, an estimated value based on your revenue range) are shared with Google. Apart from that revenue range, nothing you enter in our forms is sent to Google. We never use your data for ad personalisation or remarketing.",
+    ) +
+    paragraph(
+      "0",
+      '<strong>Your choices.</strong> You can reject or withdraw consent at any time using Cookie preferences (Cookie settings on campaign pages). Reject or Reject all on any of our pages also withdraws advertising measurement. Withdrawing stops collection, clears these first-party cookies and the stored ad click, and reloads the page. Your choices are stored on this device. See <a href="https://policies.google.com/privacy">Google Privacy Policy</a> and <a href="https://privacy.microsoft.com/privacystatement">Microsoft Privacy Statement</a> for provider data practices.',
+    ) +
+    "</section>";
   html = html.replace(/<section id="analytics-privacy-disclosure"[^>]*>[\s\S]*?<\/section>/g, "");
   html = html.replace(/(<h1[^>]*>[\s\S]*?<\/h1>)/, "$1" + disclosure);
   if (route !== "/cookies-policy") return html;
   const replacement =
-    "$1<br/>- <strong>Cookie Preferences:</strong> You can use the Cookie preferences control on this website to accept or reject Google Analytics and similar non-essential measurement scripts.<br/><br/>Please note";
-  return html.replace(
-    /(- <strong>Opt-out Tools:<\/strong> Some third-party services provide tools to opt-out of data collection, such as Google Analytics[^<]+ opt-out browser add-on or Facebook[^<]+ ad preferences settings\.)<br\/><br\/>Please note/,
-    replacement,
-  );
+    "$1<br/>- <strong>Cookie Preferences:</strong> You can use the Cookie preferences control on this website (Cookie settings on our campaign pages) to accept or reject optional analytics (Google Analytics and Microsoft Clarity) and, on our campaign pages, Google Ads advertising measurement. Both stay off until you accept them.<br/><br/>Please note";
+  // Drop the bullet written by an earlier run so a wording change replaces it.
+  html = html.replace(/<br\/>- <strong>Cookie Preferences:<\/strong>[^<]*/g, "");
+  // Anchored on the Opt-out Tools bullet, whatever its wording, so the bullet is added exactly once.
+  return html.replace(/(- <strong>Opt-out Tools:<\/strong>[^<]*)<br\/><br\/>Please note/, replacement);
 }
 
 function improveAltText(html) {
@@ -427,6 +444,12 @@ function analyticsConsentScript() {
 
   var googleTagManagerId = "${GOOGLE_TAG_MANAGER_ID}";
   var storageKey = "aetheris.analyticsConsent.v2";
+  // Advertising measurement is only offered on the campaign pages, which share this storage.
+  var adsStorageKey = "aetheris.adsConsent.v1";
+  // GA4 keeps Google Ads click data in _gac_ cookies, so withdrawing either choice clears them.
+  var analyticsCookies = /^(_ga($|_)|_gac_|_gid$|_gat|_clck$|_clsk$)/;
+  var adsCookies = /^(_gcl_|_gac_)/;
+  // The choice in force on this page: made here, or read from storage when the page loaded.
   var sessionChoice = null;
   var loaded = false;
 
@@ -450,12 +473,27 @@ function analyticsConsentScript() {
     }
   }
 
+  function adsGranted() {
+    try {
+      return window.localStorage.getItem(adsStorageKey) === "granted";
+    } catch (error) {
+      return false;
+    }
+  }
+
   function remember(choice) {
     sessionChoice = choice;
     try {
       window.localStorage.setItem(storageKey, choice);
     } catch (error) {
       // Consent still applies for the current page view.
+    }
+    if (choice !== "denied") return;
+    // This banner never grants advertising measurement, but its Reject also withdraws it.
+    try {
+      window.localStorage.setItem(adsStorageKey, "denied");
+    } catch (error) {
+      // The advertising cookies are still cleared.
     }
   }
 
@@ -491,7 +529,7 @@ function analyticsConsentScript() {
       if (!granted) window.clarity("stop");
     }
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
-      detail: { analytics: granted }
+      detail: { analytics: granted, ads: false }
     }));
   }
 
@@ -518,10 +556,10 @@ function analyticsConsentScript() {
     document.body.appendChild(button);
   }
 
-  function clearAnalyticsCookies() {
+  function clearCookies(pattern) {
     document.cookie.split(";").forEach(function (part) {
       var name = part.split("=")[0].trim();
-      if (!/^(_ga($|_)|_gid$|_gat|_clck$|_clsk$)/.test(name)) return;
+      if (!pattern.test(name)) return;
       var suffix = "; Max-Age=0; path=/; SameSite=Lax";
       document.cookie = name + "=" + suffix;
       var labels = window.location.hostname.split(".");
@@ -532,6 +570,16 @@ function analyticsConsentScript() {
     });
   }
 
+  function clearAdsStorage() {
+    clearCookies(adsCookies);
+    try {
+      // The Conversion Linker also keeps the ad click in local storage.
+      window.localStorage.removeItem("_gcl_ls");
+    } catch (error) {
+      // Nothing else to clear.
+    }
+  }
+
   function applyChoice(choice) {
     remember(choice);
     setConsent(choice === "granted");
@@ -540,7 +588,8 @@ function analyticsConsentScript() {
     if (choice === "granted") {
       loadTagManager();
     } else {
-      clearAnalyticsCookies();
+      clearCookies(analyticsCookies);
+      clearAdsStorage();
       // Unload already-running analytics, including requests still being initialized.
       if (loaded) window.location.reload();
     }
@@ -581,16 +630,53 @@ function analyticsConsentScript() {
     }
   });
 
+  // A page restored from the back/forward cache, or left open in another tab, keeps the choice
+  // it loaded with. Re-read storage so a choice made on another page applies here too.
+  function syncStoredChoice() {
+    var stored;
+    try {
+      stored = window.localStorage.getItem(storageKey);
+    } catch (error) {
+      // Without storage, the page keeps the choice made on it.
+      return;
+    }
+    if (!adsGranted()) clearAdsStorage();
+    if (stored !== "granted" && stored !== "denied") stored = null;
+    if (stored === sessionChoice) return;
+    if (sessionChoice === "granted" && loaded) {
+      // Tags that already ran under the withdrawn choice are only unloaded by a reload.
+      window.location.reload();
+      return;
+    }
+    // Cleared storage asks again on the next page load.
+    if (!stored) return;
+    sessionChoice = stored;
+    setConsent(stored === "granted");
+    removeBanner();
+    renderPreferencesButton();
+    if (stored === "granted") loadTagManager();
+    else clearCookies(analyticsCookies);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var choice = currentChoice();
+    sessionChoice = choice;
+    // Keep a campaign page's advertising grant intact; without one, no ad click is kept.
+    if (!adsGranted()) clearAdsStorage();
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) syncStoredChoice();
+    });
+    window.addEventListener("storage", function (event) {
+      if (event.key === null || event.key === storageKey || event.key === adsStorageKey) syncStoredChoice();
+    });
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
       if (choice === "granted") loadTagManager();
-      else clearAnalyticsCookies();
+      else clearCookies(analyticsCookies);
       return;
     }
-    clearAnalyticsCookies();
+    clearCookies(analyticsCookies);
     renderBanner(false);
   });
 })();`;
@@ -772,12 +858,45 @@ When using our public content, attribute it to "Aetheris Studio" and link ${orig
 `;
 }
 
+// Google hosts follow Google's CSP guide for GTM and its Preview mode, GA4 with Ads
+// features, Google Ads conversions and the Conversion Linker, mirroring the Consulting
+// site: https://developers.google.com/tag-platform/security/guides/csp
+// Google Ads also reaches Google's country domains, which CSP cannot wildcard, so we
+// list the markets we serve: EU/EEA, UK, Switzerland, Canada and Mexico (the US uses
+// google.com). Tag Assistant's CSP view names any other country domain a visitor needed.
+const googleCountryDomains = [
+  "at", "be", "bg", "ca", "ch", "co.uk", "com.cy", "com.mt", "com.mx", "cz", "de", "dk",
+  "ee", "es", "fi", "fr", "gr", "hr", "hu", "ie", "is", "it", "li", "lt", "lu", "lv",
+  "nl", "no", "pl", "pt", "ro", "se", "si", "sk",
+].map((tld) => `https://*.google.${tld}`);
+
+// Cloudflare Pages allows 2,000 characters per _headers line, indent and name included.
+// The full list fits with room to spare; a test enforces the limit.
+// reCAPTCHA on the contact page is covered by www.google.com and www.gstatic.com,
+// plus its recaptcha.google.com frame.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://*.googletagmanager.com https://tagmanager.google.com https://www.google.com https://www.gstatic.com https://www.googleadservices.com https://*.clarity.ms https://c.bing.com",
+  [
+    "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com https://*.google.com",
+    ...googleCountryDomains,
+    "https://www.googleadservices.com https://*.g.doubleclick.net https://ad.doubleclick.net https://pagead2.googlesyndication.com https://*.clarity.ms https://c.bing.com",
+  ].join(" "),
+  "img-src 'self' data: https: blob:",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.googletagmanager.com https://tagmanager.google.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "frame-src https://www.google.com https://www.googletagmanager.com https://recaptcha.google.com/recaptcha/",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "upgrade-insecure-requests",
+].join("; ");
+
 function headers() {
   return `/*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: camera=(), microphone=(), geolocation=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://*.clarity.ms https://*.googletagmanager.com https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/; connect-src 'self' https://*.clarity.ms https://c.bing.com https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com https://www.google.com/recaptcha/; img-src 'self' data: https:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; base-uri 'self'; form-action 'self'; upgrade-insecure-requests
+  Content-Security-Policy: ${CONTENT_SECURITY_POLICY}
 
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
