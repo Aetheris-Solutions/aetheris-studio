@@ -3,6 +3,12 @@
 
   var googleTagManagerId = "GTM-5553RFJZ";
   var storageKey = "aetheris.analyticsConsent.v2";
+  // Advertising measurement is only offered on the campaign pages, which share this storage.
+  var adsStorageKey = "aetheris.adsConsent.v1";
+  // GA4 keeps Google Ads click data in _gac_ cookies, so withdrawing either choice clears them.
+  var analyticsCookies = /^(_ga($|_)|_gac_|_gid$|_gat|_clck$|_clsk$)/;
+  var adsCookies = /^(_gcl_|_gac_)/;
+  // The choice in force on this page: made here, or read from storage when the page loaded.
   var sessionChoice = null;
   var loaded = false;
 
@@ -26,12 +32,27 @@
     }
   }
 
+  function adsGranted() {
+    try {
+      return window.localStorage.getItem(adsStorageKey) === "granted";
+    } catch (error) {
+      return false;
+    }
+  }
+
   function remember(choice) {
     sessionChoice = choice;
     try {
       window.localStorage.setItem(storageKey, choice);
     } catch (error) {
       // Consent still applies for the current page view.
+    }
+    if (choice !== "denied") return;
+    // This banner never grants advertising measurement, but its Reject also withdraws it.
+    try {
+      window.localStorage.setItem(adsStorageKey, "denied");
+    } catch (error) {
+      // The advertising cookies are still cleared.
     }
   }
 
@@ -67,7 +88,7 @@
       if (!granted) window.clarity("stop");
     }
     window.dispatchEvent(new CustomEvent("aetheris:consent", {
-      detail: { analytics: granted }
+      detail: { analytics: granted, ads: false }
     }));
   }
 
@@ -94,10 +115,10 @@
     document.body.appendChild(button);
   }
 
-  function clearAnalyticsCookies() {
+  function clearCookies(pattern) {
     document.cookie.split(";").forEach(function (part) {
       var name = part.split("=")[0].trim();
-      if (!/^(_ga($|_)|_gid$|_gat|_clck$|_clsk$)/.test(name)) return;
+      if (!pattern.test(name)) return;
       var suffix = "; Max-Age=0; path=/; SameSite=Lax";
       document.cookie = name + "=" + suffix;
       var labels = window.location.hostname.split(".");
@@ -108,6 +129,16 @@
     });
   }
 
+  function clearAdsStorage() {
+    clearCookies(adsCookies);
+    try {
+      // The Conversion Linker also keeps the ad click in local storage.
+      window.localStorage.removeItem("_gcl_ls");
+    } catch (error) {
+      // Nothing else to clear.
+    }
+  }
+
   function applyChoice(choice) {
     remember(choice);
     setConsent(choice === "granted");
@@ -116,7 +147,8 @@
     if (choice === "granted") {
       loadTagManager();
     } else {
-      clearAnalyticsCookies();
+      clearCookies(analyticsCookies);
+      clearAdsStorage();
       // Unload already-running analytics, including requests still being initialized.
       if (loaded) window.location.reload();
     }
@@ -157,16 +189,53 @@
     }
   });
 
+  // A page restored from the back/forward cache, or left open in another tab, keeps the choice
+  // it loaded with. Re-read storage so a choice made on another page applies here too.
+  function syncStoredChoice() {
+    var stored;
+    try {
+      stored = window.localStorage.getItem(storageKey);
+    } catch (error) {
+      // Without storage, the page keeps the choice made on it.
+      return;
+    }
+    if (!adsGranted()) clearAdsStorage();
+    if (stored !== "granted" && stored !== "denied") stored = null;
+    if (stored === sessionChoice) return;
+    if (sessionChoice === "granted" && loaded) {
+      // Tags that already ran under the withdrawn choice are only unloaded by a reload.
+      window.location.reload();
+      return;
+    }
+    // Cleared storage asks again on the next page load.
+    if (!stored) return;
+    sessionChoice = stored;
+    setConsent(stored === "granted");
+    removeBanner();
+    renderPreferencesButton();
+    if (stored === "granted") loadTagManager();
+    else clearCookies(analyticsCookies);
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
     var choice = currentChoice();
+    sessionChoice = choice;
+    // Keep a campaign page's advertising grant intact; without one, no ad click is kept.
+    if (!adsGranted()) clearAdsStorage();
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) syncStoredChoice();
+    });
+    window.addEventListener("storage", function (event) {
+      if (event.key === null || event.key === storageKey || event.key === adsStorageKey) syncStoredChoice();
+    });
     if (choice) {
       setConsent(choice === "granted");
       renderPreferencesButton();
       if (choice === "granted") loadTagManager();
-      else clearAnalyticsCookies();
+      else clearCookies(analyticsCookies);
       return;
     }
-    clearAnalyticsCookies();
+    clearCookies(analyticsCookies);
     renderBanner(false);
   });
 })();

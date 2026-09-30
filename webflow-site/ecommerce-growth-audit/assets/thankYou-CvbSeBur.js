@@ -1,0 +1,1 @@
+import{i as t,d as n,a}from"./shared-C36Ja-Fk.js";t({darkTextureUrl:n,scenes:[]});document.querySelectorAll("[data-year]").forEach(r=>{r.textContent=String(new Date().getFullYear())});const o=()=>{try{return a(window.sessionStorage,Date.now())}catch{return null}},e=o();e&&window.aetherisQueueConsentedEvent?.(e);
