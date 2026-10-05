@@ -48,6 +48,15 @@ test("ordinary messages cannot infer a company, and credentialed URLs are ignore
   assert.equal(enquiryDetails("Ecommerce Growth Leak Audit request\nStore URL: https://user:pass@example.com").domain, "");
 });
 
+test("a store domain typed without a scheme still resolves", () => {
+  const withWww = enquiryDetails("Ecommerce Growth Leak Audit request\nStore URL: www.shop.example");
+  const bare = enquiryDetails("Ecommerce Growth Leak Audit request\nStore URL: shop.example/collections");
+  assert.equal(withWww.domain, "shop.example");
+  assert.equal(withWww.storeUrl, "https://www.shop.example/");
+  assert.equal(bare.domain, "shop.example");
+  assert.equal(bare.storeUrl, "https://shop.example/collections");
+});
+
 test("Attio errors do not expose response bodies or credentials", async () => {
   await assert.rejects(saveEnquiry(env, { name: "Jamie", email: "jamie@example.com", message: "Hello" },
     async () => new Response("private contact details", { status: 403 })), /^Error: Attio returned HTTP 403$/);
